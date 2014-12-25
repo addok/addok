@@ -15,6 +15,8 @@ def insert_document(document):
     DB.hmset(key, document)
     for s in prepare(document['name']):
         DB.sadd(token_key(normalize(s)), key)
+    for s in prepare(document.get('city', '')):
+        DB.sadd(token_key(normalize(s)), key)
 
 
 def token_key(s):
@@ -73,7 +75,11 @@ class Result(object):
         self.score = float(self.importance)
 
     def __str__(self):
-        return self.name
+        label = self.name
+        city = getattr(self, 'city', None)
+        if city:
+            label = '{} {}'.format(label, city)
+        return label
 
     def __repr__(self):
         return '<{} - {} ({})>'.format(str(self), self.id, self.score)
@@ -81,9 +87,57 @@ class Result(object):
 
 class Token(object):
 
-    def __init__(self, original):
+    def __init__(self, original, position, is_last=False):
         self.original = original
+        self.position = position
+        self.is_last = is_last
         self.key = token_key(original)
+        self.db_key = None
+        self.fuzzy_keys = []
+
+    def __len__(self):
+        return len(self.original)
+
+    def __str__(self):
+        return self.original
+
+    def __repr__(self):
+        return '<Token {}>'.format(self.original)
+
+    def search(self):
+        if DB.exists(self.key):
+            self.db_key = self.key
+
+    def make_fuzzy(self):
+        neighbors = self.neighbors
+        keys = []
+        if neighbors:
+            for neighbor in neighbors:
+                key = token_key(neighbor)
+                count = DB.scard(key)
+                if count:
+                    keys.append((key, count))
+        keys.sort(key=lambda x: x[1])
+        for key, count in keys:
+            self.fuzzy_keys.append(key)
+
+    @property
+    def neighbors(self):
+        return make_fuzzy(self.original)
+
+    @property
+    def is_common(self):
+        return self.frequency > 1000
+
+    @property
+    def frequency(self):
+        if not hasattr(self, '_frequency'):
+            self._frequency = common_term(self.original)
+        return self._frequency
+
+    @property
+    def is_fuzzy(self):
+        return not self.db_key and self.fuzzy_keys
 
 
 def score_ngram(result, query):
@@ -99,75 +153,97 @@ def retrieve_autocomplete_keys(token):
     return DB.keys(key)
 
 
-def results_from_keys(keys, limit=100):
-    results = []
-    ids = []
-    if keys:
-        ids = DB.sinter(keys)
-    for _id in ids:
-        results.append(Result(DB.hgetall(_id)))
-        if len(results) >= limit:
-            break
-    return results
-
-
 def keys_sets_temp_key(keys_sets):
     return 'kstmp|{}'.format('.'.join(keys_sets))
 
 
-def search(query, match_all=False, fuzzy=0, limit=10, autocomplete=0):
-    hard_limit = 100
-    results = []
-    keys_sets = [[]]
-    tokens = list(prepare(query))
-    tokens.sort(key=lambda x: len(x), reverse=True)
-    for token in tokens:
-        key = token_key(token)
-        if DB.exists(key):
-            if not match_all:
-                without = [k[:] for k in keys_sets[:]] or [[]]
-            for keys_set in keys_sets:
-                keys_set.append(key)
-            if not match_all:
-                print('extend for', token)
-                keys_sets.extend(without)
-        elif fuzzy > 0:
-            neighbors = make_fuzzy(token)
-            print(token, "neighbors", len(neighbors))
-            if neighbors:
-                new_keys_sets = []
-                for neighbor in neighbors:
-                    for keys in keys_sets:
-                        key = token_key(neighbor)
-                        if DB.exists(key):
-                            new_keys_set = keys.copy()
-                            new_keys_set.append(key)
-                            keys_sets_key = keys_sets_temp_key(new_keys_set)
-                            if DB.sinterstore(keys_sets_key, new_keys_set):
-                                new_keys_sets.append(new_keys_set)
-                            DB.delete(keys_sets_key)
-                if new_keys_sets:
-                    print("Replacing keys_sets for", token)
-                    keys_sets = new_keys_sets
-        elif match_all:
-            return []
-    print(keys_sets)
-    for keys in keys_sets:
-        results.extend(results_from_keys(keys, limit=hard_limit))
-    if autocomplete:
-        if key in keys:
-            keys.remove(key)
-        possible_keys = retrieve_autocomplete_keys(token)
-        for key in possible_keys:
-            try_with = keys.copy()
-            try_with.add(key)
-            results.extend(results_from_keys(try_with))
+class Empty(Exception):
+    pass
 
-    # Score and sort.
-    for r in results:
-        score_ngram(r, query)
-    results.sort(key=lambda d: d.score, reverse=True)
-    return results[:limit]
+
+class Search(object):
+
+    HARD_LIMIT = 1000
+
+    def __init__(self, match_all=False, fuzzy=0, limit=10, autocomplete=0):
+        self.match_all = match_all
+        self.fuzzy = fuzzy
+        self.limit = limit
+
+    def __call__(self, query):
+        self.results = []
+        ok_tokens = []
+        pending_tokens = []
+        self.ids = []
+        self.query = query
+        self.preprocess(query)
+        self.search_all()
+        for token in self.tokens:
+            if token.db_key and not token.is_common:
+                ok_tokens.append(token)
+            else:
+                pending_tokens.append(token)
+        if not ok_tokens:  # Take the less common as basis.
+            commons = [t for t in self.tokens if t.is_common]
+            if commons:
+                commons.sort(lambda x: x.frequency, reverse=True)
+                ok_tokens = commons[:1]
+        ok_keys = [t.db_key for t in ok_tokens]
+        ids = self.intersect(ok_keys)
+        if ids and len(ids) <= self.HARD_LIMIT or not pending_tokens:
+            return self.render(ids)
+        # Retrieve not found.
+        not_found = []
+        for token in pending_tokens:
+            if not token.db_key:
+                not_found.append(token)
+        if not_found and self.fuzzy:
+            not_found.sort(key=lambda t: len(t), reverse=True)
+            try_one = not_found[0]  # Take the biggest one.
+            print('trying with', try_one)
+            try_one.make_fuzzy()
+            for key in try_one.fuzzy_keys:
+                ids = self.intersect(ok_keys + [key])
+                if ids:
+                    return self.render(ids)
+        return self.render(ids)
+
+    def render(self, ids):
+        self.compute_results(ids)
+        # Score and sort.
+        for r in self.results:
+            score_ngram(r, self.query)
+        self.results.sort(key=lambda d: d.score, reverse=True)
+        return self.results[:self.limit]
+
+    def preprocess(self, query):
+        self.tokens = [Token(t, position=i) for i, t in enumerate(prepare(query))]
+        self.tokens.sort(key=lambda x: len(x), reverse=True)
+
+    def search_all(self):
+        for token in self.tokens:
+            token.search()
+            if (self.match_all and (not self.fuzzy or not token.fuzzy_keys)
+               and not token.db_key):
+                raise Empty
+
+    def intersect(self, keys):
+        if keys:
+            return DB.sinter(keys)
+        else:
+            return []
+
+    def compute_results(self, ids):
+        for _id in ids:
+            self.results.append(Result(DB.hgetall(_id)))
+            if len(self.results) >= self.HARD_LIMIT:
+                print('Hit HARD_LIMIT for', self.query)
+                break
+
+
+def search(query, match_all=False, fuzzy=0, limit=10, autocomplete=0):
+    helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit)
+    return helper(query)
 
 
 FIELDS = [
