@@ -1,3 +1,4 @@
+import uuid
 import pytest
 
 
@@ -15,7 +16,7 @@ def pytest_runtest_teardown(item, nextitem):
 @pytest.fixture
 def doc(request):
     return {
-        'id': '123456',
+        'id': uuid.uuid4().hex,
         'importance': 0.0
     }.copy()
 
@@ -29,4 +30,11 @@ def street(doc):
 @pytest.fixture
 def city(doc):
     doc['type'] = 'city'
+    return doc
+
+
+@pytest.fixture
+def housenumber(doc):
+    doc['type'] = 'housenumber'
+    doc['housenumber'] = 11
     return doc

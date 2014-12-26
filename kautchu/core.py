@@ -1,13 +1,12 @@
-import re
+import logging
 
 import redis
-import ngram
-from unidecode import unidecode
 
 from .config import DB_SETTINGS
-from .fuzzy import fuzzy as make_fuzzy
+from .utils import make_fuzzy, compare_ngrams, tokenize, normalize
 
 DB = redis.StrictRedis(**DB_SETTINGS)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def token_key(s):
@@ -24,24 +23,6 @@ def housenumber_lat_key(s):
 
 def housenumber_lon_key(s):
     return 'lon|{}'.format(s)
-
-
-def tokenize(text, lang="fr"):
-    """
-    Split text into a list of tokens.
-    """
-    if lang == "fr":
-        pattern = r"[\w]+"
-    else:
-        raise NotImplementedError
-    return re.compile(pattern, re.U | re.X).findall(text)
-
-
-def normalize(text, lang="fr"):
-    if lang == "fr":
-        return unidecode(text.lower())
-    else:
-        raise NotImplementedError
 
 
 def prepare(text):
@@ -64,6 +45,11 @@ def word_frequency(word):
 
 def common_term(token):
     return token_frequency(token) > 1000  # TODO: Take a % of nb of docs.
+
+
+def score_ngram(result, query):
+    score = compare_ngrams(result.name, query)
+    result.score += score
 
 
 class Result(object):
@@ -120,8 +106,8 @@ class Token(object):
         if DB.exists(self.key):
             self.db_key = self.key
 
-    def make_fuzzy(self):
-        neighbors = self.neighbors
+    def make_fuzzy(self, fuzzy):
+        neighbors = make_fuzzy(self.original, fuzzy)
         keys = []
         if neighbors:
             for neighbor in neighbors:
@@ -140,10 +126,6 @@ class Token(object):
         self.autocomplete_keys = DB.keys(key)
 
     @property
-    def neighbors(self):
-        return make_fuzzy(self.original)
-
-    @property
     def is_common(self):
         return self.frequency > 1000
 
@@ -156,16 +138,6 @@ class Token(object):
     @property
     def is_fuzzy(self):
         return not self.db_key and self.fuzzy_keys
-
-
-def score_ngram(result, query):
-    # TODO: case and accents.
-    score = ngram.NGram.compare(result.name, query)
-    result.score += score
-
-
-def keys_sets_temp_key(keys_sets):
-    return 'kstmp|{}'.format('.'.join(keys_sets))
 
 
 class Empty(Exception):
@@ -201,7 +173,8 @@ class Search(object):
         ok_keys = [t.db_key for t in ok_tokens]
         ids = self.intersect(ok_keys)
         if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
-           or not pending_tokens:
+           or (not self.fuzzy and not pending_tokens):
+            logging.debug('Enough results with only rare tokens %s', ok_tokens)
             return self.render(ids)
         # Try to autocomplete
         self.last_token.autocomplete()
@@ -210,22 +183,24 @@ class Search(object):
             keys = [t.db_key for t in ok_tokens if not t.is_last]
             ids.update(self.intersect(keys + [key]))
         if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
-           or not pending_tokens:
+           or (not self.fuzzy and not pending_tokens):
+            logging.debug('Enough results after autocomplete %s', ok_tokens)
             return self.render(ids)
-        # Retrieve not found.
-        not_found = []
-        for token in pending_tokens:
-            if not token.db_key:
-                not_found.append(token)
-        if not_found and self.fuzzy:
+        if self.fuzzy:
+            # Retrieve not found.
+            not_found = []
+            for token in pending_tokens:
+                if not token.db_key:
+                    not_found.append(token)
+            logging.debug('Not found %s', not_found)
             not_found.sort(key=lambda t: len(t), reverse=True)
-            try_one = not_found[0]  # Take the longest one.
-            print('trying with', try_one)
-            try_one.make_fuzzy()
-            for key in try_one.fuzzy_keys:
-                ids = self.intersect(ok_keys + [key])
-                if ids:
-                    return self.render(ids)
+            for try_one in not_found:
+                if len(ids) < self.limit:
+                    logging.debug('Going fuzzy with %s', try_one)
+                    try_one.make_fuzzy(fuzzy=self.fuzzy)
+                    for key in try_one.fuzzy_keys:
+                        if len(ids) < self.limit:
+                            ids.update(self.intersect(ok_keys + [key]))
         return self.render(ids)
 
     def render(self, ids):
@@ -267,6 +242,6 @@ class Search(object):
             self.results.append(result)
 
 
-def search(query, match_all=False, fuzzy=0, limit=10, autocomplete=0):
+def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0):
     helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit)
     return helper(query)
