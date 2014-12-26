@@ -111,6 +111,12 @@ class Token(object):
         for key, count in keys:
             self.fuzzy_keys.append(key)
 
+    def autocomplete(self):
+        # TODO: find a way to limit number of results when word is small:
+        # - target only "rare" keys?
+        key = '{}*'.format(token_key(self.original))
+        self.autocomplete_keys = DB.keys(key)
+
     @property
     def neighbors(self):
         return make_fuzzy(self.original)
@@ -136,13 +142,6 @@ def score_ngram(result, query):
     result.score += score
 
 
-def retrieve_autocomplete_keys(token):
-    # TODO: find a way to limit number of results when word is small:
-    # - target only "rare" keys?
-    key = '{}*'.format(token_key(token))
-    return DB.keys(key)
-
-
 def keys_sets_temp_key(keys_sets):
     return 'kstmp|{}'.format('.'.join(keys_sets))
 
@@ -164,7 +163,6 @@ class Search(object):
         self.results = []
         ok_tokens = []
         pending_tokens = []
-        self.ids = []
         self.query = query
         self.preprocess(query)
         self.search_all()
@@ -180,7 +178,17 @@ class Search(object):
                 ok_tokens = commons[:1]
         ok_keys = [t.db_key for t in ok_tokens]
         ids = self.intersect(ok_keys)
-        if ids and len(ids) < self.HARD_LIMIT or not pending_tokens:
+        if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
+           or not pending_tokens:
+            return self.render(ids)
+        # Try to autocomplete
+        self.last_token.autocomplete()
+        ids = set([])  # We don't want duplicates.
+        for key in self.last_token.autocomplete_keys:
+            keys = [t.db_key for t in ok_tokens if not t.is_last]
+            ids.update(self.intersect(keys + [key]))
+        if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
+           or not pending_tokens:
             return self.render(ids)
         # Retrieve not found.
         not_found = []
@@ -207,7 +215,12 @@ class Search(object):
         return self.results[:self.limit]
 
     def preprocess(self, query):
-        self.tokens = [Token(t, position=i) for i, t in enumerate(prepare(query))]
+        self.tokens = []
+        for position, token in enumerate(prepare(query)):
+            token = Token(token, position=position)
+            self.tokens.append(token)
+        token.is_last = True
+        self.last_token = token
         self.tokens.sort(key=lambda x: len(x), reverse=True)
 
     def search_all(self):
