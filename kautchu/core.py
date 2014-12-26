@@ -17,10 +17,6 @@ def document_key(s):
     return 'd|{}'.format(s)
 
 
-def housenumber_key(s):
-    return 'h|{}'.format(s)
-
-
 def housenumber_lat_key(s):
     return 'lat|{}'.format(s)
 
@@ -91,13 +87,13 @@ class Result(object):
 
     def is_housenumber(self, tokens):
         for token in tokens:
-            hn_key = housenumber_key(self.id)
+            key = document_key(self.id)
             lat_key = housenumber_lat_key(token.original)
-            if DB.hexists(hn_key, lat_key):
+            if DB.hexists(key, lat_key):
                 self.housenumber = token.original
-                self.lat = DB.hget(hn_key, lat_key)
+                self.lat = DB.hget(key, lat_key)
                 lon_key = housenumber_lon_key(token.original)
-                self.lon = DB.hget(hn_key, lon_key)
+                self.lon = DB.hget(key, lon_key)
 
 
 class Token(object):
@@ -153,7 +149,7 @@ class Token(object):
     @property
     def frequency(self):
         if not hasattr(self, '_frequency'):
-            self._frequency = common_term(self.original)
+            self._frequency = token_frequency(self.original)
         return self._frequency
 
     @property
@@ -179,7 +175,7 @@ class Search(object):
 
     HARD_LIMIT = 100
 
-    def __init__(self, match_all=False, fuzzy=0, limit=10, autocomplete=0):
+    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=0):
         self.match_all = match_all
         self.fuzzy = fuzzy
         self.limit = limit
@@ -199,7 +195,7 @@ class Search(object):
         if not ok_tokens:  # Take the less common as basis.
             commons = [t for t in self.tokens if t.is_common]
             if commons:
-                commons.sort(lambda x: x.frequency, reverse=True)
+                commons.sort(lambda x: x.frequency)
                 ok_tokens = commons[:1]
         ok_keys = [t.db_key for t in ok_tokens]
         ids = self.intersect(ok_keys)

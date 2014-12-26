@@ -1,11 +1,10 @@
 import re
 
 from .core import (DB, prepare, token_key, normalize, document_key,
-                   housenumber_key, housenumber_lat_key, housenumber_lon_key)
+                   housenumber_lat_key, housenumber_lon_key)
 
 
-def index_housenumber(document):
-    key = housenumber_key(document['id'])
+def index_housenumber(key, document):
     DB.hset(key, housenumber_lat_key(document['housenumber']), document['lat'])
     DB.hset(key, housenumber_lon_key(document['housenumber']), document['lon'])
 
@@ -18,17 +17,18 @@ def index_field(key, string, boost=1.0):
 
 def index_document(document):
     key = document_key(document['id'])
+    exists = DB.exists(key)
     if document['type'] == 'housenumber':
-        index_housenumber(document)
+        index_housenumber(key, document)
         index_field(key, document['housenumber'], boost=0.0)
-    if not DB.exists(key) or document['type'] != 'housenumber':
+    if not exists or document['type'] != 'housenumber':
         document.pop('housenumber', None)  # When we create the street from the
                                            # housenumber row.
         DB.hmset(key, document)
         name = document['name']
         index_field(key, name)
         city = document.get('city')
-        if city != name:
+        if city and city != name:
             index_field(key, city, boost=0.0)  # Unboost
 
 
