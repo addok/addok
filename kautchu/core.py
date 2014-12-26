@@ -4,9 +4,10 @@ import redis
 import ngram
 from unidecode import unidecode
 
+from .config import DB_SETTINGS
 from .fuzzy import fuzzy as make_fuzzy
 
-DB = redis.StrictRedis(host='localhost', port=6379, db=0)
+DB = redis.StrictRedis(**DB_SETTINGS)
 
 
 def token_key(s):
