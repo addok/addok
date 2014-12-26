@@ -1,22 +1,35 @@
 import re
 
-from .core import DB, prepare, token_key, normalize, document_key
+from .core import (DB, prepare, token_key, normalize, document_key,
+                   housenumber_key, housenumber_lat_key, housenumber_lon_key)
 
 
-def insert_field(key, string, boost=1.0):
+def index_housenumber(document):
+    key = housenumber_key(document['id'])
+    DB.hset(key, housenumber_lat_key(document['housenumber']), document['lat'])
+    DB.hset(key, housenumber_lon_key(document['housenumber']), document['lon'])
+
+
+def index_field(key, string, boost=1.0):
     els = list(prepare(string))
     for s in els:
         DB.zadd(token_key(normalize(s)), 1.0 / len(els) * boost, key)
 
 
-def insert_document(document):
+def index_document(document):
     key = document_key(document['id'])
-    DB.hmset(key, document)
-    name = document['name']
-    insert_field(key, name)
-    city = document.get('city')
-    if city != name:
-        insert_field(key, city, boost=0.0)  # Unboost
+    if document['type'] == 'housenumber':
+        index_housenumber(document)
+        index_field(key, document['housenumber'], boost=0.0)
+    if not DB.exists(key) or document['type'] != 'housenumber':
+        document.pop('housenumber', None)  # When we create the street from the
+                                           # housenumber row.
+        DB.hmset(key, document)
+        name = document['name']
+        index_field(key, name)
+        city = document.get('city')
+        if city != name:
+            index_field(key, city, boost=0.0)  # Unboost
 
 
 TYPES = [

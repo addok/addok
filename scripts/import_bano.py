@@ -1,7 +1,7 @@
 import csv
 
 
-from kautchu.import_utils import insert_document, split_housenumber
+from kautchu.import_utils import index_document, split_housenumber
 
 
 FIELDS = [
@@ -28,12 +28,10 @@ def row_to_doc(row):
     elif type_ in ['hamlet', 'place']:
         type_ = 'locality'
     doc = {
-        "id": row["source_id"],
+        "id": row["source_id"].split('-')[0],
         "importance": 0.0,
-        # "coordinate": {
-        #     "lat": row['lat'],
-        #     "lon": row['lon']
-        # },
+        "lat": row['lat'],
+        "lon": row['lon'],
         "postcode": row['postcode'],
         "city": row['city'],
         "context": context,
@@ -53,7 +51,6 @@ def row_to_doc(row):
 
     housenumber = row.get('housenumber')
     if housenumber:
-        return  # handle them later
         els = split_housenumber(housenumber)
         if els:
             doc['housenumber'] = els['number']
@@ -87,7 +84,7 @@ def import_data(filepath, limit=None):
             doc = row_to_doc(row)
             if not doc:
                 continue
-            insert_document(doc)
+            index_document(doc)
             count += 1
             if count % 1000 == 0:
                 print("Done", count)

@@ -17,6 +17,18 @@ def document_key(s):
     return 'd|{}'.format(s)
 
 
+def housenumber_key(s):
+    return 'h|{}'.format(s)
+
+
+def housenumber_lat_key(s):
+    return 'lat|{}'.format(s)
+
+
+def housenumber_lon_key(s):
+    return 'lon|{}'.format(s)
+
+
 def tokenize(text, lang="fr"):
     """
     Split text into a list of tokens.
@@ -69,10 +81,23 @@ class Result(object):
         city = getattr(self, 'city', None)
         if city:
             label = '{} {}'.format(label, city)
+        housenumber = getattr(self, 'housenumber', None)
+        if housenumber:
+            label = '{} {}'.format(housenumber, label)
         return label
 
     def __repr__(self):
         return '<{} - {} ({})>'.format(str(self), self.id, self.score)
+
+    def is_housenumber(self, tokens):
+        for token in tokens:
+            hn_key = housenumber_key(self.id)
+            lat_key = housenumber_lat_key(token.original)
+            if DB.hexists(hn_key, lat_key):
+                self.housenumber = token.original
+                self.lat = DB.hget(hn_key, lat_key)
+                lon_key = housenumber_lon_key(token.original)
+                self.lon = DB.hget(hn_key, lon_key)
 
 
 class Token(object):
@@ -240,7 +265,9 @@ class Search(object):
 
     def compute_results(self, ids):
         for _id in ids:
-            self.results.append(Result(DB.hgetall(_id)))
+            result = Result(DB.hgetall(_id))
+            result.is_housenumber(self.tokens)
+            self.results.append(result)
 
 
 def search(query, match_all=False, fuzzy=0, limit=10, autocomplete=0):
