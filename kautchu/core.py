@@ -171,6 +171,7 @@ class Search(object):
 
     def __call__(self, query):
         self.results = []
+        self.bucket = set([])  # No duplicates.
         ok_tokens = []
         not_found = []
         common_tokens = []
@@ -188,42 +189,39 @@ class Search(object):
         if not ok_tokens and common_tokens:  # Take the less common as basis.
             ok_tokens = common_tokens[:1]
         ok_keys = [t.db_key for t in ok_tokens]
-        ids = self.intersect(ok_keys)
-        if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
-           or (not self.fuzzy and not not_found):
+        self.add_to_bucket(ok_keys)
+        if self.bucket_full or (not self.fuzzy and not not_found):
             logging.debug('Enough results with only rare tokens %s', ok_tokens)
-            return self.render(ids)
+            return self.render()
         for token in common_tokens:
-            if token not in ok_tokens and ids and len(ids) >= self.HARD_LIMIT:
+            if token not in ok_tokens and self.bucket_overflow:
                 ok_tokens.append(token)
                 ok_keys = [t.db_key for t in ok_tokens]
-                ids = self.intersect(ok_keys)
+                self.new_bucket(ok_keys)
         # Try to autocomplete
         self.last_token.autocomplete()
-        ids = set([])  # We don't want duplicates.
         for key in self.last_token.autocomplete_keys:
             keys = [t.db_key for t in ok_tokens if not t.is_last]
-            if len(ids) < self.HARD_LIMIT:
-                ids.update(self.intersect(keys + [key]))
-        if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
-           or (not self.fuzzy and not not_found):
+            if not self.bucket_overflow:
+                self.add_to_bucket(keys + [key])
+        if self.bucket_full or (not self.fuzzy and not not_found):
             logging.debug('Enough results after autocomplete %s', ok_tokens)
-            return self.render(ids)
+            return self.render()
         if self.fuzzy:
             # Retrieve not found.
             logging.debug('Not found %s', not_found)
             not_found.sort(key=lambda t: len(t), reverse=True)
             for try_one in not_found:
-                if len(ids) < self.limit:
+                if self.bucket_dry:
                     logging.debug('Going fuzzy with %s', try_one)
                     try_one.make_fuzzy(fuzzy=self.fuzzy)
                     for key in try_one.fuzzy_keys:
-                        if len(ids) < self.limit:
-                            ids.update(self.intersect(ok_keys + [key]))
-        return self.render(ids)
+                        if self.bucket_dry:
+                            self.add_to_bucket(ok_keys + [key])
+        return self.render()
 
-    def render(self, ids):
-        self.compute_results(ids)
+    def render(self):
+        self.compute_results()
         # Score and sort.
         for r in self.results:
             score_ngram(r, self.query)
@@ -252,13 +250,32 @@ class Search(object):
             DB.zinterstore(self.query, keys)
             ids = DB.zrevrange(self.query, 0, self.HARD_LIMIT - 1)
             DB.delete(self.query)
-        return ids
+        return set(ids)
 
-    def compute_results(self, ids):
-        for _id in ids:
+    def add_to_bucket(self, keys):
+        self.bucket.update(self.intersect(keys))
+
+    def new_bucket(self, keys):
+        self.bucket = self.intersect(keys)
+
+    def compute_results(self):
+        for _id in self.bucket:
             result = Result(DB.hgetall(_id))
             result.match_housenumber(self.tokens)
             self.results.append(result)
+
+    @property
+    def bucket_full(self):
+        l = len(self.bucket)
+        return l >= self.limit and l < self.HARD_LIMIT
+
+    @property
+    def bucket_overflow(self):
+        return len(self.bucket) >= self.HARD_LIMIT
+
+    @property
+    def bucket_dry(self):
+        return len(self.bucket) < self.limit
 
 
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0):

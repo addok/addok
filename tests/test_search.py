@@ -57,6 +57,23 @@ def test_should_give_priority_to_best_match2(street):
     assert results[0].id == street['id']
 
 
+def test_should_give_priority_to_best_match3(street):
+    street['name'] = "rue de Lille"
+    street['city'] = "Douai"
+    index_document(street)
+    other = street.copy()
+    other['id'] = "xxxx321456"
+    other['name'] = "rue de Douai"
+    other['city'] = "Lille"
+    index_document(other)
+    results = search("rue de lille douai")
+    assert len(results) == 2
+    assert results[0].id == street['id']
+    results = search("rue de douai lille")
+    assert len(results) == 2
+    assert results[0].id == other['id']
+
+
 def test_should_be_fuzzy_of_1_by_default(city):
     city['name'] = "Andrésy"
     index_document(city)
