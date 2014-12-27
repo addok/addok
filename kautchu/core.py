@@ -201,6 +201,13 @@ class Search(object):
         if self.bucket_full or (not self.fuzzy and not not_found):
             logging.debug('Enough results after autocomplete %s', ok_tokens)
             return self.render()
+        if self.bucket_empty:
+            for token in ok_tokens:
+                keys = ok_keys[:]
+                keys.remove(token.db_key)
+                self.add_to_bucket(keys)
+                if self.bucket_full:
+                    break
         if self.fuzzy:
             # Retrieve not found.
             logging.debug('Not found %s', not_found)
