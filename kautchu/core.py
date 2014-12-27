@@ -62,7 +62,7 @@ class Result(object):
     def __str__(self):
         label = self.name
         city = getattr(self, 'city', None)
-        if city:
+        if city and city != self.name:
             label = '{} {}'.format(label, city)
         housenumber = getattr(self, 'housenumber', None)
         if housenumber:
