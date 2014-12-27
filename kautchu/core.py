@@ -2,10 +2,10 @@ import logging
 
 import redis
 
-from .config import DB_SETTINGS
+from . import config
 from .utils import make_fuzzy, compare_ngrams, tokenize, normalize
 
-DB = redis.StrictRedis(**DB_SETTINGS)
+DB = redis.StrictRedis(**config.DB_SETTINGS)
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -143,7 +143,7 @@ class Token(object):
 
     @property
     def is_common(self):
-        return self.frequency > 1000
+        return self.frequency > config.COMMON_THRESHOLD
 
     @property
     def frequency(self):
@@ -161,8 +161,6 @@ class Empty(Exception):
 
 
 class Search(object):
-
-    HARD_LIMIT = 100
 
     def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=0):
         self.match_all = match_all
@@ -212,12 +210,13 @@ class Search(object):
             logging.debug('Not found %s', not_found)
             not_found.sort(key=lambda t: len(t), reverse=True)
             for try_one in not_found:
-                if self.bucket_dry:
-                    logging.debug('Going fuzzy with %s', try_one)
-                    try_one.make_fuzzy(fuzzy=self.fuzzy)
-                    for key in try_one.fuzzy_keys:
-                        if self.bucket_dry:
-                            self.add_to_bucket(ok_keys + [key])
+                if self.bucket_full:
+                    break
+                logging.debug('Going fuzzy with %s', try_one)
+                try_one.make_fuzzy(fuzzy=self.fuzzy)
+                for key in try_one.fuzzy_keys:
+                    if self.bucket_dry:
+                        self.add_to_bucket(ok_keys + [key])
         return self.render()
 
     def render(self):
@@ -248,7 +247,7 @@ class Search(object):
         ids = []
         if keys:
             DB.zinterstore(self.query, keys)
-            ids = DB.zrevrange(self.query, 0, self.HARD_LIMIT - 1)
+            ids = DB.zrevrange(self.query, 0, config.BUCKET_LIMIT - 1)
             DB.delete(self.query)
         return set(ids)
 
@@ -267,15 +266,19 @@ class Search(object):
     @property
     def bucket_full(self):
         l = len(self.bucket)
-        return l >= self.limit and l < self.HARD_LIMIT
+        return l >= self.limit and l < config.BUCKET_LIMIT
 
     @property
     def bucket_overflow(self):
-        return len(self.bucket) >= self.HARD_LIMIT
+        return len(self.bucket) >= config.BUCKET_LIMIT
 
     @property
     def bucket_dry(self):
         return len(self.bucket) < self.limit
+
+    @property
+    def bucket_empty(self):
+        return not self.bucket
 
 
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0):
