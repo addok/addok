@@ -1,6 +1,7 @@
 import pytest
 
-from kautchu.utils import make_fuzzy, compare_ngrams, tokenize, normalize
+from kautchu.utils import (make_fuzzy, compare_ngrams, tokenize, normalize,
+                           alphanumerize)
 
 
 def test_make_fuzzy_should_extend_term():
@@ -55,5 +56,13 @@ def test_tokenize(input, output):
     ['éêàù', 'eeau'],
     ['Étretat', 'etretat'],
 ])
-def test_normalize_should_lower_case(input, output):
+def test_normalize(input, output):
     assert normalize(input) == output
+
+
+@pytest.mark.parametrize('input,output', [
+    ["rue d'Andrésy", 'rue d Andrésy'],
+    ['   ', ' '],
+])
+def test_alphanumerize(input, output):
+    assert alphanumerize(input) == output

@@ -30,10 +30,10 @@ def make_fuzzy(word, max=1):
     return neighbors
 
 
-def compare_ngrams(left, right):
-    left = unidecode(left.lower())
-    right = unidecode(right.lower())
-    return NGram.compare(left, right)
+def compare_ngrams(left, right, N=2, pad_len=0):
+    left = alphanumerize(unidecode(left.lower()))
+    right = alphanumerize(unidecode(right.lower()))
+    return NGram.compare(left, right, N=N, pad_len=pad_len)
 
 
 def tokenize(text, lang="fr"):
@@ -50,3 +50,7 @@ def normalize(text, lang="fr"):
         return unidecode(text.lower())
     else:
         raise NotImplementedError
+
+
+def alphanumerize(text):
+    return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
