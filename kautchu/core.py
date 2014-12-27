@@ -48,8 +48,8 @@ def common_term(token):
 
 
 def score_ngram(result, query):
-    score = compare_ngrams(result.name, query)
-    result.score += score
+    score = compare_ngrams(str(result), query)
+    result.score = score
 
 
 class Result(object):
