@@ -17,12 +17,8 @@ def document_key(s):
     return 'd|{}'.format(s)
 
 
-def housenumber_lat_key(s):
-    return 'lat|{}'.format(s)
-
-
-def housenumber_lon_key(s):
-    return 'lon|{}'.format(s)
+def housenumber_field_key(s):
+    return 'h|{}'.format(s)
 
 
 def prepare(text):
@@ -75,12 +71,12 @@ class Result(object):
     def match_housenumber(self, tokens):
         for token in tokens:
             key = document_key(self.id)
-            lat_key = housenumber_lat_key(token.original)
-            if DB.hexists(key, lat_key):
-                self.housenumber = token.original
-                self.lat = DB.hget(key, lat_key)
-                lon_key = housenumber_lon_key(token.original)
-                self.lon = DB.hget(key, lon_key)
+            field = housenumber_field_key(token.original)
+            if DB.hexists(key, field):
+                raw, lat, lon = DB.hget(key, field).decode().split('|')
+                self.housenumber = raw
+                self.lat = lat
+                self.lon = lon
 
     def to_geojson(self):
         properties = {"label": str(self)}

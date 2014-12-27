@@ -1,13 +1,13 @@
 import re
 
 from .core import (DB, prepare, token_key, normalize, document_key,
-                   housenumber_lat_key, housenumber_lon_key)
+                   housenumber_field_key)
 
 
 def index_housenumber(key, document):
     housenumber = normalize(document['housenumber'])
-    DB.hset(key, housenumber_lat_key(housenumber), document['lat'])
-    DB.hset(key, housenumber_lon_key(housenumber), document['lon'])
+    val = '|'.join([document['housenumber'], document['lat'], document['lon']])
+    DB.hset(key, housenumber_field_key(housenumber), val)
 
 
 def index_field(key, string, boost=1.0):
