@@ -82,6 +82,22 @@ class Result(object):
                 lon_key = housenumber_lon_key(token.original)
                 self.lon = DB.hget(key, lon_key)
 
+    def to_geojson(self):
+        properties = {"label": str(self)}
+        keys = ['name', 'type', 'city', 'housenumber', 'score']
+        for key in keys:
+            val = getattr(self, key, None)
+            if val:
+                properties[key] = val
+        return {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [float(self.lon), float(self.lat)]
+            },
+            "properties": properties
+        }
+
 
 class Token(object):
 
