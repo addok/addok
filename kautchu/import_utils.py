@@ -5,8 +5,9 @@ from .core import (DB, prepare, token_key, normalize, document_key,
 
 
 def index_housenumber(key, document):
-    DB.hset(key, housenumber_lat_key(document['housenumber']), document['lat'])
-    DB.hset(key, housenumber_lon_key(document['housenumber']), document['lon'])
+    housenumber = normalize(document['housenumber'])
+    DB.hset(key, housenumber_lat_key(housenumber), document['lat'])
+    DB.hset(key, housenumber_lon_key(housenumber), document['lon'])
 
 
 def index_field(key, string, boost=1.0):

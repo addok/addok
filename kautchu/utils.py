@@ -1,4 +1,6 @@
 import re
+from pathlib import Path
+
 
 from ngram import NGram
 from unidecode import unidecode
@@ -47,10 +49,34 @@ def tokenize(text, lang="fr"):
 
 def normalize(text, lang="fr"):
     if lang == "fr":
-        return unidecode(text.lower())
+        return synonymize(unidecode(text.lower()))
     else:
         raise NotImplementedError
 
 
 def alphanumerize(text):
     return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
+
+
+SYNONYMS = {}
+
+
+def load_synonyms():
+    directory = Path(__file__).parent
+    with directory.joinpath('resources/synonyms.txt').open() as f:
+        for line in f:
+            if line.startswith('#'):
+                continue
+            synonyms, wanted = line.split('=>')
+            wanted = wanted.strip()
+            synonyms = synonyms.split(',')
+            for synonym in synonyms:
+                synonym = synonym.strip()
+                if not synonym:
+                    continue
+                SYNONYMS[synonym] = wanted
+load_synonyms()
+
+
+def synonymize(token):
+    return SYNONYMS.get(token, token)

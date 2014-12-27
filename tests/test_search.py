@@ -104,3 +104,10 @@ def test_should_do_autocomplete_on_last_term(street):
     index_document(street)
     assert search('avenue wambre')
     assert not search('wambre avenue')
+
+
+def test_synonyms_should_be_replaced(street, monkeypatch):
+    monkeypatch.setattr('kautchu.utils.SYNONYMS', {'bd': 'boulevard'})
+    street['name'] = 'boulevard des Fleurs'
+    index_document(street)
+    assert search('bd')
