@@ -20,16 +20,16 @@ def index_document(document):
     exists = DB.exists(key)
     if document['type'] == 'housenumber':
         index_housenumber(key, document)
-        index_field(key, document['housenumber'], boost=0.0)
+        index_field(key, document['housenumber'])
     if not exists or document['type'] != 'housenumber':
         document.pop('housenumber', None)  # When we create the street from the
                                            # housenumber row.
         DB.hmset(key, document)
         name = document['name']
-        index_field(key, name)
+        index_field(key, name, boost=3.0)
         city = document.get('city')
         if city and city != name:
-            index_field(key, city, boost=0.0)  # Unboost
+            index_field(key, city)
 
 
 TYPES = [
