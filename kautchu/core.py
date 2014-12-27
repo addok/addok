@@ -72,7 +72,7 @@ class Result(object):
     def __repr__(self):
         return '<{} - {} ({})>'.format(str(self), self.id, self.score)
 
-    def is_housenumber(self, tokens):
+    def match_housenumber(self, tokens):
         for token in tokens:
             key = document_key(self.id)
             lat_key = housenumber_lat_key(token.original)
@@ -172,42 +172,45 @@ class Search(object):
     def __call__(self, query):
         self.results = []
         ok_tokens = []
-        pending_tokens = []
+        not_found = []
+        common_tokens = []
         self.query = query
         self.preprocess(query)
         self.search_all()
         for token in self.tokens:
-            if token.db_key and not token.is_common:
+            if token.is_common:
+                common_tokens.append(token)
+            elif token.db_key:
                 ok_tokens.append(token)
             else:
-                pending_tokens.append(token)
-        if not ok_tokens:  # Take the less common as basis.
-            commons = [t for t in self.tokens if t.is_common]
-            if commons:
-                commons.sort(lambda x: x.frequency)
-                ok_tokens = commons[:1]
+                not_found.append(token)
+        common_tokens.sort(key=lambda x: x.frequency)
+        if not ok_tokens and common_tokens:  # Take the less common as basis.
+            ok_tokens = common_tokens[:1]
         ok_keys = [t.db_key for t in ok_tokens]
         ids = self.intersect(ok_keys)
         if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
-           or (not self.fuzzy and not pending_tokens):
+           or (not self.fuzzy and not not_found):
             logging.debug('Enough results with only rare tokens %s', ok_tokens)
             return self.render(ids)
+        for token in common_tokens:
+            if token not in ok_tokens and ids and len(ids) >= self.HARD_LIMIT:
+                ok_tokens.append(token)
+                ok_keys = [t.db_key for t in ok_tokens]
+                ids = self.intersect(ok_keys)
         # Try to autocomplete
         self.last_token.autocomplete()
         ids = set([])  # We don't want duplicates.
         for key in self.last_token.autocomplete_keys:
             keys = [t.db_key for t in ok_tokens if not t.is_last]
-            ids.update(self.intersect(keys + [key]))
+            if len(ids) < self.HARD_LIMIT:
+                ids.update(self.intersect(keys + [key]))
         if (ids and len(ids) >= self.limit and len(ids) < self.HARD_LIMIT)\
-           or (not self.fuzzy and not pending_tokens):
+           or (not self.fuzzy and not not_found):
             logging.debug('Enough results after autocomplete %s', ok_tokens)
             return self.render(ids)
         if self.fuzzy:
             # Retrieve not found.
-            not_found = []
-            for token in pending_tokens:
-                if not token.db_key:
-                    not_found.append(token)
             logging.debug('Not found %s', not_found)
             not_found.sort(key=lambda t: len(t), reverse=True)
             for try_one in not_found:
@@ -254,7 +257,7 @@ class Search(object):
     def compute_results(self, ids):
         for _id in ids:
             result = Result(DB.hgetall(_id))
-            result.is_housenumber(self.tokens)
+            result.match_housenumber(self.tokens)
             self.results.append(result)
 
 
