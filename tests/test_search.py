@@ -77,8 +77,8 @@ def test_should_give_priority_to_best_match3(street):
 def test_should_be_fuzzy_of_1_by_default(city):
     city['name'] = "Andrésy"
     index_document(city)
-    assert search('andrezy')
-    assert not search('andrezi')
+    assert search('antresy')
+    assert not search('antresu')
 
 
 def test_fuzzy_should_work_with_inversion(city):
@@ -107,7 +107,8 @@ def test_should_do_autocomplete_on_last_term(street):
 
 
 def test_synonyms_should_be_replaced(street, monkeypatch):
-    monkeypatch.setattr('addok.utils.SYNONYMS', {'bd': 'boulevard'})
+    monkeypatch.setattr('addok.textutils.default.SYNONYMS',
+                        {'bd': 'boulevard'})
     street['name'] = 'boulevard des Fleurs'
     index_document(street)
     assert search('bd')

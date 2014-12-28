@@ -1,19 +1,19 @@
 import re
 
-from .core import (DB, prepare, token_key, normalize, document_key,
-                   housenumber_field_key)
+from .core import DB, token_key, document_key, housenumber_field_key
+from .pipeline import preprocess
 
 
 def index_housenumber(key, document):
-    housenumber = normalize(document['housenumber'])
     val = '|'.join([document['housenumber'], document['lat'], document['lon']])
-    DB.hset(key, housenumber_field_key(housenumber), val)
+    for hn in preprocess(document['housenumber']):
+        DB.hset(key, housenumber_field_key(hn), val)
 
 
 def index_field(key, string, boost=1.0):
-    els = list(prepare(string))
+    els = list(preprocess(string))
     for s in els:
-        DB.zadd(token_key(normalize(s)), 1.0 / len(els) * boost, key)
+        DB.zadd(token_key(s), 1.0 / len(els) * boost, key)
 
 
 def index_document(document):

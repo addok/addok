@@ -3,7 +3,8 @@ import logging
 import redis
 
 from . import config
-from .utils import make_fuzzy, compare_ngrams, tokenize, normalize
+from .pipeline import preprocess
+from .textutils.default import make_fuzzy, compare_ngrams, normalize
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)
 logging.basicConfig(level=logging.DEBUG)
@@ -19,11 +20,6 @@ def document_key(s):
 
 def housenumber_field_key(s):
     return 'h|{}'.format(s)
-
-
-def prepare(text):
-    for s in tokenize(text):
-        yield normalize(s)
 
 
 def token_key_frequency(key):
@@ -232,7 +228,7 @@ class Search(object):
 
     def preprocess(self, query):
         self.tokens = []
-        for position, token in enumerate(prepare(query)):
+        for position, token in enumerate(preprocess(query)):
             token = Token(token, position=position)
             self.tokens.append(token)
         token.is_last = True
