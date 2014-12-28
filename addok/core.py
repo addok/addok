@@ -55,6 +55,9 @@ class Result(object):
         label = self.name
         city = getattr(self, 'city', None)
         if city and city != self.name:
+            postcode = getattr(self, 'postcode', None)
+            if postcode:
+                label = '{} {}'.format(label, postcode)
             label = '{} {}'.format(label, city)
         housenumber = getattr(self, 'housenumber', None)
         if housenumber:
@@ -76,7 +79,7 @@ class Result(object):
 
     def to_geojson(self):
         properties = {"label": str(self)}
-        keys = ['name', 'type', 'city', 'housenumber', 'score']
+        keys = ['name', 'type', 'city', 'housenumber', 'score', 'postcode']
         for key in keys:
             val = getattr(self, key, None)
             if val:
@@ -147,6 +150,9 @@ class Token(object):
     def is_fuzzy(self):
         return not self.db_key and self.fuzzy_keys
 
+    def isdigit(self):
+        return self.original.isdigit()
+
 
 class Empty(Exception):
     pass
@@ -209,6 +215,8 @@ class Search(object):
             logging.debug('Not found %s', not_found)
             not_found.sort(key=lambda t: len(t), reverse=True)
             for try_one in not_found:
+                if try_one.isdigit():
+                    continue
                 if self.bucket_full:
                     break
                 logging.debug('Going fuzzy with %s', try_one)

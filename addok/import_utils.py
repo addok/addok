@@ -31,6 +31,10 @@ def index_document(document):
         city = document.get('city')
         if city and city != name:
             index_field(key, city)
+        postcode = document.get('postcode')
+        if postcode:
+            boost = 1.2 if document['type'] == 'city' else 1
+            index_field(key, postcode, boost=boost)
 
 
 TYPES = [
