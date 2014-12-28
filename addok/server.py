@@ -2,7 +2,7 @@ import json
 
 from werkzeug.wrappers import Request, Response
 
-from kautchu.core import search
+from addok.core import search
 
 
 def app(environ, start_response):

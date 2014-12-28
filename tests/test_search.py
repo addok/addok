@@ -1,5 +1,5 @@
-from kautchu.core import search
-from kautchu.import_utils import index_document
+from addok.core import search
+from addok.import_utils import index_document
 
 
 def test_should_match_name(street):
@@ -107,7 +107,7 @@ def test_should_do_autocomplete_on_last_term(street):
 
 
 def test_synonyms_should_be_replaced(street, monkeypatch):
-    monkeypatch.setattr('kautchu.utils.SYNONYMS', {'bd': 'boulevard'})
+    monkeypatch.setattr('addok.utils.SYNONYMS', {'bd': 'boulevard'})
     street['name'] = 'boulevard des Fleurs'
     index_document(street)
     assert search('bd')

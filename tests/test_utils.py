@@ -1,7 +1,7 @@
 import pytest
 
-from kautchu.utils import (make_fuzzy, compare_ngrams, tokenize, normalize,
-                           alphanumerize, synonymize)
+from addok.utils import (make_fuzzy, compare_ngrams, tokenize, normalize,
+                         alphanumerize, synonymize)
 
 
 def test_make_fuzzy_should_extend_term():
@@ -75,5 +75,5 @@ def test_alphanumerize(input, output):
 def test_synonymize(input, output, monkeypatch):
     # Make sure we control synonyms.
     SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
-    monkeypatch.setattr('kautchu.utils.SYNONYMS', SYNONYMS)
+    monkeypatch.setattr('addok.utils.SYNONYMS', SYNONYMS)
     assert synonymize(input) == output

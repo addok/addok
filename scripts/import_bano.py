@@ -1,7 +1,7 @@
 import csv
 
 
-from kautchu.import_utils import index_document, split_housenumber
+from addok.import_utils import index_document, split_housenumber
 
 
 FIELDS = [
