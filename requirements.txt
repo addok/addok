@@ -1,3 +1,4 @@
+docopt==0.6.2
 ngram==3.3.0
 redis==2.10.3
 Unidecode==0.04.17

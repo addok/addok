@@ -4,10 +4,9 @@ import redis
 
 from . import config
 from .pipeline import preprocess
-from .textutils.default import make_fuzzy, compare_ngrams, normalize
+from .textutils.default import make_fuzzy, compare_ngrams
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)
-logging.basicConfig(level=logging.DEBUG)
 
 
 def token_key(s):
@@ -28,11 +27,6 @@ def token_key_frequency(key):
 
 def token_frequency(token):
     return token_key_frequency(token_key(token))
-
-
-def word_frequency(word):
-    token = normalize(word)
-    return token_frequency(token)
 
 
 def common_term(token):

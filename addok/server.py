@@ -2,7 +2,7 @@ import json
 
 from werkzeug.wrappers import Request, Response
 
-from addok.core import search
+from .core import search
 
 
 def app(environ, start_response):
@@ -20,8 +20,3 @@ def app(environ, start_response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
     return response(environ, start_response)
-
-
-if __name__ == '__main__':
-    from werkzeug.serving import run_simple
-    run_simple('127.0.0.1', 7878, app, use_debugger=True, use_reloader=True)
