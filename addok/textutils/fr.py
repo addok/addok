@@ -15,11 +15,11 @@ def _stemmize(s):
             ("(?<=g)u(?=[aeio])", ""),
             ("c(?=[aou])", "k"),
             ("(?<=[aeiouy])s(?=[aeiouy])", "z"),
-            ("q", "k"),
+            ("qu?", "k"),
             ("cc(?=[ie])", "s"),  # Others will hit the c => k and deduplicate
             ("ck", "k"),
             ("ph", "f"),
-            ("(?<=t)h", ""),
+            ("(?<=[tg])h", ""),
             ("sc", "s"),
             ("w", "v"),
             ("c(?=[eiy])", "s"),
@@ -28,7 +28,7 @@ def _stemmize(s):
             ("s$", ""),
             ("(?<=u)l?x$", ""),  # eaux, eux, aux, aulx
             ("(?<=u)lt$", "t"),
-            ("[td]$", ""),
+            ("[tdg]$", ""),
             ("(?<=\\w\\w)(e$)", ""),  # Remove "e" at last position only if it
                                       # follows two letters?
             ("(?<=[aeiou])(m)(?=[pbg])", "n"),
