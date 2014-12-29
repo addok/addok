@@ -1,5 +1,6 @@
 import logging
-import readline  # Enable history in cli.
+import readline
+import time
 
 from addok.core import DB, preprocess, search, document_key, token_frequency
 
@@ -83,9 +84,11 @@ class Cli(object):
                     state -= 1
 
     def do_search(self, query):
+        start = time.time()
         for result in search(query):
             print('{} ({} | {})'.format(white(result), blue(result.score),
                                         blue(result.id)))
+        print(magenta("({} seconds)".format(time.time() - start)))
 
     def do_tokenize(self, string):
         print(white(' '.join(indexed_string(string))))
