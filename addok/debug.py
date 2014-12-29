@@ -71,7 +71,16 @@ class Cli(object):
     COMMANDS = ('SEARCH', 'DOC', 'TOKENIZE', 'DEBUG', 'FREQUENCY')
 
     def __init__(self):
-        pass
+        readline.set_completer(self.completer)
+        readline.parse_and_bind("tab: complete")
+
+    def completer(self, text, state):
+        for cmd in self.COMMANDS:
+            if cmd.startswith(text.upper()):
+                if not state:
+                    return cmd + " "
+                else:
+                    state -= 1
 
     def do_search(self, query):
         for result in search(query):
@@ -116,6 +125,7 @@ class Cli(object):
 
     def __call__(self):
         self.do_help()
+
         while 1:
             try:
                 command = self.prompt()
