@@ -176,10 +176,14 @@ class Search(object):
             else:
                 not_found.append(token)
         common_tokens.sort(key=lambda x: x.frequency)
+        logging.debug('Taken tokens %s', ok_tokens)
+        logging.debug('Common tokens %s', common_tokens)
+        logging.debug('Not found tokens %s', not_found)
         if not ok_tokens and common_tokens:  # Take the less common as basis.
             ok_tokens = common_tokens[:1]
         ok_keys = [t.db_key for t in ok_tokens]
         self.add_to_bucket(ok_keys)
+        logging.debug('%s keys in bucket so far', len(self.bucket))
         if self.bucket_full or (not self.fuzzy and not not_found):
             logging.debug('Enough results with only rare tokens %s', ok_tokens)
             return self.render()
@@ -190,9 +194,10 @@ class Search(object):
                 self.new_bucket(ok_keys)
         # Try to autocomplete
         self.last_token.autocomplete()
+        keys = [t.db_key for t in ok_tokens if not t.is_last]
         for key in self.last_token.autocomplete_keys:
-            keys = [t.db_key for t in ok_tokens if not t.is_last]
             if not self.bucket_overflow:
+                logging.debug('Trying autocomplete with %s', key)
                 self.add_to_bucket(keys + [key])
         if self.bucket_full or (not self.fuzzy and not not_found):
             logging.debug('Enough results after autocomplete %s', ok_tokens)
@@ -205,8 +210,6 @@ class Search(object):
                 if self.bucket_full:
                     break
         if self.fuzzy:
-            # Retrieve not found.
-            logging.debug('Not found %s', not_found)
             not_found.sort(key=lambda t: len(t), reverse=True)
             for try_one in not_found:
                 if try_one.isdigit():
