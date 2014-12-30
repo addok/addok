@@ -183,7 +183,6 @@ class Search(object):
             ok_tokens = common_tokens[:1]
         ok_keys = [t.db_key for t in ok_tokens]
         self.add_to_bucket(ok_keys)
-        logging.debug('%s keys in bucket so far', len(self.bucket))
         if self.bucket_full or (not self.fuzzy and not not_found):
             logging.debug('Enough results with only rare tokens %s', ok_tokens)
             return self.render()
@@ -256,10 +255,14 @@ class Search(object):
         return set(ids)
 
     def add_to_bucket(self, keys):
+        logging.debug('Adding to bucket with tokens %s', keys)
         self.bucket.update(self.intersect(keys))
+        logging.debug('%s ids in bucket so far', len(self.bucket))
 
     def new_bucket(self, keys):
+        logging.debug('New bucket with tokens %s', keys)
         self.bucket = self.intersect(keys)
+        logging.debug('%s ids in bucket so far', len(self.bucket))
 
     def compute_results(self):
         for _id in self.bucket:
