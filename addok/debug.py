@@ -2,7 +2,8 @@ import logging
 import readline
 import time
 
-from addok.core import DB, preprocess, search, document_key, token_frequency
+from addok.core import (DB, preprocess, search, document_key, token_frequency,
+                        token_key, Result)
 
 
 def doc_by_id(_id):
@@ -69,7 +70,9 @@ def white(s):
 
 class Cli(object):
 
-    COMMANDS = ('SEARCH', 'DOC', 'TOKENIZE', 'DEBUG', 'FREQUENCY')
+    COMMANDS = (
+        'SEARCH', 'DOC', 'TOKENIZE', 'DEBUG', 'FREQUENCY', 'INDEX', 'BESTSCORE'
+    )
 
     def __init__(self):
         readline.set_completer(self.completer)
@@ -104,6 +107,27 @@ class Cli(object):
 
     def do_frequency(self, word):
         print(white(word_frequency(word)))
+
+    def _print_field_index_details(self, field, _id):
+        for token in indexed_string(field):
+            print(
+                white(token),
+                blue(DB.zscore(token_key(token), document_key(_id))),
+                blue(DB.zrevrank(token_key(token), document_key(_id))),
+            )
+
+    def do_index(self, _id):
+        doc = doc_by_id(_id)
+        self._print_field_index_details(doc[b'name'].decode(), _id)
+        self._print_field_index_details(doc[b'postcode'].decode(), _id)
+        self._print_field_index_details(doc[b'city'].decode(), _id)
+
+    def do_bestscore(self, word):
+        key = token_key(indexed_string(word)[0])
+        for _id, score in DB.zrevrange(key, 0, 10, withscores=True):
+            doc = DB.hgetall(_id)
+            result = Result(doc)
+            print(white(result), blue(score), blue(result.id))
 
     def prompt(self):
         command = input("> ")
