@@ -39,6 +39,15 @@ def test_make_fuzzy_should_extend_term():
     assert set(make_fuzzy('mot')) == expected
 
 
+def test_make_fuzzy_should_remove_letter_if_world_is_long():
+    assert 'mt' not in make_fuzzy('mot')
+    assert 'rain' in make_fuzzy('train')
+    assert 'tain' in make_fuzzy('train')
+    assert 'trin' in make_fuzzy('train')
+    assert 'tran' in make_fuzzy('train')
+    assert 'trai' in make_fuzzy('train')
+
+
 def test_compare_ngrams_should_return_one_for_same_string():
     assert compare_ngrams('Lille', 'Lille') == 1
 

@@ -87,6 +87,12 @@ def test_fuzzy_should_work_with_inversion(city):
     assert search('andreys')
 
 
+def test_fuzzy_should_match_with_removal(city):
+    city['name'] = "Andrésy"
+    index_document(city)
+    assert search('andressy')
+
+
 def test_should_give_priority_to_housenumber_if_match(housenumber, street):
     housenumber['name'] = 'rue des Berges'
     housenumber['housenumber'] = 22
