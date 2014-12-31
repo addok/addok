@@ -94,6 +94,7 @@ def import_data(filepath, limit=None):
 
 if __name__ == '__main__':
     import_data('data.csv')
+    # import_data('idf.csv')
     # document = {
     #     "id": "590010020E",
     #     "name": "rue vicq d'Azir",

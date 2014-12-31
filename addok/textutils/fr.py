@@ -11,7 +11,7 @@ def _stemmize(s):
     significant."""
     if not s in _CACHE:
         rules = (
-            ("g(?=[eyi])", "j"),
+            ("(?<=[^g])g(?=[eyi])", "j"),
             ("(?<=g)u(?=[aeio])", ""),
             ("c(?=[aou])", "k"),
             ("(?<=[aeiouy])s(?=[aeiouy])", "z"),
@@ -19,7 +19,8 @@ def _stemmize(s):
             ("cc(?=[ie])", "s"),  # Others will hit the c => k and deduplicate
             ("ck", "k"),
             ("ph", "f"),
-            ("(?<=[tg])h", ""),
+            ("th$", "te"),  # This t sounds.
+            ("(?<=[^sc])h", ""),
             ("sc", "s"),
             ("w", "v"),
             ("c(?=[eiy])", "s"),
@@ -28,10 +29,11 @@ def _stemmize(s):
             ("s$", ""),
             ("(?<=u)l?x$", ""),  # eaux, eux, aux, aulx
             ("(?<=u)lt$", "t"),
-            ("[tdg]$", ""),
+            ("(?<=\\w)[dg]$", ""),
+            ("(?<=[^es])t$", ""),
+            ("(?<=[aeiou])(m)(?=[pbgf])", "n"),
             ("(?<=\\w\\w)(e$)", ""),  # Remove "e" at last position only if it
                                       # follows two letters?
-            ("(?<=[aeiou])(m)(?=[pbg])", "n"),
             ("(\\D)(?=\\1)", ""),  # Remove duplicate letters.
         )
         _s = s

@@ -55,6 +55,7 @@ def test_compare_ngrams_should_be_accent_unsensitive():
     ['ABCDEF', 'abcdef'],
     ['éêàù', 'eeau'],
     ['Étretat', 'etretat'],
+    ['Erispœ', 'erispoe'],
 ])
 def test_normalize(input, output):
     assert normalize(input) == output
