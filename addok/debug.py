@@ -3,7 +3,7 @@ import readline
 import time
 
 from addok.core import (DB, preprocess, search, document_key, token_frequency,
-                        token_key, Result)
+                        token_key, Result, Token)
 
 
 def doc_by_id(_id):
@@ -71,7 +71,8 @@ def white(s):
 class Cli(object):
 
     COMMANDS = (
-        'SEARCH', 'DOC', 'TOKENIZE', 'DEBUG', 'FREQUENCY', 'INDEX', 'BESTSCORE'
+        'SEARCH', 'DOC', 'TOKENIZE', 'DEBUG', 'FREQUENCY', 'INDEX',
+        'BESTSCORE', 'AUTOCOMPLETE'
     )
 
     def __init__(self):
@@ -107,6 +108,14 @@ class Cli(object):
 
     def do_frequency(self, word):
         print(white(word_frequency(word)))
+
+    def do_autocomplete(self, s):
+        s = list(preprocess(s))[0]
+        token = Token(s)
+        token.autocomplete()
+        keys = [k.split('|')[1] for k in token.autocomplete_keys]
+        print(white(keys))
+        print(magenta('({} elements)'.format(len(keys))))
 
     def _print_field_index_details(self, field, _id):
         for token in indexed_string(field):

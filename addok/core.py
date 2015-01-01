@@ -99,7 +99,7 @@ class Result(object):
 
 class Token(object):
 
-    def __init__(self, original, position, is_last=False):
+    def __init__(self, original, position=0, is_last=False):
         self.original = original
         self.position = position
         self.is_last = is_last
