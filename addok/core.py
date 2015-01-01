@@ -194,6 +194,12 @@ class Search(object):
         self.debug('Taken tokens %s', ok_tokens)
         self.debug('Common tokens %s', common_tokens)
         self.debug('Not found tokens %s', not_found)
+        if len(self.tokens) == len(common_tokens):
+            # Only common terms, shortcut to search
+            self.add_to_bucket([t.db_key for t in self.tokens])
+            if self.bucket_overflow:
+                self.debug('Only common terms and too much result. Return.')
+                return self.render()
         if not ok_tokens and common_tokens:
             # Only commons terms, try to reduce with autocomplete.
             self.debug('Only commons, trying autocomplete')
@@ -285,13 +291,13 @@ class Search(object):
         return set(ids)
 
     def add_to_bucket(self, keys):
-        self.debug('Adding to bucket with tokens %s', keys)
+        self.debug('Adding to bucket with keys %s', keys)
         limit = config.BUCKET_LIMIT - len(self.bucket)
         self.bucket.update(self.intersect(keys, limit))
         self.debug('%s ids in bucket so far', len(self.bucket))
 
     def new_bucket(self, keys):
-        self.debug('New bucket with tokens %s', keys)
+        self.debug('New bucket with keys %s', keys)
         self.bucket = self.intersect(keys)
         self.debug('%s ids in bucket so far', len(self.bucket))
 
