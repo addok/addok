@@ -10,7 +10,7 @@ DB_SETTINGS = {
 BUCKET_LIMIT = 100
 
 # Above this treshold, terms are considered commons.
-COMMON_THRESHOLD = 1000
+COMMON_THRESHOLD = 10000
 
 RESOURCES_ROOT = Path(__file__).parent.parent.parent.joinpath('resources')
 SYNONYMS_PATH = 'synonyms.txt'
