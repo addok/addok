@@ -1,7 +1,7 @@
 import csv
 
 
-from addok.import_utils import index_document
+from addok.index_utils import index_document
 from addok.textutils.fr import split_housenumber
 
 
@@ -96,7 +96,8 @@ def import_data(filepath, limit=None):
 if __name__ == '__main__':
     # import_data('data.csv')
     # import_data('idf.csv')
-    import_data('bretagne.csv')
+    # import_data('bretagne.csv')
+    import_data('midipyrenees.csv')
     # document = {
     #     "id": "590010020E",
     #     "name": "rue vicq d'Azir",
