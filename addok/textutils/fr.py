@@ -14,6 +14,7 @@ def _stemmize(s):
             ("(?<=[^g])g(?=[eyi])", "j"),
             ("(?<=g)u(?=[aeio])", ""),
             ("c(?=[aou])", "k"),
+            ("c$", "k"),
             ("(?<=[aeiouy])s(?=[aeiouy])", "z"),
             ("qu?", "k"),
             ("cc(?=[ie])", "s"),  # Others will hit the c => k and deduplicate

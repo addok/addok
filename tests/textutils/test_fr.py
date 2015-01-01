@@ -25,6 +25,9 @@ from addok.textutils.fr import _stemmize
     ['amfreville', 'anfrevil'],
     ['rimfort', 'rinfor'],
     ['pietricaggio', 'pietrikagio'],
+    ['abatesco', 'abatesko'],
+    ['albiosc', 'albiosk'],
+    ['desc', 'desk'],
 ])
 def test_normalize(input, output):
     assert _stemmize(input) == output
