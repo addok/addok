@@ -1,4 +1,5 @@
 import logging
+import time
 
 import redis
 
@@ -36,6 +37,14 @@ def common_term(token):
 def score_ngram(result, query):
     score = compare_ngrams(str(result), query)
     result.score = score
+
+
+def score_autocomplete(key):
+    card = DB.zcard(key)
+    if card > config.COMMON_THRESHOLD:
+        return 0
+    else:
+        return card
 
 
 class Result(object):
@@ -129,6 +138,7 @@ class Token(object):
         # - target only "rare" keys?
         key = '{}*'.format(token_key(self.original))
         self.autocomplete_keys = DB.keys(key)
+        self.autocomplete_keys.sort(key=score_autocomplete, reverse=True)
 
     @property
     def is_common(self):
@@ -158,6 +168,12 @@ class Search(object):
         self.match_all = match_all
         self.fuzzy = fuzzy
         self.limit = limit
+        self._start = time.time()
+
+    def debug(self, *args):
+        s = args[0] % args[1:]
+        s = '[{}] {}'.format(str(time.time() - self._start), s)
+        logging.debug(s)
 
     def __call__(self, query):
         self.results = []
@@ -176,15 +192,22 @@ class Search(object):
             else:
                 not_found.append(token)
         common_tokens.sort(key=lambda x: x.frequency)
-        logging.debug('Taken tokens %s', ok_tokens)
-        logging.debug('Common tokens %s', common_tokens)
-        logging.debug('Not found tokens %s', not_found)
+        self.debug('Taken tokens %s', ok_tokens)
+        self.debug('Common tokens %s', common_tokens)
+        self.debug('Not found tokens %s', not_found)
+        if not ok_tokens and common_tokens:
+            # Only commons terms, try to reduce with autocomplete.
+            self.debug('Only commons, trying autocomplete')
+            self.autocomplete(common_tokens)
+            if self.bucket_full or self.bucket_overflow:
+                self.debug('Enough results after autocomplete %s', ok_tokens)
+                return self.render()
         if not ok_tokens and common_tokens:  # Take the less common as basis.
             ok_tokens = common_tokens[:1]
         ok_keys = [t.db_key for t in ok_tokens]
         self.add_to_bucket(ok_keys)
         if self.bucket_full or (not self.fuzzy and not not_found):
-            logging.debug('Enough results with only rare tokens %s', ok_tokens)
+            self.debug('Enough results with only rare tokens %s', ok_tokens)
             return self.render()
         for token in common_tokens:
             if token not in ok_tokens and self.bucket_overflow:
@@ -192,14 +215,9 @@ class Search(object):
                 ok_keys = [t.db_key for t in ok_tokens]
                 self.new_bucket(ok_keys)
         # Try to autocomplete
-        self.last_token.autocomplete()
-        keys = [t.db_key for t in ok_tokens if not t.is_last]
-        for key in self.last_token.autocomplete_keys:
-            if not self.bucket_overflow:
-                logging.debug('Trying autocomplete with %s', key)
-                self.add_to_bucket(keys + [key])
+        self.autocomplete(ok_tokens)
         if self.bucket_full or (not self.fuzzy and not not_found):
-            logging.debug('Enough results after autocomplete %s', ok_tokens)
+            self.debug('Enough results after autocomplete %s', ok_tokens)
             return self.render()
         if self.bucket_empty:
             for token in ok_tokens:
@@ -215,7 +233,7 @@ class Search(object):
                     continue
                 if self.bucket_full:
                     break
-                logging.debug('Going fuzzy with %s', try_one)
+                self.debug('Going fuzzy with %s', try_one)
                 try_one.make_fuzzy(fuzzy=self.fuzzy)
                 for key in try_one.fuzzy_keys:
                     if self.bucket_dry:
@@ -246,29 +264,42 @@ class Search(object):
                and not token.db_key):
                 raise Empty
 
-    def intersect(self, keys):
+    def autocomplete(self, tokens):
+        self.last_token.autocomplete()
+        keys = [t.db_key for t in tokens if not t.is_last]
+        for key in self.last_token.autocomplete_keys:
+            if not self.bucket_overflow:
+                self.debug('Trying autocomplete with %s', key)
+                self.add_to_bucket(keys + [key])
+
+    def intersect(self, keys, limit=0):
+        if not limit > 0:
+            limit = config.BUCKET_LIMIT - 1
         ids = []
         if keys:
             DB.zinterstore(self.query, keys)
-            ids = DB.zrevrange(self.query, 0, config.BUCKET_LIMIT - 1)
+            ids = DB.zrevrange(self.query, 0, limit)
             DB.delete(self.query)
         return set(ids)
 
     def add_to_bucket(self, keys):
-        logging.debug('Adding to bucket with tokens %s', keys)
-        self.bucket.update(self.intersect(keys))
-        logging.debug('%s ids in bucket so far', len(self.bucket))
+        self.debug('Adding to bucket with tokens %s', keys)
+        limit = config.BUCKET_LIMIT - len(self.bucket)
+        self.bucket.update(self.intersect(keys, limit))
+        self.debug('%s ids in bucket so far', len(self.bucket))
 
     def new_bucket(self, keys):
-        logging.debug('New bucket with tokens %s', keys)
+        self.debug('New bucket with tokens %s', keys)
         self.bucket = self.intersect(keys)
-        logging.debug('%s ids in bucket so far', len(self.bucket))
+        self.debug('%s ids in bucket so far', len(self.bucket))
 
     def compute_results(self):
+        self.debug('Computing results')
         for _id in self.bucket:
             result = Result(DB.hgetall(_id))
             result.match_housenumber(self.tokens)
             self.results.append(result)
+        self.debug('Done computing results')
 
     @property
     def bucket_full(self):
