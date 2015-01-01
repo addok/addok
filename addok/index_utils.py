@@ -1,7 +1,12 @@
-import re
-
-from .core import DB, token_key, document_key, housenumber_field_key
+from .core import (DB, token_key, document_key, housenumber_field_key,
+                   edge_ngram_key)
 from .pipeline import preprocess
+from .textutils.default import compute_edge_ngrams
+
+
+def index_edge_ngrams(token):
+    for ngram in compute_edge_ngrams(token):
+        DB.sadd(edge_ngram_key(ngram), token)
 
 
 def index_housenumber(key, document):
@@ -35,29 +40,3 @@ def index_document(document):
         if postcode:
             boost = 1.2 if document['type'] == 'city' else 1
             index_field(key, postcode, boost=boost)
-
-
-TYPES = [
-    'avenue', 'rue', 'boulevard', 'all[ée]es?', 'impasse', 'place',
-    'chemin', 'rocade', 'route', 'l[ôo]tissement', 'mont[ée]e', 'c[ôo]te',
-    'clos', 'champ', 'bois', 'taillis', 'boucle', 'passage', 'domaine',
-    'étang', 'etang', 'quai', 'desserte', 'pré', 'porte', 'square', 'mont',
-    'r[ée]sidence', 'parc', 'cours?', 'promenade', 'hameau', 'faubourg',
-    'ilot', 'berges?', 'via', 'cit[ée]', 'sent(e|ier)', 'rond[- ][Pp]oint',
-    'pas(se)?', 'carrefour', 'traverse', 'giratoire', 'esplanade', 'voie',
-]
-TYPES_REGEX = '|'.join(
-    map(lambda x: '[{}{}]{}'.format(x[0], x[0].upper(), x[1:]), TYPES)
-)
-
-
-def split_address(q):
-    m = re.search(
-        "^(?P<type>" + TYPES_REGEX + ")"
-        "[a-z ']+(?P<name>[\wçàèéuâêôîûöüïäë '\-]+)", q)
-    return m.groupdict() if m else {}
-
-
-def split_housenumber(q):
-    m = re.search("^(?P<number>[\d]+)/?(?P<ordinal>([^\d]+|[\d]{1}))?", q)
-    return m.groupdict() if m else {}

@@ -81,3 +81,8 @@ def compare_ngrams(left, right, N=2, pad_len=0):
 
 def alphanumerize(text):
     return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
+
+
+def compute_edge_ngrams(token, min=3):
+    """Compute edge ngram of token from min. Does not includes token itself."""
+    return [token[:i] for i in range(min, len(token))]

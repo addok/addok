@@ -1,5 +1,5 @@
-from addok.core import search
-from addok.import_utils import index_document
+from addok.core import search, preprocess
+from addok.index_utils import index_document, index_edge_ngrams
 
 
 def test_should_match_name(street):
@@ -108,6 +108,7 @@ def test_should_do_autocomplete_on_last_term(street):
     street['name'] = 'rue de Wambrechies'
     street['city'] = 'Bondues'
     index_document(street)
+    index_edge_ngrams(list(preprocess('Wambrechies'))[0])
     assert search('avenue wambre')
     assert not search('wambre avenue')
 

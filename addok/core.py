@@ -22,16 +22,16 @@ def housenumber_field_key(s):
     return 'h|{}'.format(s)
 
 
+def edge_ngram_key(s):
+    return 'n|{}'.format(s)
+
+
 def token_key_frequency(key):
     return DB.zcard(key)
 
 
 def token_frequency(token):
     return token_key_frequency(token_key(token))
-
-
-def common_term(token):
-    return token_frequency(token) > 1000  # TODO: Take a % of nb of docs.
 
 
 def score_ngram(result, query):
@@ -134,10 +134,9 @@ class Token(object):
             self.fuzzy_keys.append(key)
 
     def autocomplete(self):
-        # TODO: find a way to limit number of results when word is small:
-        # - target only "rare" keys?
-        key = '{}*'.format(token_key(self.original))
-        self.autocomplete_keys = DB.keys(key)
+        key = edge_ngram_key(self.original)
+        self.autocomplete_keys = [token_key(k.decode())
+                                  for k in DB.smembers(key)]
         self.autocomplete_keys.sort(key=score_autocomplete, reverse=True)
 
     @property
@@ -220,6 +219,7 @@ class Search(object):
             self.debug('Enough results after autocomplete %s', ok_tokens)
             return self.render()
         if self.bucket_empty:
+            self.debug('Bucket empty. Trying to remove some.')
             for token in ok_tokens:
                 keys = ok_keys[:]
                 keys.remove(token.db_key)
@@ -227,6 +227,7 @@ class Search(object):
                 if self.bucket_full:
                     break
         if self.fuzzy:
+            self.debug('Fuzzy on. Trying.')
             not_found.sort(key=lambda t: len(t), reverse=True)
             for try_one in not_found:
                 if try_one.isdigit():
@@ -265,6 +266,7 @@ class Search(object):
                 raise Empty
 
     def autocomplete(self, tokens):
+        self.debug('Autocompleting %s', self.last_token)
         self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]
         for key in self.last_token.autocomplete_keys:

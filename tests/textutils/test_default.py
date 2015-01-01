@@ -1,7 +1,8 @@
 import pytest
 
 from addok.textutils.default import (make_fuzzy, compare_ngrams, normalize,
-                                     alphanumerize, synonymize, tokenize)
+                                     alphanumerize, synonymize, tokenize,
+                                     compute_edge_ngrams)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -87,3 +88,9 @@ def test_synonymize(input, output, monkeypatch):
     SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
     monkeypatch.setattr('addok.textutils.default.SYNONYMS', SYNONYMS)
     assert synonymize(input) == output
+
+
+def test_compute_edge_ngrams():
+    assert compute_edge_ngrams('vanbrechi') == [
+        'van', 'vanb', 'vanbr', 'vanbre', 'vanbrec', 'vanbrech'
+    ]

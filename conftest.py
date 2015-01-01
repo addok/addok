@@ -5,6 +5,8 @@ import pytest
 def pytest_configure(config):
     from addok.config import DB_SETTINGS
     DB_SETTINGS['db'] = 15
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
 
 
 def pytest_runtest_teardown(item, nextitem):
