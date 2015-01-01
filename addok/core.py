@@ -285,9 +285,12 @@ class Search(object):
             limit = config.BUCKET_LIMIT - 1
         ids = []
         if keys:
-            DB.zinterstore(self.query, keys)
-            ids = DB.zrevrange(self.query, 0, limit)
-            DB.delete(self.query)
+            if len(keys) == 1:
+                ids = DB.zrevrange(keys[0], 0, limit)
+            else:
+                DB.zinterstore(self.query, keys)
+                ids = DB.zrevrange(self.query, 0, limit)
+                DB.delete(self.query)
         return set(ids)
 
     def add_to_bucket(self, keys):
