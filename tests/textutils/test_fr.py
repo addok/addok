@@ -36,6 +36,12 @@ from addok.textutils.fr import _stemmize
     ['placis', 'plasi'],
     ['courcome', 'kourkom'],
     ['hazebrouck', 'azebrouk'],
+    ['blotzheim', 'blotzeim'],
+    ['plouhinec', 'plouinek'],
+    ['hirschland', 'irchlan'],
+    ['schlierbach', 'chlierbak'],
+    ['aebtissinboesch', 'aebtisinboech'],
+    ['boescherbach', 'boecherbak'],
 ])
 def test_normalize(input, output):
     assert _stemmize(input) == output

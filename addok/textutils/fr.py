@@ -13,8 +13,8 @@ def _stemmize(s):
         rules = (
             ("(?<=[^g])g(?=[eyi])", "j"),
             ("(?<=g)u(?=[aeio])", ""),
-            ("c(?=[^ieyw])", "k"),
-            ("c$", "k"),
+            ("c(?=[^hieyw])", "k"),
+            ("((?<=[^s])ch|c)$", "k"),  # final "c", "ch", but not "sch".
             ("(?<=[aeiouy])s(?=[aeiouy])", "z"),
             ("qu?", "k"),
             ("cc(?=[ie])", "s"),  # Others will hit the c => k and deduplicate
@@ -22,7 +22,9 @@ def _stemmize(s):
             ("ph", "f"),
             ("th$", "te"),  # This t sounds.
             ("(?<=[^sc])h", ""),
+            ("^h", ""),
             ("sc", "s"),
+            ("sh", "ch"),
             ("w", "v"),
             ("c(?=[eiy])", "s"),
             ("y", "i"),
