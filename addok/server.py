@@ -12,9 +12,14 @@ def app(environ, start_response):
         limit = int(request.args.get('limit'))
     except ValueError:
         limit = 5
+    try:
+        autocomplete = int(request.args.get('autocomplete')) == '1'
+    except (ValueError, TypeError):
+        autocomplete = True
+    results = search(query, limit=limit, autocomplete=autocomplete)
     results = {
         "type": "FeatureCollection",
-        "features": [r.to_geojson() for r in search(query, limit=limit)]
+        "features": [r.to_geojson() for r in results]
     }
     response = Response(json.dumps(results), mimetype='text/plain')
     response.headers["Access-Control-Allow-Origin"] = "*"

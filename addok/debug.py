@@ -2,8 +2,9 @@ import logging
 import readline
 import time
 
-from addok.core import (DB, preprocess, search, document_key, token_frequency,
+from addok.core import (DB, search, document_key, token_frequency,
                         token_key, Result, Token)
+from addok.pipeline import preprocess_query
 
 
 def doc_by_id(_id):
@@ -11,11 +12,11 @@ def doc_by_id(_id):
 
 
 def indexed_string(s):
-    return list(preprocess(s))
+    return list(preprocess_query(s))
 
 
 def word_frequency(word):
-    token = list(preprocess(word))[0]
+    token = list(preprocess_query(word))[0]
     return token_frequency(token)
 
 
@@ -110,7 +111,7 @@ class Cli(object):
         print(white(word_frequency(word)))
 
     def do_autocomplete(self, s):
-        s = list(preprocess(s))[0]
+        s = list(preprocess_query(s))[0]
         token = Token(s)
         token.autocomplete()
         keys = [k.split('|')[1] for k in token.autocomplete_keys]

@@ -4,7 +4,7 @@ import time
 import redis
 
 from . import config
-from .pipeline import preprocess
+from .pipeline import preprocess_query
 from .textutils.default import make_fuzzy, compare_ngrams
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)
@@ -87,6 +87,10 @@ class Result(object):
             val = getattr(self, key, None)
             if val:
                 properties[key] = val
+        housenumber = getattr(self, 'housenumber', None)
+        if housenumber:
+            properties['name'] = '{} {}'.format(housenumber,
+                                                properties['name'])
         return {
             "type": "Feature",
             "geometry": {
@@ -163,11 +167,12 @@ class Empty(Exception):
 
 class Search(object):
 
-    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=0):
+    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True):
         self.match_all = match_all
         self.fuzzy = fuzzy
         self.limit = limit
         self._start = time.time()
+        self._autocomplete = autocomplete
 
     def debug(self, *args):
         s = args[0] % args[1:]
@@ -230,7 +235,7 @@ class Search(object):
                 keys = ok_keys[:]
                 keys.remove(token.db_key)
                 self.add_to_bucket(keys)
-                if self.bucket_full:
+                if self.bucket_overflow:
                     break
         if self.fuzzy:
             self.debug('Fuzzy on. Trying.')
@@ -257,7 +262,7 @@ class Search(object):
 
     def preprocess(self, query):
         self.tokens = []
-        for position, token in enumerate(preprocess(query)):
+        for position, token in enumerate(preprocess_query(query)):
             token = Token(token, position=position)
             self.tokens.append(token)
         token.is_last = True
@@ -272,6 +277,9 @@ class Search(object):
                 raise Empty
 
     def autocomplete(self, tokens):
+        if not self._autocomplete:
+            self.debug('Autocomplete not active. Abort.')
+            return
         self.debug('Autocompleting %s', self.last_token)
         self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]

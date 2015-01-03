@@ -16,9 +16,13 @@ RESOURCES_ROOT = Path(__file__).parent.parent.parent.joinpath('resources')
 SYNONYMS_PATH = 'synonyms.txt'
 
 # Pipeline stream to be used.
-PIPELINE = [
+PROCESSORS = [
     'addok.textutils.default.pipeline.tokenize',
     'addok.textutils.default.pipeline.normalize',
     'addok.textutils.default.pipeline.synonymize',
     'addok.textutils.fr.stemmize',
 ]
+QUERY_PROCESSORS = (
+    'addok.textutils.fr.extract_address',
+    'addok.textutils.fr.clean_query',
+)

@@ -73,3 +73,22 @@ def split_address(q):
 def split_housenumber(q):
     m = re.search("^(?P<number>[\d]+)/?(?P<ordinal>([^\d]+|[\d]{1}))?", q)
     return m.groupdict() if m else {}
+
+
+def _clean_query(q):
+    q = re.sub('c(e|é)dex ?[\d]*', '', q, flags=re.IGNORECASE)
+    q = re.sub('bp ?[\d]*', '', q, flags=re.IGNORECASE)
+    q = re.sub('cs ?[\d]*', '', q, flags=re.IGNORECASE)
+    q = re.sub(' {2,}', ' ', q, flags=re.IGNORECASE)
+    q = q.strip()
+    return q
+clean_query = yielder(_clean_query)
+
+
+def _extract_address(q):
+    m = extract_address_pattern.search(q)
+    return m.group() if m else q
+extract_address_pattern = re.compile(
+    '(\d*( ?(bis|ter))?(,? )?(' + TYPES_REGEX + ') .*(\d{5})?).*',
+    flags=re.IGNORECASE)
+extract_address = yielder(_extract_address)

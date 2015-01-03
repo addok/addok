@@ -1,5 +1,6 @@
-from addok.core import search, preprocess
+from addok.core import search
 from addok.index_utils import index_document, index_edge_ngrams
+from addok.pipeline import preprocess
 
 
 def test_should_match_name(street):
