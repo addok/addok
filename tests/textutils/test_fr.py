@@ -28,6 +28,14 @@ from addok.textutils.fr import _stemmize
     ['abatesco', 'abatesko'],
     ['albiosc', 'albiosk'],
     ['desc', 'desk'],
+    ['bricquebec', 'brikebek'],
+    ['locmariaquer', 'lokmariaker'],
+    ['ancetres', 'ansetr'],
+    ['vicdessos', 'vikdeso'],
+    ['acacias', 'akasia'],
+    ['placis', 'plasi'],
+    ['courcome', 'kourkom'],
+    ['hazebrouck', 'azebrouk'],
 ])
 def test_normalize(input, output):
     assert _stemmize(input) == output

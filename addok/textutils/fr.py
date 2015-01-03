@@ -13,7 +13,7 @@ def _stemmize(s):
         rules = (
             ("(?<=[^g])g(?=[eyi])", "j"),
             ("(?<=g)u(?=[aeio])", ""),
-            ("c(?=[aou])", "k"),
+            ("c(?=[^ieyw])", "k"),
             ("c$", "k"),
             ("(?<=[aeiouy])s(?=[aeiouy])", "z"),
             ("qu?", "k"),
