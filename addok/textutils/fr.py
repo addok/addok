@@ -29,6 +29,7 @@ def _stemmize(s):
             ("c(?=[eiy])", "s"),
             ("y", "i"),
             ("esn", "en"),
+            ("oe(?=\\w)", "e"),
             ("s$", ""),
             ("(?<=u)l?x$", ""),  # eaux, eux, aux, aulx
             ("(?<=u)lt$", "t"),

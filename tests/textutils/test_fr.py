@@ -40,8 +40,13 @@ from addok.textutils.fr import _stemmize
     ['plouhinec', 'plouinek'],
     ['hirschland', 'irchlan'],
     ['schlierbach', 'chlierbak'],
-    ['aebtissinboesch', 'aebtisinboech'],
-    ['boescherbach', 'boecherbak'],
+    ['aebtissinboesch', 'aebtisinbech'],
+    ['boescherbach', 'becherbak'],
+    ['affelderwoert', 'afelderver'],
+    ['boeuff', 'beuf'],
+    ['humeroeuille', 'umereuil'],
+    ['aigueboeuf', 'aigebeuf'],
+    ['boeshoernel', 'bechernel'],
 ])
 def test_normalize(input, output):
     assert _stemmize(input) == output
