@@ -35,7 +35,9 @@ def token_frequency(token):
 
 
 def score_ngram(result, query):
-    score = compare_ngrams(str(result), query)
+    score = compare_ngrams(result.name, query)
+    if score < config.MATCH_THRESHOLD:
+        score = max(score, compare_ngrams(str(result), query))
     result.score = score
 
 
@@ -203,7 +205,12 @@ class Search(object):
         self.debug('Not found tokens %s', self.not_found)
         if len(self.tokens) == len(self.common):
             # Only common terms, shortcut to search
-            self.add_to_bucket([t.db_key for t in self.tokens])
+            keys = [t.db_key for t in self.tokens]
+            self.new_bucket(keys, 10)
+            if self.has_cream():
+                self.debug('Cream found. Returning.')
+                return self.render()
+            self.new_bucket(keys)
             if self.bucket_overflow or self.has_cream():
                 self.debug('Only common terms and too much result. Return.')
                 return self.render()
@@ -216,7 +223,14 @@ class Search(object):
         if not self.meaningful and self.common:  # Take the less common.
             self.meaningful = self.common[:1]
         self.keys = [t.db_key for t in self.meaningful]
-        self.add_to_bucket(self.keys)
+        if self.bucket_empty:
+            self.new_bucket(self.keys, 10)
+            if self.has_cream():
+                self.debug('Cream found. Returning.')
+                return self.render()
+            self.new_bucket(self.keys)
+        else:
+            self.add_to_bucket(self.keys)
         if self.bucket_full or self.has_cream():
             return self.render()
         for token in self.common:
@@ -303,14 +317,14 @@ class Search(object):
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
-            limit = config.BUCKET_LIMIT - 1
+            limit = config.BUCKET_LIMIT
         ids = []
         if keys:
             if len(keys) == 1:
-                ids = DB.zrevrange(keys[0], 0, limit)
+                ids = DB.zrevrange(keys[0], 0, limit - 1)
             else:
                 DB.zinterstore(self.query, keys)
-                ids = DB.zrevrange(self.query, 0, limit)
+                ids = DB.zrevrange(self.query, 0, limit - 1)
                 DB.delete(self.query)
         return set(ids)
 
@@ -320,9 +334,9 @@ class Search(object):
         self.bucket.update(self.intersect(keys, limit))
         self.debug('%s ids in bucket so far', len(self.bucket))
 
-    def new_bucket(self, keys):
-        self.debug('New bucket with keys %s', keys)
-        self.bucket = self.intersect(keys)
+    def new_bucket(self, keys, limit=0):
+        self.debug('New bucket with keys %s and limit %s', keys, limit)
+        self.bucket = self.intersect(keys, limit)
         self.debug('%s ids in bucket so far', len(self.bucket))
 
     def convert(self):
@@ -361,6 +375,7 @@ class Search(object):
     def has_cream(self):
         if self.bucket_empty or self.bucket_overflow or len(self.bucket) > 10:
             return False
+        self.debug('Checking cream.')
         self.convert()
         return self.bucket_cream
 

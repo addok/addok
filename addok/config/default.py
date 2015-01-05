@@ -13,7 +13,7 @@ BUCKET_LIMIT = 100
 COMMON_THRESHOLD = 10000
 
 # Min score considered matching the query.
-MATCH_THRESHOLD = 0.8
+MATCH_THRESHOLD = 0.9
 
 RESOURCES_ROOT = Path(__file__).parent.parent.parent.joinpath('resources')
 SYNONYMS_PATH = 'synonyms.txt'
