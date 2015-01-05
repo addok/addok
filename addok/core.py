@@ -169,7 +169,7 @@ class Search(object):
 
     def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True):
         self.match_all = match_all
-        self.fuzzy = fuzzy
+        self._fuzzy = fuzzy
         self.limit = limit
         self._start = time.time()
         self._autocomplete = autocomplete
@@ -229,27 +229,19 @@ class Search(object):
         if self.bucket_full or (not self.fuzzy and not not_found):
             self.debug('Enough results after autocomplete %s', ok_tokens)
             return self.render()
+        if self._fuzzy:
+            self.fuzzy(not_found, ok_keys)
+            if self.bucket_dry:
+                self.fuzzy(ok_tokens, ok_keys)
         if self.bucket_empty:
             self.debug('Bucket empty. Trying to remove some.')
+            ok_tokens.sort(key=lambda x: x.frequency)
             for token in ok_tokens:
                 keys = ok_keys[:]
                 keys.remove(token.db_key)
                 self.add_to_bucket(keys)
                 if self.bucket_overflow:
                     break
-        if self.fuzzy:
-            self.debug('Fuzzy on. Trying.')
-            not_found.sort(key=lambda t: len(t), reverse=True)
-            for try_one in not_found:
-                if try_one.isdigit():
-                    continue
-                if self.bucket_full:
-                    break
-                self.debug('Going fuzzy with %s', try_one)
-                try_one.make_fuzzy(fuzzy=self.fuzzy)
-                for key in try_one.fuzzy_keys:
-                    if self.bucket_dry:
-                        self.add_to_bucket(ok_keys + [key])
         return self.render()
 
     def render(self):
@@ -290,6 +282,23 @@ class Search(object):
             else:
                 self.debug('Trying to extend bucket. Autocomplete %s', key)
                 self.add_to_bucket(keys + [key])
+
+    def fuzzy(self, tokens, base_keys):
+        self.debug('Fuzzy on. Trying with %s.', tokens)
+        tokens.sort(key=lambda t: len(t), reverse=True)
+        for try_one in tokens:
+            keys = base_keys[:]
+            if try_one.db_key in keys:
+                keys.remove(try_one.db_key)
+            if try_one.isdigit():
+                continue
+            if self.bucket_full:
+                break
+            self.debug('Going fuzzy with %s', try_one)
+            try_one.make_fuzzy(fuzzy=self.fuzzy)
+            for key in try_one.fuzzy_keys:
+                if self.bucket_dry:
+                    self.add_to_bucket(keys + [key])
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
