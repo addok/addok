@@ -284,8 +284,11 @@ class Search(object):
         self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]
         for key in self.last_token.autocomplete_keys:
-            if not self.bucket_overflow:
-                self.debug('Trying autocomplete with %s', key)
+            if self.bucket_overflow:
+                self.debug('Trying to reduce bucket. Autocomplete %s', key)
+                self.new_bucket(keys + [key])
+            else:
+                self.debug('Trying to extend bucket. Autocomplete %s', key)
                 self.add_to_bucket(keys + [key])
 
     def intersect(self, keys, limit=0):
