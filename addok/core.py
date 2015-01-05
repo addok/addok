@@ -1,11 +1,13 @@
 import logging
 import time
 
+import geohash
 import redis
 
 from . import config
 from .pipeline import preprocess_query
 from .textutils.default import make_fuzzy, compare_ngrams
+from .utils import haversine_distance, km_to_score
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)
 
@@ -26,6 +28,10 @@ def edge_ngram_key(s):
     return 'n|{}'.format(s)
 
 
+def geohash_key(s):
+    return 'g|{}'.format(s)
+
+
 def token_key_frequency(key):
     return DB.zcard(key)
 
@@ -34,11 +40,16 @@ def token_frequency(token):
     return token_key_frequency(token_key(token))
 
 
-def score_ngram(result, query):
+def score_by_ngram_distance(result, query):
     score = compare_ngrams(result.name, query)
     if score < config.MATCH_THRESHOLD:
         score = max(score, compare_ngrams(str(result), query))
     result.score = score
+
+
+def score_by_geo_distance(result, center):
+    km = haversine_distance((float(result.lat), float(result.lon)), center)
+    result.score += km_to_score(km)
 
 
 def score_autocomplete(key):
@@ -51,7 +62,8 @@ def score_autocomplete(key):
 
 class Result(object):
 
-    def __init__(self, doc):
+    def __init__(self, _id):
+        doc = DB.hgetall(_id)
         for key, value in doc.items():
             setattr(self, key.decode(), value.decode())
         self.score = float(self.importance)
@@ -167,20 +179,26 @@ class Empty(Exception):
     pass
 
 
-class Search(object):
+class BaseHelper(object):
 
-    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True):
-        self.match_all = match_all
-        self._fuzzy = fuzzy
-        self.limit = limit
-        self.min = self.limit
+    def __init__(self):
         self._start = time.time()
-        self._autocomplete = autocomplete
 
     def debug(self, *args):
         s = args[0] % args[1:]
         s = '[{}] {}'.format(str(time.time() - self._start), s)
         logging.debug(s)
+
+
+class Search(BaseHelper):
+
+    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True):
+        super().__init__()
+        self.match_all = match_all
+        self._fuzzy = fuzzy
+        self.limit = limit
+        self.min = self.limit
+        self._autocomplete = autocomplete
 
     def __call__(self, query):
         self.results = {}
@@ -344,9 +362,9 @@ class Search(object):
         for _id in self.bucket:
             if _id in self.results:
                 continue
-            result = Result(DB.hgetall(_id))
+            result = Result(_id)
             result.match_housenumber(self.tokens)
-            score_ngram(result, self.query)
+            score_by_ngram_distance(result, self.query)
             self.results[_id] = result
         self.debug('Done computing results')
 
@@ -380,6 +398,53 @@ class Search(object):
         return self.bucket_cream
 
 
+class Reverse(BaseHelper):
+
+    def __call__(self, lat, lon, limit=1):
+        self.lat = lat
+        self.lon = lon
+        self.ids = set([])
+        self.results = []
+        self.limit = limit
+        self.fetched = []
+        geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
+        hashes = self.expand([geoh])
+        self.fetch(hashes)
+        if not self.ids:
+            hashes = self.expand(hashes)
+            self.fetch(hashes)
+        return self.convert()
+
+    def expand(self, hashes):
+        new = []
+        for h in hashes:
+            neighbors = geohash.expand(h)
+            for n in neighbors:
+                if not n in self.fetched:
+                    new.append(n)
+        return new
+
+    def fetch(self, hashes):
+        self.debug('Fetching %s', hashes)
+        for h in hashes:
+            k = geohash_key(h)
+            self.ids.update(DB.smembers(k))
+            self.fetched.append(h)
+
+    def convert(self):
+        for _id in self.ids:
+            r = Result(_id)
+            score_by_geo_distance(r, (self.lat, self.lon))
+            self.results.append(r)
+            self.results.sort(key=lambda r: r.score)
+        return self.results[:self.limit]
+
+
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0):
     helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit)
     return helper(query)
+
+
+def reverse(lat, lon):
+    helper = Reverse()
+    return helper(lat, lon)

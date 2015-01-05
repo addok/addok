@@ -94,9 +94,9 @@ def import_data(filepath, limit=None):
 
 
 if __name__ == '__main__':
-    import_data('data.csv')
-    import_data('idf.csv')
-    import_data('bretagne.csv')
+    # import_data('data.csv')
+    # import_data('idf.csv')
+    # import_data('bretagne.csv')
     import_data('midipyrenees.csv')
     # document = {
     #     "id": "590010020E",

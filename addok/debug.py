@@ -3,7 +3,7 @@ import readline
 import time
 
 from addok.core import (DB, search, document_key, token_frequency,
-                        token_key, Result, Token)
+                        token_key, Result, Token, reverse)
 from addok.pipeline import preprocess_query
 
 
@@ -73,7 +73,7 @@ class Cli(object):
 
     COMMANDS = (
         'SEARCH', 'DOC', 'TOKENIZE', 'DEBUG', 'FREQUENCY', 'INDEX',
-        'BESTSCORE', 'AUTOCOMPLETE'
+        'BESTSCORE', 'AUTOCOMPLETE', 'REVERSE'
     )
 
     def __init__(self):
@@ -138,6 +138,11 @@ class Cli(object):
             doc = DB.hgetall(_id)
             result = Result(doc)
             print(white(result), blue(score), blue(result.id))
+
+    def do_reverse(self, latlon):
+        lat, lon = latlon.split()
+        for r in reverse(float(lat), float(lon)):
+            print('{} ({} | {})'.format(white(r), blue(r.score), blue(r.id)))
 
     def prompt(self):
         command = input("> ")

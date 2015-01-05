@@ -15,6 +15,8 @@ COMMON_THRESHOLD = 10000
 # Min score considered matching the query.
 MATCH_THRESHOLD = 0.9
 
+GEOHASH_PRECISION = 8
+
 RESOURCES_ROOT = Path(__file__).parent.parent.parent.joinpath('resources')
 SYNONYMS_PATH = 'synonyms.txt'
 

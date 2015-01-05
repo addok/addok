@@ -1,5 +1,8 @@
+import geohash
+
+from . import config
 from .core import (DB, token_key, document_key, housenumber_field_key,
-                   edge_ngram_key)
+                   edge_ngram_key, geohash_key)
 from .pipeline import preprocess
 from .textutils.default import compute_edge_ngrams
 
@@ -40,3 +43,10 @@ def index_document(document):
         if postcode:
             boost = 1.2 if document['type'] == 'city' else 1
             index_field(key, postcode, boost=boost)
+    index_geohash(key, float(document['lat']), float(document['lon']))
+
+
+def index_geohash(key, lat, lon):
+    geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
+    geok = geohash_key(geoh)
+    DB.sadd(geok, key)
