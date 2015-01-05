@@ -171,6 +171,7 @@ class Search(object):
         self.match_all = match_all
         self._fuzzy = fuzzy
         self.limit = limit
+        self.min = self.limit
         self._start = time.time()
         self._autocomplete = autocomplete
 
@@ -180,77 +181,67 @@ class Search(object):
         logging.debug(s)
 
     def __call__(self, query):
-        self.results = []
+        self.results = {}
         self.bucket = set([])  # No duplicates.
-        ok_tokens = []
-        not_found = []
-        common_tokens = []
+        self.meaningful = []
+        self.not_found = []
+        self.common = []
+        self.keys = []
         self.query = query
         self.preprocess(query)
         self.search_all()
         for token in self.tokens:
             if token.is_common:
-                common_tokens.append(token)
+                self.common.append(token)
             elif token.db_key:
-                ok_tokens.append(token)
+                self.meaningful.append(token)
             else:
-                not_found.append(token)
-        common_tokens.sort(key=lambda x: x.frequency)
-        self.debug('Taken tokens %s', ok_tokens)
-        self.debug('Common tokens %s', common_tokens)
-        self.debug('Not found tokens %s', not_found)
-        if len(self.tokens) == len(common_tokens):
+                self.not_found.append(token)
+        self.common.sort(key=lambda x: x.frequency)
+        self.debug('Taken tokens %s', self.meaningful)
+        self.debug('Common tokens %s', self.common)
+        self.debug('Not found tokens %s', self.not_found)
+        if len(self.tokens) == len(self.common):
             # Only common terms, shortcut to search
             self.add_to_bucket([t.db_key for t in self.tokens])
-            if self.bucket_overflow:
+            if self.bucket_overflow or self.has_cream():
                 self.debug('Only common terms and too much result. Return.')
                 return self.render()
-        if not ok_tokens and common_tokens:
+        if not self.meaningful and self.common:
             # Only commons terms, try to reduce with autocomplete.
             self.debug('Only commons, trying autocomplete')
-            self.autocomplete(common_tokens)
-            if self.bucket_full or self.bucket_overflow:
-                self.debug('Enough results after autocomplete %s', ok_tokens)
+            self.autocomplete(self.common)
+            if self.bucket_full or self.bucket_overflow or self.has_cream():
                 return self.render()
-        if not ok_tokens and common_tokens:  # Take the less common as basis.
-            ok_tokens = common_tokens[:1]
-        ok_keys = [t.db_key for t in ok_tokens]
-        self.add_to_bucket(ok_keys)
-        if self.bucket_full or (not self.fuzzy and not not_found):
-            self.debug('Enough results with only rare tokens %s', ok_tokens)
+        if not self.meaningful and self.common:  # Take the less common.
+            self.meaningful = self.common[:1]
+        self.keys = [t.db_key for t in self.meaningful]
+        self.add_to_bucket(self.keys)
+        if self.bucket_full or self.has_cream():
             return self.render()
-        for token in common_tokens:
-            if token not in ok_tokens and self.bucket_overflow:
-                ok_tokens.append(token)
-                ok_keys = [t.db_key for t in ok_tokens]
-                self.new_bucket(ok_keys)
+        for token in self.common:
+            if token not in self.meaningful and self.bucket_overflow:
+                self.meaningful.append(token)
+                self.keys = [t.db_key for t in self.meaningful]
+                self.new_bucket(self.keys)
         # Try to autocomplete
-        self.autocomplete(ok_tokens)
-        if self.bucket_full or (not self.fuzzy and not not_found):
-            self.debug('Enough results after autocomplete %s', ok_tokens)
+        self.autocomplete(self.meaningful)
+        if self.bucket_full or self.has_cream():
+            self.debug('Enough results after autocomplete %s', self.meaningful)
             return self.render()
-        if self._fuzzy:
-            self.fuzzy(not_found, ok_keys)
-            if self.bucket_dry:
-                self.fuzzy(ok_tokens, ok_keys)
-        if self.bucket_empty:
-            self.debug('Bucket empty. Trying to remove some.')
-            ok_tokens.sort(key=lambda x: x.frequency)
-            for token in ok_tokens:
-                keys = ok_keys[:]
-                keys.remove(token.db_key)
-                self.add_to_bucket(keys)
-                if self.bucket_overflow:
-                    break
+        if self._fuzzy and not self.has_cream():
+            self.fuzzy(self.not_found)
+            if self.bucket_dry and not self.has_cream():
+                self.fuzzy(self.meaningful)
+        if self.bucket_dry and not self.has_cream():
+            self.reduce_tokens()
         return self.render()
 
     def render(self):
-        self.compute_results()
-        # Score and sort.
-        for r in self.results:
-            score_ngram(r, self.query)
-        self.results.sort(key=lambda d: d.score, reverse=True)
-        return self.results[:self.limit]
+        self.convert()
+        results = list(self.results.values())
+        results.sort(key=lambda r: r.score, reverse=True)
+        return results[:self.limit]
 
     def preprocess(self, query):
         self.tokens = []
@@ -272,7 +263,7 @@ class Search(object):
         if not self._autocomplete:
             self.debug('Autocomplete not active. Abort.')
             return
-        self.debug('Autocompleting %s', self.last_token)
+        self.debug('** Autocompleting %s', self.last_token)
         self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]
         for key in self.last_token.autocomplete_keys:
@@ -283,11 +274,11 @@ class Search(object):
                 self.debug('Trying to extend bucket. Autocomplete %s', key)
                 self.add_to_bucket(keys + [key])
 
-    def fuzzy(self, tokens, base_keys):
-        self.debug('Fuzzy on. Trying with %s.', tokens)
+    def fuzzy(self, tokens):
+        self.debug('** Fuzzy on. Trying with %s.', tokens)
         tokens.sort(key=lambda t: len(t), reverse=True)
         for try_one in tokens:
-            keys = base_keys[:]
+            keys = self.keys[:]
             if try_one.db_key in keys:
                 keys.remove(try_one.db_key)
             if try_one.isdigit():
@@ -299,6 +290,16 @@ class Search(object):
             for key in try_one.fuzzy_keys:
                 if self.bucket_dry:
                     self.add_to_bucket(keys + [key])
+
+    def reduce_tokens(self):
+        self.debug('** Bucket dry. Trying to remove some.')
+        self.meaningful.sort(key=lambda x: x.frequency)
+        for token in self.meaningful:
+            keys = self.keys[:]
+            keys.remove(token.db_key)
+            self.add_to_bucket(keys)
+            if self.bucket_overflow:
+                break
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
@@ -324,18 +325,21 @@ class Search(object):
         self.bucket = self.intersect(keys)
         self.debug('%s ids in bucket so far', len(self.bucket))
 
-    def compute_results(self):
+    def convert(self):
         self.debug('Computing results')
         for _id in self.bucket:
+            if _id in self.results:
+                continue
             result = Result(DB.hgetall(_id))
             result.match_housenumber(self.tokens)
-            self.results.append(result)
+            score_ngram(result, self.query)
+            self.results[_id] = result
         self.debug('Done computing results')
 
     @property
     def bucket_full(self):
         l = len(self.bucket)
-        return l >= self.limit and l < config.BUCKET_LIMIT
+        return l >= self.min and l < config.BUCKET_LIMIT
 
     @property
     def bucket_overflow(self):
@@ -343,11 +347,22 @@ class Search(object):
 
     @property
     def bucket_dry(self):
-        return len(self.bucket) < self.limit
+        return len(self.bucket) < self.min
 
     @property
     def bucket_empty(self):
         return not self.bucket
+
+    @property
+    def bucket_cream(self):
+        return any(r.score > config.MATCH_THRESHOLD
+                   for _id, r in self.results.items())
+
+    def has_cream(self):
+        if self.bucket_empty or self.bucket_overflow or len(self.bucket) > 10:
+            return False
+        self.convert()
+        return self.bucket_cream
 
 
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0):
