@@ -1,4 +1,5 @@
 import csv
+import time
 
 
 from addok.index_utils import index_document
@@ -78,6 +79,7 @@ def row_to_doc(row):
 
 def import_from_csv(filepath, limit=None):
     print('Importing from', filepath)
+    start = time.time()
     with open(filepath) as f:
         reader = csv.DictReader(f, fieldnames=FIELDS, delimiter='|')
         count = 0
@@ -88,6 +90,6 @@ def import_from_csv(filepath, limit=None):
             index_document(doc)
             count += 1
             if count % 10000 == 0:
-                print("Done", count)
+                print("Done", count, time.time() - start)
             if limit and count >= limit:
                 break
