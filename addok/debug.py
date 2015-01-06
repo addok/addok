@@ -154,7 +154,7 @@ class Cli(object):
         """Return document linked to word with higher score.
         BESTSCORE lilas"""
         key = token_key(indexed_string(word)[0])
-        for _id, score in DB.zrevrange(key, 0, 10, withscores=True):
+        for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
             result = Result(_id)
             print(white(result), blue(score), blue(result.id))
 
