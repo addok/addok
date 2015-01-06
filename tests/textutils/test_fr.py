@@ -69,6 +69,16 @@ def test_normalize(input, output):
      "6, rue Winston-Churchill 60321 Compiègne"),
     ("BP 80111 159, avenue Jacques-Douzans 31604 Muret Cedex",
      "159, avenue Jacques-Douzans 31604 Muret"),
+    ("BP 20169 Cite administrative - 8e étage Rue Gustave-Delory 59017 Lille",
+     "Cite administrative - Rue Gustave-Delory 59017 Lille"),
+    ("12e étage Rue Gustave-Delory 59017 Lille",
+     "Rue Gustave-Delory 59017 Lille"),
+    ("12eme étage Rue Gustave-Delory 59017 Lille",
+     "Rue Gustave-Delory 59017 Lille"),
+    ("12ème étage Rue Gustave-Delory 59017 Lille",
+     "Rue Gustave-Delory 59017 Lille"),
+    ("Rue Louis des Etages",
+     "Rue Louis des Etages"),
 ])
 def test_clean_query(input, expected):
     assert _clean_query(input) == expected
