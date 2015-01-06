@@ -442,7 +442,8 @@ class Reverse(BaseHelper):
             _id, housenumber = key.decode().split('|')
             r = Result(document_key(_id))
             if housenumber:
-                field = housenumber_field_key(housenumber)
+                token = list(preprocess_query(housenumber))[0]
+                field = housenumber_field_key(token)
                 r.make_housenumber(field)
             score_by_geo_distance(r, (self.lat, self.lon))
             self.results.append(r)
