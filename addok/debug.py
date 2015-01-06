@@ -1,3 +1,4 @@
+import inspect
 import logging
 import readline
 import time
@@ -72,8 +73,8 @@ def white(s):
 class Cli(object):
 
     COMMANDS = (
-        'SEARCH', 'DOC', 'TOKENIZE', 'DEBUG', 'FREQUENCY', 'INDEX',
-        'BESTSCORE', 'AUTOCOMPLETE', 'REVERSE'
+        'SEARCH', 'GET', 'TOKENIZE', 'DEBUG', 'FREQUENCY', 'INDEX',
+        'BESTSCORE', 'AUTOCOMPLETE', 'REVERSE', 'HELP'
     )
 
     def __init__(self):
@@ -89,6 +90,8 @@ class Cli(object):
                     state -= 1
 
     def do_search(self, query):
+        """Issue a search (default command, can be omitted):
+        SEARCH rue des Lilas"""
         start = time.time()
         for result in search(query):
             print('{} ({} | {})'.format(white(result), blue(result.score),
@@ -96,21 +99,34 @@ class Cli(object):
         print(magenta("({} seconds)".format(time.time() - start)))
 
     def do_tokenize(self, string):
+        """Inspect how a string is tokenized before being indexed.
+        TOKENIZE Rue des Lilas"""
         print(white(' '.join(indexed_string(string))))
 
     def do_help(self, *args):
-        print(cyan('Commands:'), yellow(' '.join(self.COMMANDS)))
+        """Display this help message."""
+        for name, func in inspect.getmembers(Cli, inspect.isfunction):
+            if name.startswith('do_'):
+                doc = func.__doc__ or ''
+                print(yellow(name[3:].upper()),
+                      cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
 
     def do_debug(self, *args):
+        """Set debug mode on (must be run before any command)."""
         set_debug()
 
-    def do_doc(self, _id):
+    def do_get(self, _id):
+        """Get document from index with its id.
+        GET 772210180J"""
         print(white(doc_by_id(_id)))
 
     def do_frequency(self, word):
+        """Return word frequency in index.
+        FREQUENCY lilas"""
         print(white(word_frequency(word)))
 
     def do_autocomplete(self, s):
+        """Shows autocomplete results for a given token."""
         s = list(preprocess_query(s))[0]
         token = Token(s)
         token.autocomplete()
@@ -127,19 +143,24 @@ class Cli(object):
             )
 
     def do_index(self, _id):
+        """Get index details for a document by its id.
+        INDEX 772210180J"""
         doc = doc_by_id(_id)
         self._print_field_index_details(doc[b'name'].decode(), _id)
         self._print_field_index_details(doc[b'postcode'].decode(), _id)
         self._print_field_index_details(doc[b'city'].decode(), _id)
 
     def do_bestscore(self, word):
+        """Return document linked to word with higher score.
+        BESTSCORE lilas"""
         key = token_key(indexed_string(word)[0])
         for _id, score in DB.zrevrange(key, 0, 10, withscores=True):
-            doc = DB.hgetall(_id)
-            result = Result(doc)
+            result = Result(_id)
             print(white(result), blue(score), blue(result.id))
 
     def do_reverse(self, latlon):
+        """Do a reverse search. Args: lat lon.
+        REVERSE 48.1234 2.9876"""
         lat, lon = latlon.split()
         for r in reverse(float(lat), float(lon)):
             print('{} ({} | {})'.format(white(r), blue(r.score), blue(r.id)))
