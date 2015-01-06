@@ -16,27 +16,31 @@ def pytest_runtest_teardown(item, nextitem):
 
 
 @pytest.fixture
-def doc(request):
-    return {
-        'id': uuid.uuid4().hex,
-        'importance': 0.0
-    }.copy()
+def factory(request):
+    def _(**kwargs):
+        doc = {
+            'id': uuid.uuid4().hex,
+            'type': 'street',
+            'name': 'ellington',
+            'importance': 0.0,
+            'lat': '48.3254',
+            'lon': '2.256'
+        }
+        doc.update(kwargs)
+        return doc
+    return _
 
 
 @pytest.fixture
-def street(doc):
-    doc['type'] = 'street'
-    return doc
+def street(factory):
+    return factory()
 
 
 @pytest.fixture
-def city(doc):
-    doc['type'] = 'city'
-    return doc
+def city(factory):
+    return factory(type='city')
 
 
 @pytest.fixture
-def housenumber(doc):
-    doc['type'] = 'housenumber'
-    doc['housenumber'] = 11
-    return doc
+def housenumber(factory):
+    return factory(type='housenumber', housenumber='11')

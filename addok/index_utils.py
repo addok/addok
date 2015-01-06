@@ -13,8 +13,11 @@ def index_edge_ngrams(token):
 
 
 def index_housenumber(key, document):
-    val = '|'.join([document['housenumber'], document['lat'], document['lon']])
-    for hn in preprocess(document['housenumber']):
+    val = '|'.join([
+        str(document['housenumber']), str(document['lat']),
+        str(document['lon'])
+    ])
+    for hn in preprocess(str(document['housenumber'])):
         DB.hset(key, housenumber_field_key(hn), val)
 
 
@@ -29,7 +32,8 @@ def index_document(document):
     exists = DB.exists(key)
     if document['type'] == 'housenumber':
         index_housenumber(key, document)
-        index_field(key, document['housenumber'])
+        index_field(key, str(document['housenumber']))
+    index_geohash(document)
     if not exists or document['type'] != 'housenumber':
         document.pop('housenumber', None)  # When we create the street from the
                                            # housenumber row.
@@ -43,10 +47,12 @@ def index_document(document):
         if postcode:
             boost = 1.2 if document['type'] == 'city' else 1
             index_field(key, postcode, boost=boost)
-    index_geohash(key, float(document['lat']), float(document['lon']))
 
 
-def index_geohash(key, lat, lon):
+def index_geohash(doc):
+    key = '|'.join([doc['id'], str(doc.get('housenumber', ''))])
+    lat = float(doc['lat'])
+    lon = float(doc['lon'])
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
     geok = geohash_key(geoh)
     DB.sadd(geok, key)

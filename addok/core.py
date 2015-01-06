@@ -91,10 +91,14 @@ class Result(object):
             key = document_key(self.id)
             field = housenumber_field_key(token.original)
             if DB.hexists(key, field):
-                raw, lat, lon = DB.hget(key, field).decode().split('|')
-                self.housenumber = raw
-                self.lat = lat
-                self.lon = lon
+                self.make_housenumber(field)
+
+    def make_housenumber(self, field):
+        key = document_key(self.id)
+        raw, lat, lon = DB.hget(key, field).decode().split('|')
+        self.housenumber = raw
+        self.lat = lat
+        self.lon = lon
 
     def to_geojson(self):
         properties = {"label": str(self)}
@@ -405,14 +409,14 @@ class Reverse(BaseHelper):
     def __call__(self, lat, lon, limit=1):
         self.lat = lat
         self.lon = lon
-        self.ids = set([])
+        self.keys = set([])
         self.results = []
         self.limit = limit
         self.fetched = []
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
         self.fetch(hashes)
-        if not self.ids:
+        if not self.keys:
             hashes = self.expand(hashes)
             self.fetch(hashes)
         return self.convert()
@@ -430,12 +434,16 @@ class Reverse(BaseHelper):
         self.debug('Fetching %s', hashes)
         for h in hashes:
             k = geohash_key(h)
-            self.ids.update(DB.smembers(k))
+            self.keys.update(DB.smembers(k))
             self.fetched.append(h)
 
     def convert(self):
-        for _id in self.ids:
-            r = Result(_id)
+        for key in self.keys:
+            _id, housenumber = key.decode().split('|')
+            r = Result(document_key(_id))
+            if housenumber:
+                field = housenumber_field_key(housenumber)
+                r.make_housenumber(field)
             score_by_geo_distance(r, (self.lat, self.lon))
             self.results.append(r)
             self.results.sort(key=lambda r: r.score)
@@ -447,6 +455,6 @@ def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0):
     return helper(query)
 
 
-def reverse(lat, lon):
+def reverse(lat, lon, limit=1):
     helper = Reverse()
-    return helper(lat, lon)
+    return helper(lat, lon, limit)
