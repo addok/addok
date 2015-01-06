@@ -76,7 +76,7 @@ def row_to_doc(row):
     return doc
 
 
-def import_data(filepath, limit=None):
+def import_from_csv(filepath, limit=None):
     print('Importing from', filepath)
     with open(filepath) as f:
         reader = csv.DictReader(f, fieldnames=FIELDS, delimiter='|')
@@ -87,26 +87,7 @@ def import_data(filepath, limit=None):
                 continue
             index_document(doc)
             count += 1
-            if count % 1000 == 0:
+            if count % 10000 == 0:
                 print("Done", count)
             if limit and count >= limit:
                 break
-
-
-if __name__ == '__main__':
-    # import_data('data.csv')
-    # import_data('idf.csv')
-    # import_data('bretagne.csv')
-    import_data('midipyrenees.csv')
-    # document = {
-    #     "id": "590010020E",
-    #     "name": "rue vicq d'Azir",
-    #     "context": "Xe arrondissement Paris Île-de-France"
-    # }
-    # insert_document(document)
-    # document = {
-    #     "id": "590010020X",
-    #     "name": "Avenue des Champs-Élysées",
-    #     "context": "Ve arrondissement Paris Île-de-France"
-    # }
-    # insert_document(document)

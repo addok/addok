@@ -4,10 +4,12 @@ Addok: search engine for address. Only address.
 Usage:
     run.py serve [--port=<number>] [--host=<string>] [options]
     run.py shell
+    run.py import <filepath>...
 
 Examples:
     python run.py serve --port 5432 --debug
     python run.py shell
+    python import path/to/bano-full.csv
 
 Options:
     -h --help           print this message and exit
@@ -18,12 +20,13 @@ Options:
 
 from docopt import docopt
 
-from addok.server import app
 from addok.debug import Cli
+from addok.server import app
+from addok.import_utils import import_from_csv
 
 if __name__ == '__main__':
 
-    args = docopt(__doc__, version='Piati 0.1')
+    args = docopt(__doc__, version='Addok 0.1')
 
     if args['serve']:
         from werkzeug.serving import run_simple
@@ -32,3 +35,6 @@ if __name__ == '__main__':
     elif args['shell']:
         cli = Cli()
         cli()
+    elif args['import']:
+        for path in args['<filepath>']:
+            import_from_csv(path)
