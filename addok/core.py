@@ -65,6 +65,8 @@ class Result(object):
     def __init__(self, _id):
         doc = DB.hgetall(_id)
         for key, value in doc.items():
+            if key.startswith(b'h|'):
+                continue
             setattr(self, key.decode(), value.decode())
         self.score = float(self.importance)
 
