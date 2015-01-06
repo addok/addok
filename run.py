@@ -5,6 +5,7 @@ Usage:
     run.py serve [--port=<number>] [--host=<string>] [options]
     run.py shell
     run.py import <filepath>...
+    run.py ngrams
 
 Examples:
     python run.py serve --port 5432 --debug
@@ -22,7 +23,7 @@ from docopt import docopt
 
 from addok.debug import Cli
 from addok.server import app
-from addok.import_utils import import_from_csv
+from addok.import_utils import import_from_csv, create_edge_ngrams
 
 if __name__ == '__main__':
 
@@ -38,3 +39,5 @@ if __name__ == '__main__':
     elif args['import']:
         for path in args['<filepath>']:
             import_from_csv(path)
+    elif args['ngrams']:
+        create_edge_ngrams()

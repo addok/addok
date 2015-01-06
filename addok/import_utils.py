@@ -2,7 +2,8 @@ import csv
 import time
 
 
-from addok.index_utils import index_document
+from addok.core import DB
+from addok.index_utils import index_document, index_edge_ngrams
 from addok.textutils.fr import split_housenumber
 
 
@@ -93,3 +94,12 @@ def import_from_csv(filepath, limit=None):
                 print("Done", count, time.time() - start)
             if limit and count >= limit:
                 break
+
+
+def create_edge_ngrams():
+    for key in DB.scan_iter(match='w|*'):
+        key = key.decode()
+        _, token = key.split('|')
+        if token.isdigit():
+            continue
+        index_edge_ngrams(token)
