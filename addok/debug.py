@@ -122,7 +122,17 @@ class Cli(object):
     def do_get(self, _id):
         """Get document from index with its id.
         GET 772210180J"""
-        print(white(doc_by_id(_id)))
+        doc = doc_by_id(_id)
+        housenumbers = {}
+        for key, value in doc.items():
+            key = key.decode()
+            value = value.decode()
+            if key.startswith('h|'):
+                housenumbers[key] = value
+            else:
+                print(white(key), magenta(value))
+        if housenumbers:
+            print(white('hosuenumbers'), magenta(housenumbers))
 
     def do_frequency(self, word):
         """Return word frequency in index.
