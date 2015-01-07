@@ -40,14 +40,17 @@ def index_document(document):
                                            # housenumber row.
         pipe.hmset(key, document)
         name = document['name']
-        index_field(pipe, key, name, boost=3.0)
+        index_field(pipe, key, name, boost=4.0)
         city = document.get('city')
         if city and city != name:
             index_field(pipe, key, city)
         postcode = document.get('postcode')
         if postcode:
-            boost = 1.2 if document['type'] == 'city' else 1
+            boost = 1.2 if document['type'] == 'commune' else 1
             index_field(pipe, key, postcode, boost=boost)
+        context = document.get('context')
+        if context:
+            index_field(pipe, key, context)
     pipe.execute()
 
 
