@@ -1,6 +1,7 @@
 import csv
 import time
 
+from multiprocessing import Pool
 
 from addok.core import DB
 from addok.index_utils import index_document, index_edge_ngrams
@@ -59,22 +60,32 @@ def row_to_doc(row):
     return doc
 
 
+def index_row(row):
+    doc = row_to_doc(row)
+    if not doc:
+        return
+    index_document(doc)
+
+
 def import_from_csv(filepath, limit=None):
     print('Importing from', filepath)
+
     start = time.time()
     with open(filepath) as f:
+        pool = Pool()
         reader = csv.DictReader(f, fieldnames=FIELDS, delimiter='|')
         count = 0
+        chunk = []
         for row in reader:
-            doc = row_to_doc(row)
-            if not doc:
-                continue
-            index_document(doc)
             count += 1
+            chunk.append(row)
             if count % 10000 == 0:
+                pool.map(index_row, chunk)
                 print("Done", count, time.time() - start)
-            if limit and count >= limit:
-                break
+                chunk = []
+        pool.close()
+        pool.join()
+    print('Done in', time.time() - start)
 
 
 def create_edge_ngrams():
