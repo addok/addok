@@ -44,12 +44,13 @@ def score_by_ngram_distance(result, query):
     score = compare_ngrams(result.name, query)
     if score < config.MATCH_THRESHOLD:
         score = max(score, compare_ngrams(str(result), query))
-    result.score = score
+    result.add_score(score, max=1.0)
 
 
 def score_by_geo_distance(result, center):
     km = haversine_distance((float(result.lat), float(result.lon)), center)
-    result.score += km_to_score(km)
+    result.distance = km
+    result.add_score(km_to_score(km), max=0.1)
 
 
 def score_autocomplete(key):
@@ -63,12 +64,14 @@ def score_autocomplete(key):
 class Result(object):
 
     def __init__(self, _id):
+        self.importance = 0.0  # Default value, can be overriden by db values.
+        self._max_score = self.MAX_SCORE
         doc = DB.hgetall(_id)
         for key, value in doc.items():
             if key.startswith(b'h|'):
                 continue
             setattr(self, key.decode(), value.decode())
-        self.score = float(self.importance)
+        self._score = float(self.importance)
 
     def __str__(self):
         label = self.name
@@ -119,6 +122,24 @@ class Result(object):
             },
             "properties": properties
         }
+
+    def add_score(self, score, max):
+        self._score += score
+        self._max_score += max
+
+    @property
+    def score(self):
+        return self._score / self._max_score
+
+
+class SearchResult(Result):
+
+    MAX_SCORE = config.MAX_DOC_IMPORTANCE
+
+
+class ReverseResult(Result):
+
+    MAX_SCORE = 0.0
 
 
 class Token(object):
@@ -368,7 +389,7 @@ class Search(BaseHelper):
         for _id in self.bucket:
             if _id in self.results:
                 continue
-            result = Result(_id)
+            result = SearchResult(_id)
             result.match_housenumber(self.tokens)
             score_by_ngram_distance(result, self.query)
             self.results[_id] = result
@@ -440,7 +461,7 @@ class Reverse(BaseHelper):
     def convert(self):
         for key in self.keys:
             _id, housenumber = key.decode().split('|')
-            r = Result(document_key(_id))
+            r = ReverseResult(document_key(_id))
             if housenumber:
                 token = list(preprocess_query(housenumber))[0]
                 field = housenumber_field_key(token)

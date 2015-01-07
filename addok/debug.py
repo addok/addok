@@ -177,7 +177,8 @@ class Cli(object):
         REVERSE 48.1234 2.9876"""
         lat, lon = latlon.split()
         for r in reverse(float(lat), float(lon)):
-            print('{} ({} | {})'.format(white(r), blue(r.score), blue(r.id)))
+            print('{} ({} | {} km | {})'.format(white(r), blue(r.score),
+                                                blue(r.distance), blue(r.id)))
 
     def prompt(self):
         command = input("> ")
