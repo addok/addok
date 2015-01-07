@@ -32,6 +32,10 @@ Search engine for address. Only address.
 
     python run.py import path/to/bano-full.csv
 
+3. Index edge ngrams
+
+    python run.py ngrams
+
 If you only want a subset of the data, you can extract it from full file with
 a command like:
 
