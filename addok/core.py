@@ -187,19 +187,22 @@ class Empty(Exception):
 
 class BaseHelper(object):
 
-    def __init__(self):
+    def __init__(self, verbose):
         self._start = time.time()
+        if not verbose:
+            self.debug = lambda *args: None
 
     def debug(self, *args):
         s = args[0] % args[1:]
         s = '[{}] {}'.format(str(time.time() - self._start), s)
-        logging.debug(s)
+        print(s)
 
 
 class Search(BaseHelper):
 
-    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True):
-        super().__init__()
+    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True,
+                 verbose=False):
+        super().__init__(verbose=verbose)
         self.match_all = match_all
         self._fuzzy = fuzzy
         self.limit = limit
@@ -448,11 +451,13 @@ class Reverse(BaseHelper):
         return self.results[:self.limit]
 
 
-def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0):
-    helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit)
+def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0,
+           verbose=False):
+    helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit,
+                    verbose=verbose)
     return helper(query)
 
 
-def reverse(lat, lon, limit=1):
-    helper = Reverse()
+def reverse(lat, lon, limit=1, verbose=False):
+    helper = Reverse(verbose=verbose)
     return helper(lat, lon, limit)

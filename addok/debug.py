@@ -73,8 +73,8 @@ def white(s):
 class Cli(object):
 
     COMMANDS = (
-        'SEARCH', 'GET', 'TOKENIZE', 'DEBUG', 'FREQUENCY', 'INDEX',
-        'BESTSCORE', 'AUTOCOMPLETE', 'REVERSE', 'HELP'
+        'SEARCH', 'GET', 'TOKENIZE', 'FREQUENCY', 'INDEX', 'BESTSCORE',
+        'AUTOCOMPLETE', 'REVERSE', 'HELP', 'EXPLAIN'
     )
 
     def __init__(self):
@@ -89,14 +89,22 @@ class Cli(object):
                 else:
                     state -= 1
 
-    def do_search(self, query):
-        """Issue a search (default command, can be omitted):
-        SEARCH rue des Lilas"""
+    def _search(self, query, verbose=False):
         start = time.time()
-        for result in search(query):
+        for result in search(query, verbose=verbose):
             print('{} ({} | {})'.format(white(result), blue(result.score),
                                         blue(result.id)))
         print(magenta("({} seconds)".format(time.time() - start)))
+
+    def do_search(self, query):
+        """Issue a search (default command, can be omitted):
+        SEARCH rue des Lilas"""
+        self._search(query)
+
+    def do_explain(self, query):
+        """Issue a search with debug info:
+        EXPLAIN rue des Lilas"""
+        self._search(query, verbose=True)
 
     def do_tokenize(self, string):
         """Inspect how a string is tokenized before being indexed.
@@ -110,10 +118,6 @@ class Cli(object):
                 doc = func.__doc__ or ''
                 print(yellow(name[3:].upper()),
                       cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
-
-    def do_debug(self, *args):
-        """Set debug mode on (must be run before any command)."""
-        set_debug()
 
     def do_get(self, _id):
         """Get document from index with its id.
