@@ -89,9 +89,11 @@ def import_from_csv(filepath, limit=None):
 
 
 def create_edge_ngrams():
+    start = time.time()
     for key in DB.scan_iter(match='w|*'):
         key = key.decode()
         _, token = key.split('|')
         if token.isdigit():
             continue
         index_edge_ngrams(token)
+    print('Done in', time.time() - start)
