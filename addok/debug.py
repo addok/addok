@@ -132,7 +132,7 @@ class Cli(object):
             else:
                 print(white(key), magenta(value))
         if housenumbers:
-            print(white('hosuenumbers'), magenta(housenumbers))
+            print(white('housenumbers'), magenta(housenumbers))
 
     def do_frequency(self, word):
         """Return word frequency in index.
