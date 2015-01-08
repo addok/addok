@@ -43,4 +43,4 @@ def city(factory):
 
 @pytest.fixture
 def housenumber(factory):
-    return factory(type='housenumber', housenumber='11')
+    return factory(housenumbers={'11': {'lat': '48.3254', 'lon': '2.256'}})

@@ -96,11 +96,10 @@ def test_fuzzy_should_match_with_removal(city):
 
 def test_should_give_priority_to_housenumber_if_match(housenumber, street):
     housenumber['name'] = 'rue des Berges'
-    housenumber['housenumber'] = 22
     street['name'] = 'rue des Berges'
     index_document(housenumber)
     index_document(street)
-    results = search('22 rue des berges')
+    results = search('11 rue des berges')
     assert len(results) == 1
     assert results[0].id == housenumber['id']
 

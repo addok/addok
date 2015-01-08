@@ -1,4 +1,5 @@
 __pycache__
 *.pyc
 *.csv
+*.sjson
 notes.md

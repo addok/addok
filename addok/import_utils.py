@@ -1,11 +1,11 @@
 import csv
+import json
 import time
 
 from multiprocessing import Pool
 
 from addok.core import DB
 from addok.index_utils import index_document, index_edge_ngrams
-from addok.textutils.fr import split_housenumber
 
 
 FIELDS = [
@@ -15,11 +15,10 @@ FIELDS = [
 
 
 def row_to_doc(row):
-    dep_id_len = 3 if row['source_id'].startswith('97') else 2
-    dep_id = str(row['source_id'])[:dep_id_len]
+    dep_id_len = 3 if row['id'].startswith('97') else 2
+    dep_id = str(row['id'])[:dep_id_len]
     context = ', '.join([dep_id, row['dep'], row['region']])
     # type can be:
-    # - number => housenumber
     # - street => street
     # - hamlet => locality found in OSM as place=hamlet
     # - place => locality not found in OSM
@@ -28,12 +27,10 @@ def row_to_doc(row):
     # - city => city
     type_ = row['type']
     name = row.get('name')
-    if type_ == 'number':
-        type_ = 'housenumber'
-    elif type_ in ['hamlet', 'place']:
+    if type_ in ['hamlet', 'place']:
         type_ = 'locality'
     doc = {
-        "id": row["source_id"].split('-')[0],
+        "id": row["id"].split('-')[0],
         "lat": row['lat'],
         "lon": row['lon'],
         "postcode": row['postcode'],
@@ -42,16 +39,10 @@ def row_to_doc(row):
         "type": type_,
         "name": name
     }
-    housenumber = row.get('housenumber')
-    if housenumber:
-        els = split_housenumber(housenumber)
-        if els:
-            doc['housenumber'] = els['number']
-            if els['ordinal']:
-                doc['ordinal'] = els['ordinal']
-        else:
-            doc['housenumber'] = housenumber
-    elif type_ in ['village', 'town', 'city', 'commune']:
+    housenumbers = row.get('housenumbers')
+    if housenumbers:
+        doc['housenumbers'] = housenumbers
+    if type_ in ['village', 'town', 'city', 'commune']:
         doc['importance'] = 0.1
         # Sometimes, a village is in reality an hamlet, so it has both a name
         # (the hamlet name) and a city (the administrative entity it belongs
@@ -67,18 +58,17 @@ def index_row(row):
     index_document(doc)
 
 
-def import_from_csv(filepath, limit=None):
+def import_from_stream_json(filepath, limit=None):
     print('Importing from', filepath)
 
     start = time.time()
     with open(filepath) as f:
         pool = Pool()
-        reader = csv.DictReader(f, fieldnames=FIELDS, delimiter='|')
         count = 0
         chunk = []
-        for row in reader:
+        for row in f:
             count += 1
-            chunk.append(row)
+            chunk.append(json.loads(row))
             if count % 10000 == 0:
                 pool.map(index_row, chunk)
                 print("Done", count, time.time() - start)

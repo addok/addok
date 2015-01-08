@@ -23,7 +23,7 @@ from docopt import docopt
 
 from addok.debug import Cli
 from addok.server import app
-from addok.import_utils import import_from_csv, create_edge_ngrams
+from addok.import_utils import import_from_stream_json, create_edge_ngrams
 
 if __name__ == '__main__':
 
@@ -38,6 +38,6 @@ if __name__ == '__main__':
         cli()
     elif args['import']:
         for path in args['<filepath>']:
-            import_from_csv(path)
+            import_from_stream_json(path)
     elif args['ngrams']:
         create_edge_ngrams()
