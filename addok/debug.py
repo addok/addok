@@ -75,7 +75,8 @@ class Cli(object):
 
     COMMANDS = (
         'SEARCH', 'GET', 'TOKENIZE', 'FREQUENCY', 'INDEX', 'BESTSCORE',
-        'AUTOCOMPLETE', 'REVERSE', 'HELP', 'EXPLAIN', 'BIGRAMS', 'DISTANCE'
+        'AUTOCOMPLETE', 'REVERSE', 'HELP', 'EXPLAIN', 'BIGRAMS', 'DISTANCE',
+        'DBINFO'
     )
 
     def __init__(self):
@@ -197,6 +198,17 @@ class Cli(object):
             return
         one, two = s
         print(white(compare_ngrams(one, two)))
+
+    def do_dbinfo(self, *args):
+        """Print some useful infos from Redis DB."""
+        info = DB.info()
+        keys = [
+            'keyspace_misses', 'keyspace_hits', 'used_memory_human',
+            'total_commands_processed', 'total_connections_received',
+            'connected_clients']
+        for key in keys:
+            print('{}: {}'.format(white(key), blue(info[key])))
+        print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
 
     def prompt(self):
         command = input("> ")
