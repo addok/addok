@@ -15,10 +15,27 @@ def pytest_runtest_teardown(item, nextitem):
     DB.flushdb()
 
 
+class DummyDoc(dict):
+
+    def __init__(self, *args, **kwargs):
+        skip_index = kwargs.pop('skip_index', False)
+        super().__init__(*args, **kwargs)
+        if not skip_index:
+            self.index()
+
+    def update(self, **kwargs):
+        super().update(kwargs)
+        self.index()
+
+    def index(self):
+        from addok.index_utils import index_document
+        index_document(self)
+
+
 @pytest.fixture
 def factory(request):
     def _(**kwargs):
-        doc = {
+        default = {
             'id': uuid.uuid4().hex,
             'type': 'street',
             'name': 'ellington',
@@ -26,7 +43,8 @@ def factory(request):
             'lat': '48.3254',
             'lon': '2.256'
         }
-        doc.update(kwargs)
+        default.update(kwargs)
+        doc = DummyDoc(**default)
         return doc
     return _
 

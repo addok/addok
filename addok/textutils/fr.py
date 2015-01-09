@@ -93,3 +93,11 @@ extract_address_pattern = re.compile(
     '(\d*( ?(bis|ter))?(,? )?(' + TYPES_REGEX + ') .*(\d{5})?).*',
     flags=re.IGNORECASE)
 extract_address = yielder(_extract_address)
+
+
+def _glue_ordinal(q):
+    """Glue '3' and 'bis'."""
+    return glue_ordinal_pattern.sub('\g<1>\g<2>', q)
+glue_ordinal_pattern = re.compile('(\d{,4}) (bis|ter|quater)',
+                                  flags=re.IGNORECASE)
+glue_ordinal = yielder(_glue_ordinal)

@@ -32,4 +32,5 @@ PROCESSORS = [
 QUERY_PROCESSORS = (
     'addok.textutils.fr.extract_address',
     'addok.textutils.fr.clean_query',
+    'addok.textutils.fr.glue_ordinal',
 )

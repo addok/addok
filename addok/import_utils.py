@@ -42,7 +42,7 @@ def row_to_doc(row):
     housenumbers = row.get('housenumbers')
     if housenumbers:
         doc['housenumbers'] = housenumbers
-    if type_ in ['village', 'town', 'city', 'commune']:
+    if type_ in ['village', 'town', 'city', 'commune', 'locality']:
         doc['importance'] = 0.1
         # Sometimes, a village is in reality an hamlet, so it has both a name
         # (the hamlet name) and a city (the administrative entity it belongs
@@ -55,7 +55,7 @@ def index_row(row):
     doc = row_to_doc(row)
     if not doc:
         return
-    index_document(doc)
+    index_document(doc, update_ngrams=False)
 
 
 def import_from_stream_json(filepath, limit=None):
@@ -73,17 +73,35 @@ def import_from_stream_json(filepath, limit=None):
                 pool.map(index_row, chunk)
                 print("Done", count, time.time() - start)
                 chunk = []
+        if chunk:
+            pool.map(index_row, chunk)
         pool.close()
         pool.join()
-    print('Done in', time.time() - start)
+    print('Done', count, 'in', time.time() - start)
+
+
+def index_ngram_key(key):
+    key = key.decode()
+    _, token = key.split('|')
+    if token.isdigit():
+        return
+    index_edge_ngrams(DB, token)
 
 
 def create_edge_ngrams():
     start = time.time()
+    pool = Pool()
+    count = 0
+    chunk = []
     for key in DB.scan_iter(match='w|*'):
-        key = key.decode()
-        _, token = key.split('|')
-        if token.isdigit():
-            continue
-        index_edge_ngrams(token)
-    print('Done in', time.time() - start)
+        count += 1
+        chunk.append(key)
+        if count % 10000 == 0:
+            pool.map(index_ngram_key, chunk)
+            print("Done", count, time.time() - start)
+            chunk = []
+    if chunk:
+        pool.map(index_ngram_key, chunk)
+    pool.close()
+    pool.join()
+    print('Done', count, 'in', time.time() - start)

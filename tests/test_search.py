@@ -1,12 +1,10 @@
 from addok.core import search
-from addok.index_utils import index_document, index_edge_ngrams
-from addok.pipeline import preprocess
+from addok.index_utils import index_document
 
 
 def test_should_match_name(street):
     assert not search('Conflans')
-    street['name'] = 'Conflans'
-    index_document(street)
+    street.update(name='Conflans')
     results = search('Conflans')
     assert results
     result = results[0]
@@ -16,57 +14,40 @@ def test_should_match_name(street):
 
 def test_should_match_name_case_insensitive(street):
     assert not search('conflans')
-    street['name'] = 'Conflans'
-    index_document(street)
+    street.update(name='Conflans')
     assert search('conflans')
 
 
 def test_should_match_name_with_accent(street):
     assert not search('andrésy')
-    street['name'] = 'Andrésy'
-    index_document(street)
+    street.update(name='Andrésy')
     assert search('andrésy')
 
 
 def test_should_match_name_without_accent(street):
     assert not search('andresy')
-    street['name'] = 'Andrésy'
-    index_document(street)
+    street.update(name='Andrésy')
     assert search('andresy')
 
 
 def test_should_give_priority_to_best_match(street, city):
-    street['name'] = "rue d'Andrésy"
-    index_document(street)
-    city['name'] = 'Andrésy'
-    index_document(city)
+    street.update(name="rue d'Andrésy")
+    city.update(name='Andrésy')
     results = search('andresy')
     assert results[0].id == city['id']
 
 
-def test_should_give_priority_to_best_match2(street):
-    street['name'] = "rue d'Andrésy"
-    street['city'] = "Conflans"
-    index_document(street)
-    other = street.copy()
-    other['id'] = "xxxx321456"
-    other['name'] = "rue de Conflans"
-    other['city'] = "Andrésy"
-    index_document(other)
+def test_should_give_priority_to_best_match2(street, factory):
+    street.update(name="rue d'Andrésy", city="Conflans")
+    factory(name="rue de Conflans", city="Andrésy")
     results = search("rue andresy")
     assert len(results) == 2
     assert results[0].id == street['id']
 
 
-def test_should_give_priority_to_best_match3(street):
-    street['name'] = "rue de Lille"
-    street['city'] = "Douai"
-    index_document(street)
-    other = street.copy()
-    other['id'] = "xxxx321456"
-    other['name'] = "rue de Douai"
-    other['city'] = "Lille"
-    index_document(other)
+def test_should_give_priority_to_best_match3(street, factory):
+    street.update(name="rue de Lille", city="Douai")
+    other = factory(name="rue de Douai", city="Lille")
     results = search("rue de lille douai")
     assert len(results) == 2
     assert results[0].id == street['id']
@@ -76,39 +57,31 @@ def test_should_give_priority_to_best_match3(street):
 
 
 def test_should_be_fuzzy_of_1_by_default(city):
-    city['name'] = "Andrésy"
-    index_document(city)
+    city.update(name="Andrésy")
     assert search('antresy')
     assert not search('antresu')
 
 
 def test_fuzzy_should_work_with_inversion(city):
-    city['name'] = "Andrésy"
-    index_document(city)
+    city.update(name="Andrésy")
     assert search('andreys')
 
 
 def test_fuzzy_should_match_with_removal(city):
-    city['name'] = "Andrésy"
-    index_document(city)
+    city.update(name="Andrésy")
     assert search('andressy')
 
 
 def test_should_give_priority_to_housenumber_if_match(housenumber, street):
-    housenumber['name'] = 'rue des Berges'
-    street['name'] = 'rue des Berges'
-    index_document(housenumber)
-    index_document(street)
+    housenumber.update(name='rue des Berges')
+    street.update(name='rue des Berges')
     results = search('11 rue des berges')
     assert len(results) == 1
     assert results[0].id == housenumber['id']
 
 
 def test_should_do_autocomplete_on_last_term(street):
-    street['name'] = 'rue de Wambrechies'
-    street['city'] = 'Bondues'
-    index_document(street)
-    index_edge_ngrams(list(preprocess('Wambrechies'))[0])
+    street.update(name='rue de Wambrechies', city="Bondues")
     assert search('avenue wambre')
     assert not search('wambre avenue')
 
@@ -116,6 +89,49 @@ def test_should_do_autocomplete_on_last_term(street):
 def test_synonyms_should_be_replaced(street, monkeypatch):
     monkeypatch.setattr('addok.textutils.default.SYNONYMS',
                         {'bd': 'boulevard'})
-    street['name'] = 'boulevard des Fleurs'
-    index_document(street)
+    street.update(name='boulevard des Fleurs')
     assert search('bd')
+
+
+def test_should_return_results_if_only_common_terms(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.COMMON_THRESHOLD', 3)
+    monkeypatch.setattr('addok.config.BUCKET_LIMIT', 3)
+    street1 = factory(name="rue de la monnaie", city="Vitry")
+    street2 = factory(name="rue de la monnaie", city="Paris")
+    street3 = factory(name="rue de la monnaie", city="Condom")
+    street4 = factory(name="La monnaye", city="Saint-Loup-Cammas")
+    results = search('rue de la monnaie')
+    ids = [r.id for r in results]
+    assert street1['id'] in ids
+    assert street2['id'] in ids
+    assert street3['id'] in ids
+    assert street4['id'] not in ids
+
+
+def test_not_found_term_is_autocompleted(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.COMMON_THRESHOLD', 3)
+    monkeypatch.setattr('addok.config.BUCKET_LIMIT', 3)
+    factory(name="rue de la monnaie", city="Vitry")
+    assert search('rue de la mon')
+
+
+def test_found_term_is_autocompleted_if_missing_results(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.COMMON_THRESHOLD', 3)
+    monkeypatch.setattr('addok.config.BUCKET_LIMIT', 3)
+    factory(name="rue de la montagne", city="Vitry")
+    factory(name="rue du mont", city="Vitry")
+    assert len(search('rue mont')) == 2
+
+
+def test_found_term_is_not_autocompleted_if_enough_results(factory,
+                                                           monkeypatch):
+    monkeypatch.setattr('addok.config.COMMON_THRESHOLD', 3)
+    monkeypatch.setattr('addok.config.BUCKET_LIMIT', 3)
+    montagne = factory(name="rue de la montagne", city="Vitry")
+    factory(name="rue du mont", city="Vitry")
+    factory(name="rue du mont", city="Paris")
+    factory(name="rue du mont", city="Lille")
+    results = search('rue mont', limit=2)
+    ids = [r.id for r in results]
+    assert len(ids) == 2
+    assert montagne['id'] not in ids

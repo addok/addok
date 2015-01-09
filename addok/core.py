@@ -1,5 +1,6 @@
-import logging
 import time
+
+from math import ceil
 
 import geohash
 import redis
@@ -32,6 +33,10 @@ def geohash_key(s):
     return 'g|{}'.format(s)
 
 
+def bigram_key(s):
+    return 'b|{}'.format(s)
+
+
 def token_key_frequency(key):
     return DB.zcard(key)
 
@@ -41,16 +46,16 @@ def token_frequency(token):
 
 
 def score_by_ngram_distance(result, query):
-    score = compare_ngrams(result.name, query)
+    score = compare_ngrams(str(result), query)
     if score < config.MATCH_THRESHOLD:
         score = max(score, compare_ngrams(str(result), query))
-    result.add_score(score, max=1.0)
+    result.add_score(score, ceiling=1.0)
 
 
 def score_by_geo_distance(result, center):
     km = haversine_distance((float(result.lat), float(result.lon)), center)
     result.distance = km
-    result.add_score(km_to_score(km), max=0.1)
+    result.add_score(km_to_score(km), ceiling=0.1)
 
 
 def score_autocomplete(key):
@@ -123,9 +128,9 @@ class Result(object):
             "properties": properties
         }
 
-    def add_score(self, score, max):
+    def add_score(self, score, ceiling):
         self._score += score
-        self._max_score += max
+        self._max_score += ceiling
 
     @property
     def score(self):
@@ -215,7 +220,7 @@ class BaseHelper(object):
 
     def debug(self, *args):
         s = args[0] % args[1:]
-        s = '[{}] {}'.format(str(time.time() - self._start), s)
+        s = '[{}] {}'.format(str(time.time() - self._start)[:10], s)
         print(s)
 
 
@@ -240,6 +245,7 @@ class Search(BaseHelper):
         self.query = query
         self.preprocess(query)
         self.search_all()
+        self.set_should_match_threshold()
         for token in self.tokens:
             if token.is_common:
                 self.common.append(token)
@@ -251,53 +257,86 @@ class Search(BaseHelper):
         self.debug('Taken tokens %s', self.meaningful)
         self.debug('Common tokens %s', self.common)
         self.debug('Not found tokens %s', self.not_found)
+        steps = [
+            self.step_only_commons,
+            self.step_no_meaningful_but_common_try_autocomplete,
+            self.step_bucket_with_meaningful,
+            self.step_check_bucket_full,
+            self.step_check_cream,
+            self.step_reduce_with_other_commons,
+            self.step_autocomplete,
+            self.step_check_bucket_full,
+            self.step_check_cream,
+            self.step_fuzzy,
+            self.step_extend_results_reducing_tokens,
+        ]
+        for step in steps:
+            self.debug('** %s **', step.__name__.upper())
+            if step():
+                return self.render()
+        return self.render()
+
+    def step_only_commons(self):
         if len(self.tokens) == len(self.common):
             # Only common terms, shortcut to search
             keys = [t.db_key for t in self.tokens]
             self.new_bucket(keys, 10)
             if self.has_cream():
                 self.debug('Cream found. Returning.')
-                return self.render()
+                return True
             self.new_bucket(keys)
-            if self.bucket_overflow or self.has_cream():
-                self.debug('Only common terms and too much result. Return.')
-                return self.render()
+            if self.bucket_overflow:
+                self.debug('Only common terms and too much results. Return.')
+                return True
+
+    def step_no_meaningful_but_common_try_autocomplete(self):
         if not self.meaningful and self.common:
             # Only commons terms, try to reduce with autocomplete.
             self.debug('Only commons, trying autocomplete')
             self.autocomplete(self.common)
-            if self.bucket_full or self.bucket_overflow or self.has_cream():
-                return self.render()
-        if not self.meaningful and self.common:  # Take the less common.
             self.meaningful = self.common[:1]
+            if not self.pass_should_match_threshold:
+                return False
+            if self.bucket_full or self.bucket_overflow or self.has_cream():
+                return True
+
+    def step_bucket_with_meaningful(self):
         self.keys = [t.db_key for t in self.meaningful]
         if self.bucket_empty:
             self.new_bucket(self.keys, 10)
             if self.has_cream():
                 self.debug('Cream found. Returning.')
-                return self.render()
+                return True
             self.new_bucket(self.keys)
         else:
             self.add_to_bucket(self.keys)
-        if self.bucket_full or self.has_cream():
-            return self.render()
-        for token in self.common:
+
+    def step_reduce_with_other_commons(self):
+        for token in self.common:  # Already ordered by frequency asc.
             if token not in self.meaningful and self.bucket_overflow:
+                self.debug('Now considering also commong token %s', token)
                 self.meaningful.append(token)
                 self.keys = [t.db_key for t in self.meaningful]
                 self.new_bucket(self.keys)
-        # Try to autocomplete
+
+    def step_autocomplete(self):
         self.autocomplete(self.meaningful)
-        if self.bucket_full or self.has_cream():
-            self.debug('Enough results after autocomplete %s', self.meaningful)
-            return self.render()
+
+    def step_fuzzy(self):
         if self._fuzzy and not self.has_cream():
             self.fuzzy(self.not_found)
             if self.bucket_dry and not self.has_cream():
                 self.fuzzy(self.meaningful)
+
+    def step_extend_results_reducing_tokens(self):
         if self.bucket_dry and not self.has_cream():
             self.reduce_tokens()
-        return self.render()
+
+    def step_check_bucket_full(self):
+        return self.bucket_full
+
+    def step_check_cream(self):
+        return self.has_cream()
 
     def render(self):
         self.convert()
@@ -325,16 +364,21 @@ class Search(BaseHelper):
         if not self._autocomplete:
             self.debug('Autocomplete not active. Abort.')
             return
-        self.debug('** Autocompleting %s', self.last_token)
-        self.last_token.autocomplete()
+        self.debug('Autocompleting %s', self.last_token)
+        # self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]
-        for key in self.last_token.autocomplete_keys:
-            if not self.bucket_overflow:
+        bigram_keys = [bigram_key(t.original) for t in tokens if not t.is_last]
+        key = edge_ngram_key(self.last_token.original)
+        autocomplete_tokens = DB.sinter(bigram_keys + [key])
+        self.debug('Found tokens to autocomplete %s', autocomplete_tokens)
+        for token in autocomplete_tokens:
+            key = token_key(token.decode())
+            if not self.bucket_overflow or self.last_token in self.not_found:
                 self.debug('Trying to extend bucket. Autocomplete %s', key)
                 self.add_to_bucket(keys + [key])
 
     def fuzzy(self, tokens):
-        self.debug('** Fuzzy on. Trying with %s.', tokens)
+        self.debug('Fuzzy on. Trying with %s.', tokens)
         tokens.sort(key=lambda t: len(t), reverse=True)
         for try_one in tokens:
             keys = self.keys[:]
@@ -351,7 +395,7 @@ class Search(BaseHelper):
                     self.add_to_bucket(keys + [key])
 
     def reduce_tokens(self):
-        self.debug('** Bucket dry. Trying to remove some.')
+        self.debug('** Bucket dry. Trying to remove some tokens.')
         self.meaningful.sort(key=lambda x: x.frequency)
         for token in self.meaningful:
             keys = self.keys[:]
@@ -375,12 +419,14 @@ class Search(BaseHelper):
 
     def add_to_bucket(self, keys):
         self.debug('Adding to bucket with keys %s', keys)
+        self.matched_keys.update(keys)
         limit = config.BUCKET_LIMIT - len(self.bucket)
         self.bucket.update(self.intersect(keys, limit))
         self.debug('%s ids in bucket so far', len(self.bucket))
 
     def new_bucket(self, keys, limit=0):
         self.debug('New bucket with keys %s and limit %s', keys, limit)
+        self.matched_keys = set(keys)
         self.bucket = self.intersect(keys, limit)
         self.debug('%s ids in bucket so far', len(self.bucket))
 
@@ -423,6 +469,14 @@ class Search(BaseHelper):
         self.debug('Checking cream.')
         self.convert()
         return self.bucket_cream
+
+    def set_should_match_threshold(self):
+        self.matched_keys = set([])
+        self.should_match_threshold = ceil(2 / 3 * len(self.tokens))
+
+    @property
+    def pass_should_match_threshold(self):
+        len(self.matched_keys) >= self.should_match_threshold
 
 
 class Reverse(BaseHelper):

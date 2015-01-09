@@ -12,7 +12,7 @@ def count_keys():
 
 def test_index_edge_ngrams():
     before = count_keys()
-    index_edge_ngrams('street')
+    index_edge_ngrams(DB, 'street')
     after = count_keys()
     assert after - before == 3
     assert DB.smembers('n|str') == set([b'street'])

@@ -1,6 +1,7 @@
 import pytest
 
-from addok.textutils.fr import _stemmize, _clean_query, _extract_address
+from addok.textutils.fr import (_stemmize, _clean_query, _extract_address,
+                                _glue_ordinal)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -108,3 +109,17 @@ def test_clean_query(input, expected):
 ])
 def test_match_address(input, expected):
     assert _extract_address(input) == expected
+
+
+@pytest.mark.parametrize("input,expected", [
+    ('60, avenue du Centre 78180 Montigny-le-Bretonneux',
+     '60, avenue du Centre 78180 Montigny-le-Bretonneux'),
+    ('60 bis, avenue du Centre 78180 Montigny-le-Bretonneux',
+     '60bis, avenue du Centre 78180 Montigny-le-Bretonneux'),
+    ('6 ter, avenue du Centre 78180 Montigny-le-Bretonneux',
+     '6ter, avenue du Centre 78180 Montigny-le-Bretonneux'),
+    ('600 quater, avenue du Centre 78180 Montigny-le-Bretonneux',
+     '600quater, avenue du Centre 78180 Montigny-le-Bretonneux'),
+])
+def test_glue_ordinal(input, expected):
+    assert _glue_ordinal(input) == expected
