@@ -4,7 +4,7 @@ import readline
 import time
 
 from addok.core import (DB, search, document_key, token_frequency,
-                        token_key, Result, Token, reverse, bigram_key)
+                        token_key, SearchResult, Token, reverse, bigram_key)
 from addok.pipeline import preprocess_query
 from addok.textutils.default import compare_ngrams
 
@@ -165,13 +165,14 @@ class Cli(object):
         self._print_field_index_details(doc[b'name'].decode(), _id)
         self._print_field_index_details(doc[b'postcode'].decode(), _id)
         self._print_field_index_details(doc[b'city'].decode(), _id)
+        self._print_field_index_details(doc[b'context'].decode(), _id)
 
     def do_bestscore(self, word):
         """Return document linked to word with higher score.
         BESTSCORE lilas"""
         key = token_key(indexed_string(word)[0])
         for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
-            result = Result(_id)
+            result = SearchResult(_id)
             print(white(result), blue(score), blue(result.id))
 
     def do_reverse(self, latlon):

@@ -33,7 +33,8 @@ def index_document(doc, update_ngrams=True):
     pipe = DB.pipeline()
     index_geohash(pipe, doc['id'], '', doc['lat'], doc['lon'])
     name = doc['name']
-    bigram_els = index_field(pipe, key, name, boost=4.0,
+    importance = doc.get('importance', 0.0)
+    bigram_els = index_field(pipe, key, name, boost=4.0 + importance,
                              update_ngrams=update_ngrams)
     city = doc.get('city')
     if city and city != name:

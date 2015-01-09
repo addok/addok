@@ -42,8 +42,9 @@ def row_to_doc(row):
     housenumbers = row.get('housenumbers')
     if housenumbers:
         doc['housenumbers'] = housenumbers
-    if type_ in ['village', 'town', 'city', 'commune', 'locality']:
+    if len(doc['id']) == 5:
         doc['importance'] = 0.1
+    if type_ in ['village', 'town', 'city', 'commune', 'locality']:
         # Sometimes, a village is in reality an hamlet, so it has both a name
         # (the hamlet name) and a city (the administrative entity it belongs
         # to), this is why we first look if a name exists.
