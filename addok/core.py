@@ -329,7 +329,9 @@ class Search(BaseHelper):
                 self.fuzzy(self.meaningful)
 
     def step_extend_results_reducing_tokens(self):
-        if self.bucket_dry and not self.has_cream():
+        if self.has_cream():
+            return  # No need.
+        if self.bucket_dry:
             self.reduce_tokens()
 
     def step_check_bucket_full(self):
@@ -395,14 +397,17 @@ class Search(BaseHelper):
                     self.add_to_bucket(keys + [key])
 
     def reduce_tokens(self):
-        self.debug('** Bucket dry. Trying to remove some tokens.')
-        self.meaningful.sort(key=lambda x: x.frequency)
-        for token in self.meaningful:
-            keys = self.keys[:]
-            keys.remove(token.db_key)
-            self.add_to_bucket(keys)
-            if self.bucket_overflow:
-                break
+        # Only if bucket is empty or we have margin on should_match_threshold.
+        if self.bucket_empty\
+           or len(self.meaningful) - 1 > self.should_match_threshold:
+            self.debug('Bucket dry. Trying to remove some tokens.')
+            self.meaningful.sort(key=lambda x: x.frequency)
+            for token in self.meaningful:
+                keys = self.keys[:]
+                keys.remove(token.db_key)
+                self.add_to_bucket(keys)
+                if self.bucket_overflow:
+                    break
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
