@@ -40,15 +40,17 @@ def index_document(doc, update_ngrams=True):
     if city and city != name:
         bigram_els.extend(index_field(pipe, key, city,
                                       update_ngrams=update_ngrams))
-    index_bigrams(pipe, bigram_els)
     postcode = doc.get('postcode')
     if postcode:
         boost = 1.2 if doc['type'] == 'commune' else 1
-        index_field(pipe, key, postcode, boost=boost,
-                    update_ngrams=update_ngrams)
+        els = index_field(pipe, key, postcode, boost=boost,
+                          update_ngrams=update_ngrams)
+        bigram_els.extend(els)
     context = doc.get('context')
     if context:
-        index_field(pipe, key, context, update_ngrams=update_ngrams)
+        els = index_field(pipe, key, context, update_ngrams=update_ngrams)
+        bigram_els.extend(els)
+    index_bigrams(pipe, bigram_els)
     housenumbers = doc.get('housenumbers')
     if housenumbers:
         del doc['housenumbers']
