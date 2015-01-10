@@ -188,7 +188,9 @@ class Cli(object):
         BIGRAMS lilas"""
         word = list(preprocess_query(word))[0]
         key = bigram_key(word)
-        print(white(DB.smembers(key)))
+        tokens = [t.decode() for t in DB.smembers(key)]
+        tokens.sort()
+        print(white(tokens))
 
     def do_distance(self, s):
         """Print the distance score between two strings. Use | as separator.
