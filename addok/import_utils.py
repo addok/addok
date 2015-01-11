@@ -17,7 +17,11 @@ FIELDS = [
 def row_to_doc(row):
     dep_id_len = 3 if row['id'].startswith('97') else 2
     dep_id = str(row['id'])[:dep_id_len]
-    context = ', '.join([dep_id, row['dep'], row['region']])
+    context = [dep_id]
+    if row['dep'] != row.get('city'):
+        context.append(row['dep'])
+    context.append(row['region'])
+    context = ', '.join(context)
     # type can be:
     # - street => street
     # - hamlet => locality found in OSM as place=hamlet
