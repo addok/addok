@@ -22,10 +22,14 @@ def index_field(pipe, key, string, boost=1.0, update_ngrams=True):
 
 
 def index_bigrams(pipe, els):
+    els = set(els)  # Unique values.
     for el in els:
+        values = set([])
         for el2 in els:
             if el != el2:
-                pipe.sadd(bigram_key(el), el2)
+                values.add(el2)
+        if values:
+            pipe.sadd(bigram_key(el), *values)
 
 
 def index_document(doc, update_ngrams=True):
