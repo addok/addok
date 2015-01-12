@@ -1,7 +1,10 @@
 import inspect
+import json
 import logging
 import readline
 import time
+
+import geohash
 
 from .core import (DB, search, document_key, token_frequency,
                    token_key, SearchResult, Token, reverse, pair_key)
@@ -81,11 +84,18 @@ class Cli(object):
     )
 
     def __init__(self):
+        self._inspect_commands()
         readline.set_completer(self.completer)
         readline.parse_and_bind("tab: complete")
 
+    def _inspect_commands(self):
+        self.COMMANDS = {}
+        for name, func in inspect.getmembers(Cli, inspect.isfunction):
+            if name.startswith('do_'):
+                self.COMMANDS[name[3:].upper()] = func.__doc__ or ''
+
     def completer(self, text, state):
-        for cmd in self.COMMANDS:
+        for cmd in self.COMMANDS.keys():
             if cmd.startswith(text.upper()):
                 if not state:
                     return cmd + " "
@@ -124,11 +134,9 @@ class Cli(object):
 
     def do_help(self, *args):
         """Display this help message."""
-        for name, func in inspect.getmembers(Cli, inspect.isfunction):
-            if name.startswith('do_'):
-                doc = func.__doc__ or ''
-                print(yellow(name[3:].upper()),
-                      cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
+        for name, doc in self.COMMANDS.items():
+            print(yellow(name),
+                  cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
 
     def do_get(self, _id):
         """Get document from index with its id.
@@ -223,6 +231,19 @@ class Cli(object):
             print('{}: {}'.format(white(key), blue(info[key])))
         print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
 
+    def do_dbkey(self, key):
+        """Print raw content of a DB key.
+        DBKEY g|u09tyzfe"""
+        type_ = DB.type(key).decode()
+        if type_ == 'set':
+            out = DB.smembers(key)
+        elif type_ == 'hash':
+            out = DB.hgetall(key)
+        else:
+            out = 'Unsupported type {}'.format(type_)
+        print('type:', magenta(type_))
+        print('value:', white(out))
+
     def do_geodistance(self, s):
         """Compute geodistance from a result to a point.
         GEODISTANCE 772210180J 48.1234 2.9876"""
@@ -237,6 +258,22 @@ class Cli(object):
         score = km_to_score(km)
         print('km: {} | score: {}'.format(white(km), blue(score)))
 
+    def do_geohashtogeojson(self, geoh):
+        """Build GeoJSON corresponding to geohash given as parameter.
+        GEOHASHTOGEOJSON u09vej04"""
+        bbox = geohash.bbox(geoh)
+        geojson = {
+            "type": "Polygon",
+            "coordinates": [[
+                [bbox['w'], bbox['n']],
+                [bbox['e'], bbox['n']],
+                [bbox['e'], bbox['s']],
+                [bbox['w'], bbox['s']],
+                [bbox['w'], bbox['n']]
+            ]]
+        }
+        print(white(json.dumps(geojson)))
+
     def prompt(self):
         command = input("> ")
         return command
@@ -244,7 +281,7 @@ class Cli(object):
     def handle_command(self, command_line):
         if not command_line:
             return
-        if not command_line.startswith(self.COMMANDS):
+        if not command_line.startswith(tuple(self.COMMANDS.keys())):
             action = 'SEARCH'
             arg = command_line
         elif command_line.count(' '):
