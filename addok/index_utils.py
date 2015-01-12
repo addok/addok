@@ -38,8 +38,7 @@ def index_document(doc, update_ngrams=True):
     index_geohash(pipe, doc['id'], '', doc['lat'], doc['lon'])
     name = doc['name']
     importance = doc.get('importance', 0.0)
-    pair_els = index_field(pipe, key, name, boost=4.0 + importance,
-                           update_ngrams=update_ngrams)
+    pair_els = []
     city = doc.get('city')
     if city and city != name:
         pair_els.extend(index_field(pipe, key, city,
@@ -54,7 +53,6 @@ def index_document(doc, update_ngrams=True):
     if context:
         els = index_field(pipe, key, context, update_ngrams=update_ngrams)
         pair_els.extend(els)
-    index_pairs(pipe, pair_els)
     housenumbers = doc.get('housenumbers')
     if housenumbers:
         del doc['housenumbers']
@@ -64,6 +62,12 @@ def index_document(doc, update_ngrams=True):
                 doc[housenumber_field_key(hn)] = val
             index_field(pipe, key, str(number), update_ngrams=update_ngrams)
             index_geohash(pipe, doc['id'], number, point['lat'], point['lon'])
+    # Process name last, to give priority to higher score, in case same token
+    # is in two fields (for example: "rue de xxx, ile de france" contains
+    # twice "de")
+    pair_els.extend(index_field(pipe, key, name, boost=4.0 + importance,
+                                update_ngrams=update_ngrams))
+    index_pairs(pipe, pair_els)
     pipe.hmset(key, doc)
     pipe.execute()
 
