@@ -35,7 +35,7 @@ def index_pairs(pipe, els):
 def index_document(doc, update_ngrams=True):
     key = document_key(doc['id'])
     pipe = DB.pipeline()
-    index_geohash(pipe, doc['id'], '', doc['lat'], doc['lon'])
+    index_geohash(pipe, key, doc['lat'], doc['lon'])
     name = doc['name']
     importance = doc.get('importance', 0.0)
     pair_els = []
@@ -61,7 +61,7 @@ def index_document(doc, update_ngrams=True):
             for hn in preprocess(number):
                 doc[housenumber_field_key(hn)] = val
             index_field(pipe, key, str(number), update_ngrams=update_ngrams)
-            index_geohash(pipe, doc['id'], number, point['lat'], point['lon'])
+            index_geohash(pipe, key, point['lat'], point['lon'])
     # Process name last, to give priority to higher score, in case same token
     # is in two fields (for example: "rue de xxx, ile de france" contains
     # twice "de")
@@ -72,8 +72,7 @@ def index_document(doc, update_ngrams=True):
     pipe.execute()
 
 
-def index_geohash(pipe, _id, number, lat, lon):
-    key = '|'.join([_id, str(number)])
+def index_geohash(pipe, key, lat, lon):
     lat = float(lat)
     lon = float(lon)
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)

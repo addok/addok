@@ -71,12 +71,18 @@ class Result(object):
     def __init__(self, _id):
         self.importance = 0.0  # Default value, can be overriden by db values.
         self._max_score = self.MAX_SCORE
+        self.load(_id)
+        self._score = float(self.importance)
+
+    def load(self, _id):
         doc = DB.hgetall(_id)
         for key, value in doc.items():
-            if key.startswith(b'h|'):
-                continue
-            setattr(self, key.decode(), value.decode())
-        self._score = float(self.importance)
+            self.load_db_field(key.decode(), value.decode())
+
+    def load_db_field(self, key, value):
+        if key.startswith('h|'):
+            return
+        setattr(self, key, value)
 
     def __str__(self):
         label = self.name
@@ -145,6 +151,29 @@ class SearchResult(Result):
 class ReverseResult(Result):
 
     MAX_SCORE = 0.0
+
+    def __init__(self, *args, **kwargs):
+        self.housenumbers = []
+        super().__init__(*args, **kwargs)
+
+    def load_db_field(self, key, value):
+        if key.startswith('h|'):
+            self.housenumbers.append(value.split('|'))
+        else:
+            setattr(self, key, value)
+
+    def load_closer(self, lat, lon):
+
+        def sort(h):
+            return haversine_distance((float(h[1]), float(h[2])), (lat, lon))
+
+        candidates = self.housenumbers + [(None, self.lat, self.lon)]
+        candidates.sort(key=sort)
+        closer = candidates[0]
+        if closer[0]:  # Means a housenumber is closer than street centerpoint.
+            self.housenumber = closer[0]
+            self.lat = closer[1]
+            self.lon = closer[2]
 
 
 class Token(object):
@@ -238,6 +267,19 @@ class Search(BaseHelper):
     def __call__(self, query, lat=None, lon=None):
         self.lat = lat
         self.lon = lon
+        if self.lat and self.lon:
+            geoh = geohash.encode(self.lat, self.lon, config.GEOHASH_PRECISION)
+            neighbors = geohash.neighbors(geoh)
+            neighbors = [geohash_key(n) for n in neighbors]
+            self.geohash_key = 'gx|{}'.format(geoh)
+            total = DB.sunionstore(self.geohash_key, neighbors)
+            if not total:
+                DB.delete(self.geohash_key)
+                self.geohash_key = None
+            else:
+                DB.expire(self.geohash_key, 10)
+        else:
+            self.geohash_key = None
         self.results = {}
         self.bucket = set([])  # No duplicates.
         self.meaningful = []
@@ -282,12 +324,11 @@ class Search(BaseHelper):
         if len(self.tokens) == len(self.common):
             # Only common terms, shortcut to search
             keys = [t.db_key for t in self.tokens]
-            self.new_bucket(keys, 10)
-            if self.has_cream():
-                self.debug('Cream found. Returning.')
-                return True
+            if self.geohash_key:
+                keys.append(self.geohash_key)
+                self.debug('Adding geohash %s', self.geohash_key)
             self.new_bucket(keys)
-            if self.bucket_overflow:
+            if not self.bucket_empty:
                 self.debug('Only common terms and too much results. Return.')
                 return True
 
@@ -426,14 +467,14 @@ class Search(BaseHelper):
 
     def add_to_bucket(self, keys):
         self.debug('Adding to bucket with keys %s', keys)
-        self.matched_keys.update(keys)
+        self.matched_keys.update([k for k in keys if k.startswith('w|')])
         limit = config.BUCKET_LIMIT - len(self.bucket)
         self.bucket.update(self.intersect(keys, limit))
         self.debug('%s ids in bucket so far', len(self.bucket))
 
     def new_bucket(self, keys, limit=0):
         self.debug('New bucket with keys %s and limit %s', keys, limit)
-        self.matched_keys = set(keys)
+        self.matched_keys = set([k for k in keys if k.startswith('w|')])
         self.bucket = self.intersect(keys, limit)
         self.debug('%s ids in bucket so far', len(self.bucket))
 
@@ -522,16 +563,13 @@ class Reverse(BaseHelper):
             self.fetched.append(h)
 
     def convert(self):
-        for key in self.keys:
-            _id, housenumber = key.decode().split('|')
-            r = ReverseResult(document_key(_id))
-            if housenumber:
-                token = list(preprocess_query(housenumber))[0]
-                field = housenumber_field_key(token)
-                r.make_housenumber(field)
+        for _id in self.keys:
+            r = ReverseResult(_id)
+            r.load_closer(self.lat, self.lon)
             score_by_geo_distance(r, (self.lat, self.lon))
             self.results.append(r)
-            self.results.sort(key=lambda r: r.score)
+            self.debug(r, r.distance, r.score)
+        self.results.sort(key=lambda r: r.score, reverse=True)
         return self.results[:self.limit]
 
 
