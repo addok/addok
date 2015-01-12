@@ -185,7 +185,7 @@ class Cli(object):
 
     def do_pair(self, word):
         """See all token associated with a given token.
-        PAIRS lilas"""
+        PAIR lilas"""
         word = list(preprocess_query(word))[0]
         key = pair_key(word)
         tokens = [t.decode() for t in DB.smembers(key)]
