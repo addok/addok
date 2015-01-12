@@ -33,8 +33,8 @@ def geohash_key(s):
     return 'g|{}'.format(s)
 
 
-def bigram_key(s):
-    return 'b|{}'.format(s)
+def pair_key(s):
+    return 'p|{}'.format(s)
 
 
 def token_key_frequency(key):
@@ -369,9 +369,9 @@ class Search(BaseHelper):
         self.debug('Autocompleting %s', self.last_token)
         # self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]
-        bigram_keys = [bigram_key(t.original) for t in tokens if not t.is_last]
+        pair_keys = [pair_key(t.original) for t in tokens if not t.is_last]
         key = edge_ngram_key(self.last_token.original)
-        autocomplete_tokens = DB.sinter(bigram_keys + [key])
+        autocomplete_tokens = DB.sinter(pair_keys + [key])
         self.debug('Found tokens to autocomplete %s', autocomplete_tokens)
         for token in autocomplete_tokens:
             key = token_key(token.decode())

@@ -2,7 +2,7 @@ import geohash
 
 from . import config
 from .core import (DB, token_key, document_key, housenumber_field_key,
-                   edge_ngram_key, geohash_key, bigram_key)
+                   edge_ngram_key, geohash_key, pair_key)
 from .pipeline import preprocess
 from .textutils.default import compute_edge_ngrams
 
@@ -21,15 +21,15 @@ def index_field(pipe, key, string, boost=1.0, update_ngrams=True):
     return els
 
 
-def index_bigrams(pipe, els):
-    els = set(els)  # Unique values.
+def index_pairs(pipe, els):
+    els = set(els)  # Unique values.
     for el in els:
         values = set([])
         for el2 in els:
             if el != el2:
                 values.add(el2)
         if values:
-            pipe.sadd(bigram_key(el), *values)
+            pipe.sadd(pair_key(el), *values)
 
 
 def index_document(doc, update_ngrams=True):
@@ -38,23 +38,23 @@ def index_document(doc, update_ngrams=True):
     index_geohash(pipe, doc['id'], '', doc['lat'], doc['lon'])
     name = doc['name']
     importance = doc.get('importance', 0.0)
-    bigram_els = index_field(pipe, key, name, boost=4.0 + importance,
-                             update_ngrams=update_ngrams)
+    pair_els = index_field(pipe, key, name, boost=4.0 + importance,
+                           update_ngrams=update_ngrams)
     city = doc.get('city')
     if city and city != name:
-        bigram_els.extend(index_field(pipe, key, city,
-                                      update_ngrams=update_ngrams))
+        pair_els.extend(index_field(pipe, key, city,
+                                    update_ngrams=update_ngrams))
     postcode = doc.get('postcode')
     if postcode:
         boost = 1.2 if doc['type'] == 'commune' else 1
         els = index_field(pipe, key, postcode, boost=boost,
                           update_ngrams=update_ngrams)
-        bigram_els.extend(els)
+        pair_els.extend(els)
     context = doc.get('context')
     if context:
         els = index_field(pipe, key, context, update_ngrams=update_ngrams)
-        bigram_els.extend(els)
-    index_bigrams(pipe, bigram_els)
+        pair_els.extend(els)
+    index_pairs(pipe, pair_els)
     housenumbers = doc.get('housenumbers')
     if housenumbers:
         del doc['housenumbers']

@@ -4,7 +4,7 @@ import readline
 import time
 
 from addok.core import (DB, search, document_key, token_frequency,
-                        token_key, SearchResult, Token, reverse, bigram_key)
+                        token_key, SearchResult, Token, reverse, pair_key)
 from addok.pipeline import preprocess_query
 from addok.textutils.default import compare_ngrams
 
@@ -75,7 +75,7 @@ class Cli(object):
 
     COMMANDS = (
         'SEARCH', 'GET', 'TOKENIZE', 'FREQUENCY', 'INDEX', 'BESTSCORE',
-        'AUTOCOMPLETE', 'REVERSE', 'HELP', 'EXPLAIN', 'BIGRAMS', 'DISTANCE',
+        'AUTOCOMPLETE', 'REVERSE', 'HELP', 'EXPLAIN', 'PAIR', 'DISTANCE',
         'DBINFO'
     )
 
@@ -183,14 +183,15 @@ class Cli(object):
             print('{} ({} | {} km | {})'.format(white(r), blue(r.score),
                                                 blue(r.distance), blue(r.id)))
 
-    def do_bigrams(self, word):
+    def do_pair(self, word):
         """See all token associated with a given token.
         BIGRAMS lilas"""
         word = list(preprocess_query(word))[0]
-        key = bigram_key(word)
+        key = pair_key(word)
         tokens = [t.decode() for t in DB.smembers(key)]
         tokens.sort()
         print(white(tokens))
+        print(magenta('(Total: {})'.format(len(tokens))))
 
     def do_distance(self, s):
         """Print the distance score between two strings. Use | as separator.
