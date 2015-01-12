@@ -1,5 +1,4 @@
 from addok.core import search
-from addok.index_utils import index_document
 
 
 def test_should_match_name(street):
@@ -135,3 +134,12 @@ def test_found_term_is_not_autocompleted_if_enough_results(factory,
     ids = [r.id for r in results]
     assert len(ids) == 2
     assert montagne['id'] not in ids
+
+
+def test_closer_result_should_be_first_for_same_score(factory):
+    expected = factory(name='rue de paris', city='Cergy', lat=48.1, lon=2.2)
+    factory(name='rue de paris', city='Perpète', lat=-48.1, lon=-2.2)
+    factory(name='rue de paris', city='Loin', lat=8.1, lon=42.2)
+    results = search('rue de la monnaie', lat=48.1, lon=2.2)
+    assert len(results) == 3
+    assert results[0].id == expected['id']

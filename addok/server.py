@@ -37,7 +37,14 @@ def on_search(request):
         autocomplete = int(request.args.get('autocomplete')) == '1'
     except (ValueError, TypeError):
         autocomplete = True
-    results = search(query, limit=limit, autocomplete=autocomplete)
+    try:
+        lat = float(request.args.get('lat'))
+        lon = float(request.args.get('lon'))
+    except (ValueError, TypeError):
+        lat = None
+        lon = None
+    results = search(query, limit=limit, autocomplete=autocomplete, lat=lat,
+                     lon=lon)
     return serve_results(results)
 
 

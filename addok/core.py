@@ -235,7 +235,9 @@ class Search(BaseHelper):
         self.min = self.limit
         self._autocomplete = autocomplete
 
-    def __call__(self, query):
+    def __call__(self, query, lat=None, lon=None):
+        self.lat = lat
+        self.lon = lon
         self.results = {}
         self.bucket = set([])  # No duplicates.
         self.meaningful = []
@@ -383,13 +385,13 @@ class Search(BaseHelper):
         self.debug('Fuzzy on. Trying with %s.', tokens)
         tokens.sort(key=lambda t: len(t), reverse=True)
         for try_one in tokens:
+            if self.bucket_full:
+                break
             keys = self.keys[:]
             if try_one.db_key in keys:
                 keys.remove(try_one.db_key)
             if try_one.isdigit():
                 continue
-            if self.bucket_full:
-                break
             self.debug('Going fuzzy with %s', try_one)
             try_one.make_fuzzy(fuzzy=self.fuzzy)
             for key in try_one.fuzzy_keys:
@@ -443,6 +445,8 @@ class Search(BaseHelper):
             result = SearchResult(_id)
             result.match_housenumber(self.tokens)
             score_by_ngram_distance(result, self.query)
+            if self.lat and self.lon:
+                score_by_geo_distance(result, (self.lat, self.lon))
             self.results[_id] = result
         self.debug('Done computing results')
 
@@ -532,10 +536,10 @@ class Reverse(BaseHelper):
 
 
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0,
-           verbose=False):
+           lat=None, lon=None, verbose=False):
     helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit,
                     verbose=verbose)
-    return helper(query)
+    return helper(query, lat=lat, lon=lon)
 
 
 def reverse(lat, lon, limit=1, verbose=False):

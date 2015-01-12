@@ -3,10 +3,11 @@ import logging
 import readline
 import time
 
-from addok.core import (DB, search, document_key, token_frequency,
-                        token_key, SearchResult, Token, reverse, pair_key)
-from addok.pipeline import preprocess_query
-from addok.textutils.default import compare_ngrams
+from .core import (DB, search, document_key, token_frequency,
+                   token_key, SearchResult, Token, reverse, pair_key)
+from .pipeline import preprocess_query
+from .textutils.default import compare_ngrams
+from .utils import haversine_distance, km_to_score
 
 
 def doc_by_id(_id):
@@ -76,7 +77,7 @@ class Cli(object):
     COMMANDS = (
         'SEARCH', 'GET', 'TOKENIZE', 'FREQUENCY', 'INDEX', 'BESTSCORE',
         'AUTOCOMPLETE', 'REVERSE', 'HELP', 'EXPLAIN', 'PAIR', 'DISTANCE',
-        'DBINFO'
+        'DBINFO', 'GEODISTANCE',
     )
 
     def __init__(self):
@@ -93,7 +94,15 @@ class Cli(object):
 
     def _search(self, query, verbose=False):
         start = time.time()
-        for result in search(query, verbose=verbose):
+        if 'CENTER' in query:
+            query, center = query.split('CENTER')
+            lat, lon = center.split()
+            lat = float(lat)
+            lon = float(lon)
+        else:
+            lat = None
+            lon = None
+        for result in search(query, verbose=verbose, lat=lat, lon=lon):
             print('{} ({} | {})'.format(white(result), blue(result.score),
                                         blue(result.id)))
         print(magenta("({} seconds)".format(time.time() - start)))
@@ -213,6 +222,20 @@ class Cli(object):
         for key in keys:
             print('{}: {}'.format(white(key), blue(info[key])))
         print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
+
+    def do_geodistance(self, s):
+        """Compute geodistance from a result to a point.
+        GEODISTANCE 772210180J 48.1234 2.9876"""
+        try:
+            _id, lat, lon = s.split()
+        except:
+            print('Malformed query. Use: ID lat lon')
+            return
+        result = SearchResult(document_key(_id))
+        center = (float(lat), float(lon))
+        km = haversine_distance((float(result.lat), float(result.lon)), center)
+        score = km_to_score(km)
+        print('km: {} | score: {}'.format(white(km), blue(score)))
 
     def prompt(self):
         command = input("> ")
