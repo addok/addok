@@ -1,3 +1,4 @@
+import atexit
 import inspect
 import json
 import logging
@@ -77,22 +78,30 @@ def white(s):
 
 class Cli(object):
 
-    COMMANDS = (
-        'SEARCH', 'GET', 'TOKENIZE', 'FREQUENCY', 'INDEX', 'BESTSCORE',
-        'AUTOCOMPLETE', 'REVERSE', 'HELP', 'EXPLAIN', 'PAIR', 'DISTANCE',
-        'DBINFO', 'GEODISTANCE',
-    )
+    HISTORY_FILE = '.cli_history'
 
     def __init__(self):
         self._inspect_commands()
         readline.set_completer(self.completer)
         readline.parse_and_bind("tab: complete")
+        self._init_history_file()
 
     def _inspect_commands(self):
         self.COMMANDS = {}
         for name, func in inspect.getmembers(Cli, inspect.isfunction):
             if name.startswith('do_'):
                 self.COMMANDS[name[3:].upper()] = func.__doc__ or ''
+
+    def _init_history_file(self):
+        if hasattr(readline, "read_history_file"):
+            try:
+                readline.read_history_file(self.HISTORY_FILE)
+            except FileNotFoundError:
+                pass
+            atexit.register(self.save_history)
+
+    def save_history(self):
+        readline.write_history_file(self.HISTORY_FILE)
 
     def completer(self, text, state):
         for cmd in self.COMMANDS.keys():
