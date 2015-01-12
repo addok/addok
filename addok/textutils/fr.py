@@ -57,6 +57,7 @@ TYPES = [
     'r[ée]sidence', 'parc', 'cours?', 'promenade', 'hameau', 'faubourg',
     'ilot', 'berges?', 'via', 'cit[ée]', 'sent(e|ier)', 'rond[- ][Pp]oint',
     'pas(se)?', 'carrefour', 'traverse', 'giratoire', 'esplanade', 'voie',
+    'chauss[ée]e',
 ]
 TYPES_REGEX = '|'.join(
     map(lambda x: '[{}{}]{}'.format(x[0], x[0].upper(), x[1:]), TYPES)

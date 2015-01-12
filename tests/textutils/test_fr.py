@@ -104,6 +104,8 @@ def test_clean_query(input, expected):
      "1, place Saint-Léger 68504 Guebwiller"),
     ("Centre social 3 rue du Laurier 73000 CHAMBERY",
      "3 rue du Laurier 73000 CHAMBERY"),
+    ("Maison de la Médiation 72 Chaussée de l'Hôtel de Ville 59650 VILLENEUVE D ASCQ",
+     "72 Chaussée de l'Hôtel de Ville 59650 VILLENEUVE D ASCQ"),
     ("Non matching pattern",
      "Non matching pattern"),
 ])
