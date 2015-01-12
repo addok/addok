@@ -7,7 +7,7 @@ import redis
 
 from . import config
 from .pipeline import preprocess_query
-from .textutils.default import make_fuzzy, compare_ngrams
+from .textutils.default import make_fuzzy, compare_ngrams, string_contain
 from .utils import haversine_distance, km_to_score
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)
@@ -56,6 +56,13 @@ def score_by_geo_distance(result, center):
     km = haversine_distance((float(result.lat), float(result.lon)), center)
     result.distance = km
     result.add_score(km_to_score(km), ceiling=0.1)
+
+
+def score_by_contain(result, query):
+    score = 0.0
+    if string_contain(query, str(result)):
+        score = 0.1
+    result.add_score(score, ceiling=0.1)
 
 
 def score_autocomplete(key):
@@ -488,6 +495,7 @@ class Search(BaseHelper):
             score_by_ngram_distance(result, self.query)
             if self.lat and self.lon:
                 score_by_geo_distance(result, (self.lat, self.lon))
+            score_by_contain(result, self.query)
             self.results[_id] = result
         self.debug('Done computing results')
 

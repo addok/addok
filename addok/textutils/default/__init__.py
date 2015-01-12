@@ -79,6 +79,12 @@ def compare_ngrams(left, right, N=2, pad_len=0):
     return NGram.compare(left, right, N=N, pad_len=pad_len)
 
 
+def string_contain(candidate, target):
+    candidate = alphanumerize(unidecode(candidate.lower()))
+    target = alphanumerize(unidecode(target.lower()))
+    return candidate in target
+
+
 def alphanumerize(text):
     return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
 

@@ -2,7 +2,7 @@ import pytest
 
 from addok.textutils.default import (make_fuzzy, compare_ngrams, normalize,
                                      alphanumerize, synonymize, tokenize,
-                                     compute_edge_ngrams)
+                                     compute_edge_ngrams, string_contain)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -94,3 +94,10 @@ def test_compute_edge_ngrams():
     assert compute_edge_ngrams('vanbrechi') == [
         'van', 'vanb', 'vanbr', 'vanbre', 'vanbrec', 'vanbrech'
     ]
+
+
+@pytest.mark.parametrize('candidate,target', [
+    ['22 rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
+])
+def test_string_contain(candidate, target):
+    assert string_contain(candidate, target)
