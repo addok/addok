@@ -15,8 +15,8 @@ FIELDS = [
 
 
 def row_to_doc(row):
-    dep_id_len = 3 if row['id'].startswith('97') else 2
-    dep_id = str(row['id'])[:dep_id_len]
+    dep_id_len = 3 if row['source_id'].startswith('97') else 2
+    dep_id = str(row['source_id'])[:dep_id_len]
     context = [dep_id]
     if row['dep'] != row.get('city'):
         context.append(row['dep'])
@@ -34,7 +34,7 @@ def row_to_doc(row):
     if type_ in ['hamlet', 'place']:
         type_ = 'locality'
     doc = {
-        "id": row["id"].split('-')[0],
+        "id": row["source_id"].split('-')[0],
         "lat": row['lat'],
         "lon": row['lon'],
         "postcode": row['postcode'],
@@ -71,9 +71,10 @@ def import_from_stream_json(filepath, limit=None):
         pool = Pool()
         count = 0
         chunk = []
-        for row in f:
+        reader = csv.DictReader(f, fieldnames=FIELDS, delimiter='|')
+        for row in reader:
             count += 1
-            chunk.append(json.loads(row))
+            chunk.append(json.loads(json.dumps(row)))
             if count % 10000 == 0:
                 pool.map(index_row, chunk)
                 print("Done", count, time.time() - start)
