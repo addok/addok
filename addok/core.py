@@ -76,6 +76,7 @@ def score_autocomplete(key):
 class Result(object):
 
     def __init__(self, _id):
+        self.housenumber = None
         self.importance = 0.0  # Default value, can be overriden by db values.
         self._max_score = self.MAX_SCORE
         self.load(_id)
@@ -108,18 +109,21 @@ class Result(object):
         return '<{} - {} ({})>'.format(str(self), self.id, self.score)
 
     def match_housenumber(self, tokens):
+        originals = [t.original for t in tokens]
         for token in tokens:
             key = document_key(self.id)
             field = housenumber_field_key(token.original)
             if DB.hexists(key, field):
-                self.make_housenumber(field)
-
-    def make_housenumber(self, field):
-        key = document_key(self.id)
-        raw, lat, lon = DB.hget(key, field).decode().split('|')
-        self.housenumber = raw
-        self.lat = lat
-        self.lon = lon
+                key = document_key(self.id)
+                raw, lat, lon = DB.hget(key, field).decode().split('|')
+                if raw in self.name and originals.count(token.original) != 2:
+                    # Consider that user is not requesting a housenumber if
+                    # token is also in name (ex. rue du 8 mai), unless this
+                    # token is twice in the query (8 rue du 8 mai).
+                    continue
+                self.housenumber = raw
+                self.lat = lat
+                self.lon = lon
 
     def to_geojson(self):
         properties = {"label": str(self)}

@@ -71,12 +71,20 @@ def test_fuzzy_should_match_with_removal(city):
     assert search('andressy')
 
 
-def test_should_give_priority_to_housenumber_if_match(housenumber, street):
+def test_should_give_priority_to_housenumber_if_match(housenumber):
     housenumber.update(name='rue des Berges')
-    street.update(name='rue des Berges')
+    results = search('rue des berges')
+    assert not results[0].housenumber
     results = search('11 rue des berges')
-    assert len(results) == 1
-    assert results[0].id == housenumber['id']
+    assert results[0].housenumber == '11'
+
+
+def test_should_not_return_housenumber_if_number_is_also_in_name(housenumber):
+    housenumber.update(name='rue du 11 Novembre')
+    results = search('rue du 11 novembre')
+    assert not results[0].housenumber
+    results = search('11 rue du 11 novembre')
+    assert results[0].housenumber == '11'
 
 
 def test_should_do_autocomplete_on_last_term(street):
