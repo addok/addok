@@ -360,7 +360,9 @@ class Search(BaseHelper):
             if self.has_cream():
                 self.debug('Cream found. Returning.')
                 return True
-            self.new_bucket(self.keys)
+            if not self.bucket_empty:
+                # Do not rerun if bucket with limit 10 has returned 0 results
+                self.new_bucket(self.keys)
         else:
             self.add_to_bucket(self.keys)
 
