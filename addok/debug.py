@@ -7,7 +7,7 @@ import time
 
 import geohash
 
-from .core import (DB, search, document_key, token_frequency,
+from .core import (DB, search, document_key, token_frequency, make_fuzzy,
                    token_key, SearchResult, Token, reverse, pair_key)
 from .pipeline import preprocess_query
 from .textutils.default import compare_ngrams
@@ -282,6 +282,21 @@ class Cli(object):
             ]]
         }
         print(white(json.dumps(geojson)))
+
+    def do_fuzzy(self, word):
+        """Compute fuzzy extensions of word.
+        FUZZY lilas"""
+        word = list(preprocess_query(word))[0]
+        print(white(make_fuzzy(word)))
+
+    def do_fuzzyindex(self, word):
+        """Compute fuzzy extensions of word that exist in index.
+        FUZZYINDEX lilas"""
+        word = list(preprocess_query(word))[0]
+        token = Token(word)
+        token.make_fuzzy()
+        keys = [k.split('|')[1] for k in token.fuzzy_keys]
+        print(white(keys))
 
     def prompt(self):
         command = input("> ")
