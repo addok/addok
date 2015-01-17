@@ -56,8 +56,9 @@ def make_fuzzy(word, max=1):
     for letter in letters:
         for i in range(0, len(word)):
             neighbor = list(word)
-            neighbor[i] = letter
-            neighbors.append(''.join(neighbor))
+            if letter != neighbor[i]:
+                neighbor[i] = letter
+                neighbors.append(''.join(neighbor))
     # insertions
     for letter in letters:
         for i in range(0, len(word) + 1):

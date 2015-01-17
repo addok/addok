@@ -31,9 +31,9 @@ def test_make_fuzzy_should_extend_term():
         'moa', 'bot', 'mbt', 'mob', 'cot', 'mct', 'moc', 'dot', 'mdt', 'mod',
         'eot', 'met', 'moe', 'fot', 'mft', 'mof', 'got', 'mgt', 'mog', 'hot',
         'mht', 'moh', 'iot', 'mit', 'moi', 'jot', 'mjt', 'moj', 'kot', 'mkt',
-        'mok', 'lot', 'mlt', 'mol', 'mot', 'mmt', 'mom', 'not', 'mnt', 'mon',
-        'oot', 'mot', 'moo', 'pot', 'mpt', 'mop', 'qot', 'mqt', 'moq', 'rot',
-        'mrt', 'mor', 'sot', 'mst', 'mos', 'tot', 'mtt', 'mot', 'uot', 'mut',
+        'mok', 'lot', 'mlt', 'mol', 'mmt', 'mom', 'not', 'mnt', 'mon',
+        'oot', 'moo', 'pot', 'mpt', 'mop', 'qot', 'mqt', 'moq', 'rot',
+        'mrt', 'mor', 'sot', 'mst', 'mos', 'tot', 'mtt', 'uot', 'mut',
         'mou', 'vot', 'mvt', 'mov', 'wot', 'mwt', 'mow', 'xot', 'mxt', 'mox',
         'yot', 'myt', 'moy', 'zot', 'mzt', 'moz',
     ])
