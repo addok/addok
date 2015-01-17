@@ -210,15 +210,14 @@ class Token(object):
         if DB.exists(self.key):
             self.db_key = self.key
 
-    def make_fuzzy(self, fuzzy):
+    def make_fuzzy(self, fuzzy=1):
         neighbors = make_fuzzy(self.original, fuzzy)
         keys = []
-        if neighbors:
-            for neighbor in neighbors:
-                key = token_key(neighbor)
-                count = DB.zcard(key)
-                if count:
-                    keys.append((key, count))
+        for neighbor in neighbors:
+            key = token_key(neighbor)
+            count = DB.zcard(key)
+            if count:
+                keys.append((key, count))
         keys.sort(key=lambda x: x[1])
         for key, count in keys:
             self.fuzzy_keys.append(key)
