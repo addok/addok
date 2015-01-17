@@ -188,6 +188,9 @@ class Cli(object):
         """Get index details for a document by its id.
         INDEX 772210180J"""
         doc = doc_by_id(_id)
+        if not doc:
+            print(red('Not found.'))
+            return
         self._print_field_index_details(doc[b'name'].decode(), _id)
         self._print_field_index_details(doc[b'postcode'].decode(), _id)
         self._print_field_index_details(doc[b'city'].decode(), _id)
