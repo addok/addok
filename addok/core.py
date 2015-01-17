@@ -453,7 +453,7 @@ class Search(BaseHelper):
 
     def reduce_tokens(self):
         # Only if bucket is empty or we have margin on should_match_threshold.
-        if self.bucket_empty\
+        if self.bucket_dry\
            or len(self.meaningful) - 1 > self.should_match_threshold:
             self.debug('Bucket dry. Trying to remove some tokens.')
             self.meaningful.sort(key=lambda x: x.frequency)
