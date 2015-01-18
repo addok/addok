@@ -77,6 +77,10 @@ def make_fuzzy(word, max=1):
 def compare_ngrams(left, right, N=2, pad_len=0):
     left = alphanumerize(unidecode(left.lower()))
     right = alphanumerize(unidecode(right.lower()))
+    if len(left) == 1 and len(right) == 1:
+        # NGram.compare returns 0.0 for 1 letter comparison, even if letters
+        # are equal.
+        return 1.0 if left == right else 0.0
     return NGram.compare(left, right, N=N, pad_len=pad_len)
 
 

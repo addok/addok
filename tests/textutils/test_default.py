@@ -49,16 +49,15 @@ def test_make_fuzzy_should_remove_letter_if_world_is_long():
     assert 'trai' in make_fuzzy('train')
 
 
-def test_compare_ngrams_should_return_one_for_same_string():
-    assert compare_ngrams('Lille', 'Lille') == 1
-
-
-def test_compare_ngrams_should_be_case_unsensitive():
-    assert compare_ngrams('Lille', 'lille') == 1
-
-
-def test_compare_ngrams_should_be_accent_unsensitive():
-    assert compare_ngrams('Andrésy', 'andresy') == 1
+@pytest.mark.parametrize('left,right,score', [
+    ['Lille', 'Lille', 1],
+    ['Lille', 'lille', 1],
+    ['Andrésy', 'andresy', 1],
+    ['Y', 'y', 1],
+    ['Ay', 'ay', 1],
+])
+def test_compare_ngrams(left, right, score):
+    assert compare_ngrams(left, right) == score
 
 
 @pytest.mark.parametrize('input,output', [
