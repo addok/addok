@@ -124,7 +124,11 @@ class Cli(object):
         for result in search(query, verbose=verbose, lat=lat, lon=lon):
             print('{} ({} | {})'.format(white(result), blue(result.score),
                                         blue(result.id)))
-        print(magenta("({} seconds)".format(time.time() - start)))
+        duration = round((time.time() - start) * 1000,1)
+        if duration > 50:
+            print(red("({} ms)".format(duration)))
+        else:
+            print(green("({} ms)".format(duration)))
 
     def do_search(self, query):
         """Issue a search (default command, can be omitted):
