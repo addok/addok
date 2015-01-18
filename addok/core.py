@@ -46,7 +46,7 @@ def token_frequency(token):
 
 
 def score_by_ngram_distance(result, query):
-    score = compare_ngrams(str(result), query)
+    score = compare_ngrams(result.name, query)
     if score < config.MATCH_THRESHOLD:
         score = max(score, compare_ngrams(str(result), query))
     result.add_score(score, ceiling=1.0)
