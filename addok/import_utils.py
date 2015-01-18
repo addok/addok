@@ -41,13 +41,12 @@ def row_to_doc(row):
         "city": row['city'],
         "context": context,
         "type": type_,
-        "name": name
+        "name": name,
+        "importance": row.get('importance', 0.0) * 0.1
     }
     housenumbers = row.get('housenumbers')
     if housenumbers:
         doc['housenumbers'] = housenumbers
-    if len(doc['id']) == 5:
-        doc['importance'] = 0.1
     if type_ in ['village', 'town', 'city', 'commune', 'locality']:
         # Sometimes, a village is in reality an hamlet, so it has both a name
         # (the hamlet name) and a city (the administrative entity it belongs
