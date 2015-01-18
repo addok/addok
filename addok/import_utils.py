@@ -10,7 +10,7 @@ from addok.index_utils import index_document, index_edge_ngrams
 
 FIELDS = [
     'source_id', 'housenumber', 'name', 'postcode', 'city', 'source', 'lat',
-    'lon', 'dep', 'region', 'type'
+    'lon', 'departement', 'region', 'type'
 ]
 
 
@@ -18,8 +18,8 @@ def row_to_doc(row):
     dep_id_len = 3 if row['id'].startswith('97') else 2
     dep_id = str(row['id'])[:dep_id_len]
     context = [dep_id]
-    if row['dep'] != row.get('city'):
-        context.append(row['dep'])
+    if row['departement'] != row.get('city'):
+        context.append(row['departement'])
     context.append(row['region'])
     context = ', '.join(context)
     # type can be:
