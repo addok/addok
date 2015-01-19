@@ -2,6 +2,7 @@ import atexit
 import inspect
 import json
 import logging
+import re
 import readline
 import time
 
@@ -162,7 +163,12 @@ class Cli(object):
             else:
                 print(white(key), magenta(value))
         if housenumbers:
-            print(white('housenumbers'), magenta(housenumbers))
+            def sorter(item):
+                k, v = item
+                return int(re.match(r'\d+', v.split('|')[0]).group())
+            housenumbers = sorted(housenumbers.items(), key=sorter)
+            housenumbers = ['{}: {}'.format(k[2:], v) for k, v in housenumbers]
+            print(white('housenumbers'), magenta(', '.join(housenumbers)))
 
     def do_frequency(self, word):
         """Return word frequency in index.
