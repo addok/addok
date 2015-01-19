@@ -277,19 +277,7 @@ class Search(BaseHelper):
     def __call__(self, query, lat=None, lon=None):
         self.lat = lat
         self.lon = lon
-        if self.lat and self.lon:
-            geoh = geohash.encode(self.lat, self.lon, config.GEOHASH_PRECISION)
-            neighbors = geohash.neighbors(geoh)
-            neighbors = [geohash_key(n) for n in neighbors]
-            self.geohash_key = 'gx|{}'.format(geoh)
-            total = DB.sunionstore(self.geohash_key, neighbors)
-            if not total:
-                DB.delete(self.geohash_key)
-                self.geohash_key = None
-            else:
-                DB.expire(self.geohash_key, 10)
-        else:
-            self.geohash_key = None
+        self._geohash_key = None
         self.results = {}
         self.bucket = set([])  # No duplicates.
         self.meaningful = []
@@ -394,6 +382,22 @@ class Search(BaseHelper):
 
     def step_check_cream(self):
         return self.has_cream()
+
+    @property
+    def geohash_key(self):
+        if self.lat and self.lon and not self._geohash_key:
+            geoh = geohash.encode(self.lat, self.lon, config.GEOHASH_PRECISION)
+            neighbors = geohash.neighbors(geoh)
+            neighbors = [geohash_key(n) for n in neighbors]
+            self._geohash_key = 'gx|{}'.format(geoh)
+            self.debug('Compute geohash key %s', self._geohash_key)
+            total = DB.sunionstore(self._geohash_key, neighbors)
+            if not total:
+                DB.delete(self._geohash_key)
+                self._geohash_key = None
+            else:
+                DB.expire(self._geohash_key, 10)
+        return self._geohash_key
 
     def render(self):
         self.convert()
