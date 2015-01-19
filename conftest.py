@@ -1,6 +1,9 @@
 import uuid
 import pytest
 
+from werkzeug.test import Client
+from werkzeug.wrappers import BaseResponse
+
 
 def pytest_configure(config):
     from addok.config import DB_SETTINGS
@@ -62,3 +65,10 @@ def city(factory):
 @pytest.fixture
 def housenumber(factory):
     return factory(housenumbers={'11': {'lat': '48.3254', 'lon': '2.256'}})
+
+
+@pytest.fixture
+def client():
+    from addok.server import app  # Do not import before redis config has been
+                                  # patched.
+    return Client(app, BaseResponse)

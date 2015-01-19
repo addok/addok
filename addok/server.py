@@ -1,4 +1,7 @@
+import csv
+import io
 import json
+import logging
 
 from werkzeug.exceptions import HTTPException, BadRequest
 from werkzeug.routing import Map, Rule
@@ -9,7 +12,19 @@ from .core import search, reverse
 url_map = Map([
     Rule('/search/', endpoint='search'),
     Rule('/reverse/', endpoint='reverse'),
+    Rule('/csv/', endpoint='csv'),
 ])
+
+
+class NotFoundLogHandler(logging.FileHandler):
+
+    def __init__(filename, *args, **kwargs):
+        super().__init__('notfound.log', *args, **kwargs)
+
+
+notfound = logging.getLogger('notfound')
+notfound.setLevel(logging.DEBUG)
+notfound.addHandler(NotFoundLogHandler())
 
 
 def app(environ, start_response):
@@ -24,11 +39,17 @@ def app(environ, start_response):
             response = on_search(request)
         elif endpoint == 'reverse':
             response = on_reverse(request)
+        elif endpoint == 'csv':
+            response = on_csv(request)
     return response(environ, start_response)
 
 
 def on_search(request):
     query = request.args.get('q', '')
+    if not query:
+        response = Response('Missing query', status=400)
+        cors(response)
+        return response
     try:
         limit = int(request.args.get('limit'))
     except (ValueError, TypeError):
@@ -45,6 +66,8 @@ def on_search(request):
         lon = None
     results = search(query, limit=limit, autocomplete=autocomplete, lat=lat,
                      lon=lon)
+    if not results:
+        notfound.debug(query)
     return serve_results(results)
 
 
@@ -68,6 +91,48 @@ def serve_results(results):
         "features": [r.to_geojson() for r in results]
     }
     response = Response(json.dumps(results), mimetype='text/plain')
+    cors(response)
+    return response
+
+
+def on_csv(request):
+    if request.method == 'POST':
+        f = request.files['data']
+        first_line = next(f.stream).decode().strip('\n')
+        dialect = csv.Sniffer().sniff(first_line)
+        headers = first_line.split(dialect.delimiter)
+        columns = request.form.getlist('columns') or headers
+        content = f.read().decode().split('\n')
+        rows = csv.DictReader(content, fieldnames=headers, dialect=dialect)
+        fieldnames = headers[:]
+        fieldnames.extend(['latitude', 'longitude', 'address'])
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames, dialect=dialect)
+        writer.writeheader()
+        for row in rows:
+            q = ' '.join([row[k] for k in columns])
+            results = search(q, autocomplete=False, limit=1)
+            if results:
+                row.update({
+                    'latitude': results[0].lat,
+                    'longitude': results[0].lon,
+                    'address': str(results[0]),
+                })
+            else:
+                notfound.debug(q)
+            writer.writerow(row)
+        output.seek(0)
+        response = Response(output.read())
+        response.headers['Content-Disposition'] = 'attachment'
+        response.headers['Content-Type'] = 'text/csv'
+        cors(response)
+        return response
+    elif request.method == 'OPTIONS':
+        response = Response('')
+        cors(response)
+        return response
+
+
+def cors(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
-    return response

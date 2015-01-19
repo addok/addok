@@ -4,3 +4,4 @@ __pycache__
 *.sjson
 notes.md
 .cli_history
+notfound.log
