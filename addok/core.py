@@ -524,7 +524,6 @@ class Search(BaseHelper):
                 result.score_by_ngram_distance(self.query)
             if self.lat and self.lon:
                 result.score_by_geo_distance((self.lat, self.lon))
-            result.score_by_contain(self.query)
             self.results[_id] = result
         self.debug('Done computing results')
 
