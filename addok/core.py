@@ -479,7 +479,7 @@ class Search(BaseHelper):
         if self.bucket_dry\
            or len(self.meaningful) - 1 > self.should_match_threshold:
             self.debug('Bucket dry. Trying to remove some tokens.')
-            self.meaningful.sort(key=lambda x: x.frequency)
+            self.meaningful.sort(key=lambda x: x.frequency, reverse=True)
             for token in self.meaningful:
                 keys = self.keys[:]
                 keys.remove(token.db_key)
