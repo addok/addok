@@ -59,9 +59,11 @@ class Result(object):
     def __init__(self, _id):
         self.housenumber = None
         self.importance = 0.0  # Default value, can be overriden by db values.
-        self._max_score = self.MAX_SCORE
+        self._scores = {}
         self.load(_id)
-        self._score = float(self.importance)
+        if self.MAX_IMPORTANCE:
+            self.add_score('importance', float(self.importance),
+                           self.MAX_IMPORTANCE)
 
     def load(self, _id):
         doc = DB.hgetall(_id)
@@ -126,13 +128,13 @@ class Result(object):
             "properties": properties
         }
 
-    def add_score(self, score, ceiling):
-        self._score += score
-        self._max_score += ceiling
+    def add_score(self, name, score, ceiling):
+        self._scores[name] = (score, ceiling)
 
     @property
     def score(self):
-        return self._score / self._max_score
+        score, _max = zip(*self._scores.values())
+        return sum(score) / sum(_max)
 
     def score_by_autocomplete_distance(self, query):
         score = 0
@@ -143,7 +145,7 @@ class Result(object):
         elif contains(query, self.name):
             score = 0.7
         if score:
-            self.add_score(score, ceiling=1.0)
+            self.add_score('str_distance', score, ceiling=1.0)
         else:
             self.score_by_ngram_distance(query)
 
@@ -151,28 +153,28 @@ class Result(object):
         score = compare_ngrams(self.name, query)
         if score < config.MATCH_THRESHOLD:
             score = max(score, compare_ngrams(str(self), query))
-        self.add_score(score, ceiling=1.0)
+        self.add_score('str_distance', score, ceiling=1.0)
 
     def score_by_geo_distance(self, center):
         km = haversine_distance((float(self.lat), float(self.lon)), center)
         self.distance = km
-        self.add_score(km_to_score(km), ceiling=0.1)
+        self.add_score('geo_distance', km_to_score(km), ceiling=0.1)
 
     def score_by_contain(self, query):
         score = 0.0
         if contains(query, str(self)):
             score = 0.1
-        self.add_score(score, ceiling=0.1)
+        self.add_score('contains_boost', score, ceiling=0.1)
 
 
 class SearchResult(Result):
 
-    MAX_SCORE = config.MAX_DOC_IMPORTANCE
+    MAX_IMPORTANCE = config.MAX_DOC_IMPORTANCE
 
 
 class ReverseResult(Result):
 
-    MAX_SCORE = 0.0
+    MAX_IMPORTANCE = 0.0
 
     def __init__(self, *args, **kwargs):
         self.housenumbers = []

@@ -130,9 +130,18 @@ class Cli(object):
         results = helper(query, lat=lat, lon=lon)
         if bucket:  # Means we want all the bucket
             results = helper._sorted_bucket
+
+        def format_scores(result):
+            if verbose or bucket:
+                return (', '.join('{}: {}/{}'.format(k, round(v[0], 4), v[1])
+                        for k, v in result._scores.items()))
+            else:
+                return result.score
+
         for result in results:
-            print('{} ({} | {})'.format(white(result), blue(result.score),
-                                        blue(result.id)))
+            print('{} ({} | {})'.format(white(result),
+                                        blue(result.id),
+                                        blue(format_scores(result))))
         duration = round((time.time() - start) * 1000, 1)
         formatter = red if duration > 50 else green
         print(formatter("({} ms)".format(duration)))
