@@ -401,9 +401,9 @@ class Search(BaseHelper):
 
     def render(self):
         self.convert()
-        results = list(self.results.values())
-        results.sort(key=lambda r: r.score, reverse=True)
-        return results[:self.limit]
+        self._sorted_bucket = list(self.results.values())
+        self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
+        return self._sorted_bucket[:self.limit]
 
     def preprocess(self, query):
         self.tokens = []

@@ -8,7 +8,7 @@ import time
 
 import geohash
 
-from .core import (DB, search, document_key, token_frequency, make_fuzzy,
+from .core import (DB, Search, document_key, token_frequency, make_fuzzy,
                    token_key, SearchResult, Token, reverse, pair_key)
 from .pipeline import preprocess_query
 from .textutils.default import compare_ngrams
@@ -112,8 +112,12 @@ class Cli(object):
                 else:
                     state -= 1
 
-    def _search(self, query, verbose=False):
+    def _search(self, query, verbose=False, bucket=False):
         start = time.time()
+        limit = 10
+        if 'LIMIT' in query:
+            query, limit = query.split('LIMIT')
+            limit = int(limit)
         if 'CENTER' in query:
             query, center = query.split('CENTER')
             lat, lon = center.split()
@@ -122,7 +126,11 @@ class Cli(object):
         else:
             lat = None
             lon = None
-        for result in search(query, verbose=verbose, lat=lat, lon=lon):
+        helper = Search(limit=limit, verbose=verbose)
+        results = helper(query, lat=lat, lon=lon)
+        if bucket:  # Means we want all the bucket
+            results = helper._sorted_bucket
+        for result in results:
             print('{} ({} | {})'.format(white(result), blue(result.score),
                                         blue(result.id)))
         duration = round((time.time() - start) * 1000, 1)
@@ -131,13 +139,19 @@ class Cli(object):
 
     def do_search(self, query):
         """Issue a search (default command, can be omitted):
-        SEARCH rue des Lilas"""
+        SEARCH rue des Lilas [CENTER lat lon] [LIMIT 10]"""
         self._search(query)
 
     def do_explain(self, query):
         """Issue a search with debug info:
         EXPLAIN rue des Lilas"""
         self._search(query, verbose=True)
+
+    def do_bucket(self, query):
+        """Issue a search and return all the collected bucket, not only up to
+        limit elements:
+        BUCKET rue des Lilas"""
+        self._search(query, bucket=True)
 
     def do_tokenize(self, string):
         """Inspect how a string is tokenized before being indexed.
