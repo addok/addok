@@ -550,7 +550,7 @@ class Search(BaseHelper):
 
     @property
     def bucket_cream(self):
-        return any(r.str_distance > config.MATCH_THRESHOLD
+        return any(r.str_distance >= config.MATCH_THRESHOLD
                    for _id, r in self.results.items())
 
     def has_cream(self):
