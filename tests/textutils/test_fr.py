@@ -128,6 +128,8 @@ def test_match_address(input, expected):
      '6ter, avenue du Centre 78180 Montigny-le-Bretonneux'),
     ('600 quater, avenue du Centre 78180 Montigny-le-Bretonneux',
      '600quater, avenue du Centre 78180 Montigny-le-Bretonneux'),
+    ('place des Terreaux Lyon',
+     'place des Terreaux Lyon'),
 ])
 def test_glue_ordinal(input, expected):
     assert _glue_ordinal(input) == expected
