@@ -325,9 +325,11 @@ class Search(BaseHelper):
             if self.geohash_key:
                 keys.append(self.geohash_key)
                 self.debug('Adding geohash %s', self.geohash_key)
-            self.new_bucket(keys)
+            self.autocomplete(self.tokens, skip_commons=True)
+            if self.bucket_dry:
+                self.add_to_bucket(keys)
             if not self.bucket_empty:
-                self.debug('Only common terms and too much results. Return.')
+                self.debug('Only common terms. Return.')
                 return True
 
     def step_no_meaningful_but_common_try_autocomplete(self):
@@ -357,7 +359,7 @@ class Search(BaseHelper):
     def step_reduce_with_other_commons(self):
         for token in self.common:  # Already ordered by frequency asc.
             if token not in self.meaningful and self.bucket_overflow:
-                self.debug('Now considering also commong token %s', token)
+                self.debug('Now considering also common token %s', token)
                 self.meaningful.append(token)
                 self.keys = [t.db_key for t in self.meaningful]
                 self.new_bucket(self.keys)
@@ -421,7 +423,7 @@ class Search(BaseHelper):
                and not token.db_key):
                 raise Empty
 
-    def autocomplete(self, tokens):
+    def autocomplete(self, tokens, skip_commons=False):
         if not self._autocomplete:
             self.debug('Autocomplete not active. Abort.')
             return
@@ -434,6 +436,10 @@ class Search(BaseHelper):
         self.debug('Found tokens to autocomplete %s', autocomplete_tokens)
         for token in autocomplete_tokens:
             key = token_key(token.decode())
+            if skip_commons\
+               and token_key_frequency(key) > config.COMMON_THRESHOLD:
+                self.debug('Skip common token to autocomplete %s', key)
+                continue
             if not self.bucket_overflow or self.last_token in self.not_found:
                 self.debug('Trying to extend bucket. Autocomplete %s', key)
                 self.add_to_bucket(keys + [key])
