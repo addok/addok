@@ -136,6 +136,10 @@ class Result(object):
         score, _max = zip(*self._scores.values())
         return sum(score) / sum(_max)
 
+    @property
+    def str_distance(self):
+        return self._scores.get('str_distance', [0.0])[0]
+
     def score_by_autocomplete_distance(self, query):
         score = 0
         if equals(query, self.name):
@@ -546,7 +550,7 @@ class Search(BaseHelper):
 
     @property
     def bucket_cream(self):
-        return any(r.score > config.MATCH_THRESHOLD
+        return any(r.str_distance > config.MATCH_THRESHOLD
                    for _id, r in self.results.items())
 
     def has_cream(self):
