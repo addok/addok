@@ -154,9 +154,7 @@ class Result(object):
             self.score_by_ngram_distance(query)
 
     def score_by_ngram_distance(self, query):
-        score = compare_ngrams(self.name, query)
-        if score < config.MATCH_THRESHOLD:
-            score = max(score, compare_ngrams(str(self), query))
+        score = compare_ngrams(str(self), query)
         self.add_score('str_distance', score, ceiling=1.0)
 
     def score_by_geo_distance(self, center):
