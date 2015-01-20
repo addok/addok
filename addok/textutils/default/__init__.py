@@ -84,10 +84,22 @@ def compare_ngrams(left, right, N=2, pad_len=0):
     return NGram.compare(left, right, N=N, pad_len=pad_len)
 
 
-def string_contain(candidate, target):
+def contains(candidate, target):
     candidate = alphanumerize(unidecode(candidate.lower()))
     target = alphanumerize(unidecode(target.lower()))
     return candidate in target
+
+
+def startswith(candidate, target):
+    candidate = alphanumerize(unidecode(candidate.lower()))
+    target = alphanumerize(unidecode(target.lower()))
+    return target.startswith(candidate)
+
+
+def equals(candidate, target):
+    candidate = alphanumerize(unidecode(candidate.lower()))
+    target = alphanumerize(unidecode(target.lower()))
+    return target == candidate
 
 
 def alphanumerize(text):

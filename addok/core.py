@@ -7,7 +7,8 @@ import redis
 
 from . import config
 from .pipeline import preprocess_query
-from .textutils.default import make_fuzzy, compare_ngrams, string_contain
+from .textutils.default import (make_fuzzy, compare_ngrams, contains,
+                                startswith, equals)
 from .utils import haversine_distance, km_to_score
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)
@@ -43,26 +44,6 @@ def token_key_frequency(key):
 
 def token_frequency(token):
     return token_key_frequency(token_key(token))
-
-
-def score_by_ngram_distance(result, query):
-    score = compare_ngrams(result.name, query)
-    if score < config.MATCH_THRESHOLD:
-        score = max(score, compare_ngrams(str(result), query))
-    result.add_score(score, ceiling=1.0)
-
-
-def score_by_geo_distance(result, center):
-    km = haversine_distance((float(result.lat), float(result.lon)), center)
-    result.distance = km
-    result.add_score(km_to_score(km), ceiling=0.1)
-
-
-def score_by_contain(result, query):
-    score = 0.0
-    if string_contain(query, str(result)):
-        score = 0.1
-    result.add_score(score, ceiling=0.1)
 
 
 def score_autocomplete(key):
@@ -117,9 +98,9 @@ class Result(object):
                 key = document_key(self.id)
                 raw, lat, lon = DB.hget(key, field).decode().split('|')
                 if raw in self.name and originals.count(token.original) != 2:
-                    # Consider that user is not requesting a housenumber if
+                    # Consider that user is not requesting a housenumber if
                     # token is also in name (ex. rue du 8 mai), unless this
-                    # token is twice in the query (8 rue du 8 mai).
+                    # token is twice in the query (8 rue du 8 mai).
                     continue
                 self.housenumber = raw
                 self.lat = lat
@@ -152,6 +133,36 @@ class Result(object):
     @property
     def score(self):
         return self._score / self._max_score
+
+    def score_by_autocomplete_distance(self, query):
+        score = 0
+        if equals(query, self.name):
+            score = 1.0
+        elif startswith(query, str(self)):
+            score = 0.9
+        elif contains(query, self.name):
+            score = 0.7
+        if score:
+            self.add_score(score, ceiling=1.0)
+        else:
+            self.score_by_ngram_distance(query)
+
+    def score_by_ngram_distance(self, query):
+        score = compare_ngrams(self.name, query)
+        if score < config.MATCH_THRESHOLD:
+            score = max(score, compare_ngrams(str(self), query))
+        self.add_score(score, ceiling=1.0)
+
+    def score_by_geo_distance(self, center):
+        km = haversine_distance((float(self.lat), float(self.lon)), center)
+        self.distance = km
+        self.add_score(km_to_score(km), ceiling=0.1)
+
+    def score_by_contain(self, query):
+        score = 0.0
+        if contains(query, str(self)):
+            score = 0.1
+        self.add_score(score, ceiling=0.1)
 
 
 class SearchResult(Result):
@@ -284,8 +295,8 @@ class Search(BaseHelper):
         self.not_found = []
         self.common = []
         self.keys = []
-        self.query = query
-        self.preprocess(query)
+        self.query = query.strip()
+        self.preprocess()
         self.search_all()
         self.set_should_match_threshold()
         for token in self.tokens:
@@ -405,9 +416,9 @@ class Search(BaseHelper):
         self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
         return self._sorted_bucket[:self.limit]
 
-    def preprocess(self, query):
+    def preprocess(self):
         self.tokens = []
-        for position, token in enumerate(preprocess_query(query)):
+        for position, token in enumerate(preprocess_query(self.query)):
             token = Token(token, position=position)
             self.tokens.append(token)
         token.is_last = True
@@ -505,10 +516,13 @@ class Search(BaseHelper):
                 continue
             result = SearchResult(_id)
             result.match_housenumber(self.tokens)
-            score_by_ngram_distance(result, self.query)
+            if self._autocomplete:
+                result.score_by_autocomplete_distance(self.query)
+            else:
+                result.score_by_ngram_distance(self.query)
             if self.lat and self.lon:
-                score_by_geo_distance(result, (self.lat, self.lon))
-            score_by_contain(result, self.query)
+                result.score_by_geo_distance((self.lat, self.lon))
+            result.score_by_contain(self.query)
             self.results[_id] = result
         self.debug('Done computing results')
 
@@ -572,7 +586,7 @@ class Reverse(BaseHelper):
         for h in hashes:
             neighbors = geohash.expand(h)
             for n in neighbors:
-                if not n in self.fetched:
+                if n not in self.fetched:
                     new.append(n)
         return new
 
@@ -587,7 +601,7 @@ class Reverse(BaseHelper):
         for _id in self.keys:
             r = ReverseResult(_id)
             r.load_closer(self.lat, self.lon)
-            score_by_geo_distance(r, (self.lat, self.lon))
+            r.score_by_geo_distance((self.lat, self.lon))
             self.results.append(r)
             self.debug(r, r.distance, r.score)
         self.results.sort(key=lambda r: r.score, reverse=True)

@@ -6,7 +6,7 @@ DB_SETTINGS = {
     'db': 0
 }
 
-# Max number of results to be retrieved from db and scored.
+# Max number of results to be retrieved from db and scored.
 BUCKET_LIMIT = 100
 
 # Above this treshold, terms are considered commons.

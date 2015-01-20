@@ -2,7 +2,8 @@ import pytest
 
 from addok.textutils.default import (make_fuzzy, compare_ngrams, normalize,
                                      alphanumerize, synonymize, tokenize,
-                                     compute_edge_ngrams, string_contain)
+                                     compute_edge_ngrams, contains,
+                                     startswith, equals)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -83,7 +84,7 @@ def test_alphanumerize(input, output):
     ['13e', 'treizieme'],
 ])
 def test_synonymize(input, output, monkeypatch):
-    # Make sure we control synonyms.
+    # Make sure we control synonyms.
     SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
     monkeypatch.setattr('addok.textutils.default.SYNONYMS', SYNONYMS)
     assert synonymize(input) == output
@@ -97,6 +98,24 @@ def test_compute_edge_ngrams():
 
 @pytest.mark.parametrize('candidate,target', [
     ['22 rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
+    ['rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
 ])
-def test_string_contain(candidate, target):
-    assert string_contain(candidate, target)
+def test_contains(candidate, target):
+    assert contains(candidate, target)
+
+
+@pytest.mark.parametrize('candidate,target', [
+    ['22 rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
+    ['etang des rivieres', "Étang des Rivières 42330 Saint-Galmier"],
+])
+def test_startswith(candidate, target):
+    assert startswith(candidate, target)
+
+
+@pytest.mark.parametrize('candidate,target', [
+    ["22 rue vicq d azir 75010 paris", "22 Rue Vicq d'Azir 75010 Paris"],
+    ['etang des rivieres', "Étang des Rivières"],
+    ['Saint galmier', "Saint-Galmier"],
+])
+def test_equals(candidate, target):
+    assert equals(candidate, target)
