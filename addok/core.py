@@ -303,8 +303,6 @@ class Search(BaseHelper):
             self.step_only_commons,
             self.step_no_meaningful_but_common_try_autocomplete,
             self.step_bucket_with_meaningful,
-            self.step_check_bucket_full,
-            self.step_check_cream,
             self.step_reduce_with_other_commons,
             self.step_autocomplete,
             self.step_check_bucket_full,
