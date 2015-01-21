@@ -338,7 +338,9 @@ class Search(BaseHelper):
             if self.geohash_key:
                 keys.append(self.geohash_key)
                 self.debug('Adding geohash %s', self.geohash_key)
-            self.autocomplete(self.tokens, skip_commons=True)
+            if len(self.token) > 1:
+                # Do not give priority to autocomplete when only one token.
+                self.autocomplete(self.tokens, skip_commons=True)
             if self.bucket_dry:
                 self.add_to_bucket(keys)
             if not self.bucket_empty:
