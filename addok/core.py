@@ -360,7 +360,9 @@ class Search(BaseHelper):
         self.keys = [t.db_key for t in self.meaningful]
         if self.bucket_empty:
             self.new_bucket(self.keys, 10)
-            if self.has_cream():
+            if not self._autocomplete and self.has_cream():
+                # Do not check cream before computing autocomplete when
+                # autocomplete is on.
                 self.debug('Cream found. Returning.')
                 return True
             if not self.bucket_empty:
