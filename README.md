@@ -26,11 +26,12 @@ Search engine for address. Only address.
 
 # Import data
 
-1. Download [BANO data](http://bano.openstreetmap.fr/data/bano-full.csv.gz)
+1. Download [BANO data](bano.openstreetmap.fr/data/full.sjson.gz) and uncompress
+   it
 
 2. Run import command
 
-    python run.py import path/to/bano-full.csv
+    python run.py import path/to/full.sjson
 
 3. Index edge ngrams
 
@@ -39,7 +40,7 @@ Search engine for address. Only address.
 If you only want a subset of the data, you can extract it from full file with
 a command like:
 
-    sed -n 's/|Île-de-France|/&/p' ~/Data/geo/bano/bano-full.csv > idf.csv
+    sed -n 's/"Île-de-France"/&/p' path/to/full.sjson > idf.sjson
 
 
 # Shell
