@@ -56,6 +56,13 @@ def restart():
 
 @task
 @roles('web')
+def shell():
+    cmd = "{virtualenv_dir}/bin/python /home/addok/addok/run.py shell"
+    run_as_addok(cmd.format(virtualenv_dir=env.virtualenv_dir))
+
+
+@task
+@roles('web')
 def update(action='check'):
     """
     Update the repository (server-side).
