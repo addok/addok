@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import logging
+from pathlib import Path
 
 from werkzeug.exceptions import HTTPException, BadRequest
 from werkzeug.routing import Map, Rule
@@ -19,7 +20,8 @@ url_map = Map([
 class NotFoundLogHandler(logging.FileHandler):
 
     def __init__(filename, *args, **kwargs):
-        super().__init__('notfound.log', *args, **kwargs)
+        path = str(Path(__file__).parent.parent.joinpath('notfound.log'))
+        super().__init__(path, *args, **kwargs)
 
 
 notfound = logging.getLogger('notfound')
