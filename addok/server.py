@@ -68,7 +68,7 @@ def on_search(request):
                      lon=lon)
     if not results:
         notfound.debug(query)
-    return serve_results(results)
+    return serve_results(results, query=query)
 
 
 def on_reverse(request):
@@ -85,11 +85,14 @@ def on_reverse(request):
     return serve_results(results)
 
 
-def serve_results(results):
+def serve_results(results, query=None):
     results = {
         "type": "FeatureCollection",
+        "version": "draft",
         "features": [r.to_geojson() for r in results]
     }
+    if query:
+        results['query'] = query
     response = Response(json.dumps(results), mimetype='text/plain')
     cors(response)
     return response
