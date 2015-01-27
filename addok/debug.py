@@ -6,6 +6,8 @@ import re
 import readline
 import time
 
+from pathlib import Path
+
 import geohash
 
 from .core import (DB, Search, document_key, token_frequency, make_fuzzy,
@@ -96,13 +98,18 @@ class Cli(object):
     def _init_history_file(self):
         if hasattr(readline, "read_history_file"):
             try:
-                readline.read_history_file(self.HISTORY_FILE)
+                readline.read_history_file(self.history_file)
             except FileNotFoundError:
                 pass
             atexit.register(self.save_history)
 
     def save_history(self):
-        readline.write_history_file(self.HISTORY_FILE)
+        readline.write_history_file(self.history_file)
+
+    @property
+    def history_file(self):
+        directory = Path(__file__).parent.parent
+        return str(directory.joinpath(self.HISTORY_FILE))
 
     def completer(self, text, state):
         for cmd in self.COMMANDS.keys():
