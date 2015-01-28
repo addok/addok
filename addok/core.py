@@ -362,8 +362,9 @@ class Search(BaseHelper):
                 # autocomplete is on.
                 self.debug('Cream found. Returning.')
                 return True
-            if not self.bucket_empty:
-                # Do not rerun if bucket with limit 10 has returned 0 results
+            if len(self.bucket) == 10:
+                # Do not rerun if bucket with limit 10 has returned less
+                # than 10 results.
                 self.new_bucket(self.keys)
         else:
             self.add_to_bucket(self.keys)
