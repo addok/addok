@@ -105,6 +105,7 @@ class Result(object):
                 self.housenumber = raw
                 self.lat = lat
                 self.lon = lon
+                break
 
     def to_geojson(self):
         properties = {"label": str(self)}
