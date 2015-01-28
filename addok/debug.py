@@ -336,7 +336,7 @@ class Cli(object):
         word = list(preprocess_query(word))[0]
         token = Token(word)
         token.make_fuzzy()
-        keys = [k.split('|')[1] for k in token.fuzzy_keys]
+        keys = [n for n in token.neighbors if DB.zcard(token_key(n))]
         print(white(keys))
 
     def prompt(self):

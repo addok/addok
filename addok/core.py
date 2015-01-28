@@ -226,16 +226,7 @@ class Token(object):
             self.db_key = self.key
 
     def make_fuzzy(self, fuzzy=1):
-        neighbors = make_fuzzy(self.original, fuzzy)
-        keys = []
-        for neighbor in neighbors:
-            key = token_key(neighbor)
-            count = DB.zcard(key)
-            if count:
-                keys.append((key, count))
-        keys.sort(key=lambda x: x[1])
-        for key, count in keys:
-            self.fuzzy_keys.append(key)
+        self.neighbors = make_fuzzy(self.original, fuzzy)
 
     def autocomplete(self):
         key = edge_ngram_key(self.original)
@@ -466,6 +457,8 @@ class Search(BaseHelper):
                 self.add_to_bucket(keys + [key])
 
     def fuzzy(self, tokens):
+        if not self.bucket_dry:
+            return
         self.debug('Fuzzy on. Trying with %s.', tokens)
         tokens.sort(key=lambda t: len(t), reverse=True)
         for try_one in tokens:
@@ -478,7 +471,17 @@ class Search(BaseHelper):
                 continue
             self.debug('Going fuzzy with %s', try_one)
             try_one.make_fuzzy(fuzzy=self.fuzzy)
-            for key in try_one.fuzzy_keys:
+            DB.sadd(self.query, *try_one.neighbors)
+            interkeys = [pair_key(t) for t in tokens if t.db_key in keys]
+            interkeys.append(self.query)
+            fuzzy_words = DB.sinter(interkeys)
+            DB.delete(self.query)
+            # Keep the priority we gave in building fuzzy terms (inversion
+            # first, then substitution, etc.).
+            fuzzy_words = [w.decode() for w in fuzzy_words]
+            fuzzy_words.sort(key=lambda x: try_one.neighbors.index(x))
+            fuzzy_keys = [token_key(w) for w in fuzzy_words]
+            for key in fuzzy_keys:
                 if self.bucket_dry:
                     self.add_to_bucket(keys + [key])
 
