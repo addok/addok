@@ -558,7 +558,7 @@ class Search(BaseHelper):
         return not self.bucket
 
     @property
-    def bucket_cream(self):
+    def bucket_greasy(self):
         return any(r.str_distance >= config.MATCH_THRESHOLD
                    for _id, r in self.results.items())
 
@@ -567,7 +567,7 @@ class Search(BaseHelper):
             return False
         self.debug('Checking cream.')
         self.convert()
-        return self.bucket_cream
+        return self.bucket_greasy
 
     def set_should_match_threshold(self):
         self.matched_keys = set([])
