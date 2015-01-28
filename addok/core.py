@@ -57,6 +57,7 @@ def score_autocomplete(key):
 class Result(object):
 
     def __init__(self, _id):
+        self.housenumbers = {}
         self.housenumber = None
         self.importance = 0.0  # Default value, can be overriden by db values.
         self._scores = {}
@@ -72,7 +73,7 @@ class Result(object):
 
     def load_db_field(self, key, value):
         if key.startswith('h|'):
-            return
+            self.housenumbers[key[2:]] = value
         setattr(self, key, value)
 
     def __str__(self):
@@ -94,11 +95,8 @@ class Result(object):
     def match_housenumber(self, tokens):
         originals = [t.original for t in tokens]
         for token in tokens:
-            key = document_key(self.id)
-            field = housenumber_field_key(token.original)
-            if DB.hexists(key, field):
-                key = document_key(self.id)
-                raw, lat, lon = DB.hget(key, field).decode().split('|')
+            if token.original in self.housenumbers:
+                raw, lat, lon = self.housenumbers[token.original].split('|')
                 if raw in self.name and originals.count(token.original) != 2:
                     # Consider that user is not requesting a housenumber if
                     # token is also in name (ex. rue du 8 mai), unless this
@@ -178,9 +176,9 @@ class ReverseResult(Result):
 
     MAX_IMPORTANCE = 0.0
 
-    def __init__(self, *args, **kwargs):
+    def load(self, *args, **kwargs):
         self.housenumbers = []
-        super().__init__(*args, **kwargs)
+        super().load(*args, **kwargs)
 
     def load_db_field(self, key, value):
         if key.startswith('h|'):
