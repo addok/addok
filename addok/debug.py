@@ -176,7 +176,7 @@ class Cli(object):
 
     def do_help(self, *args):
         """Display this help message."""
-        for name, doc in self.COMMANDS.items():
+        for name, doc in sorted(self.COMMANDS.items(), key=lambda x: x[0]):
             print(yellow(name),
                   cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
 
