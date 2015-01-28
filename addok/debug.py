@@ -339,6 +339,17 @@ class Cli(object):
         keys = [n for n in token.neighbors if DB.zcard(token_key(n))]
         print(white(keys))
 
+    def do_intersect(self, words):
+        """Do a raw intersect between tokens (limit 100).
+        INTERSECT rue des lilas"""
+        tokens = [token_key(w) for w in preprocess_query(words)]
+        DB.zinterstore(words, tokens)
+        ids = DB.zrevrange(words, 0, 100)
+        DB.delete(words)
+        for id_ in ids:
+            r = SearchResult(id_)
+            print(white(r), blue(r.id))
+
     def prompt(self):
         command = input("> ")
         return command
