@@ -71,8 +71,11 @@ def import_from_stream_json(filepath, limit=None):
         count = 0
         chunk = []
         for row in f:
+            try:
+                chunk.append(json.loads(row))
+            except ValueError:
+                continue
             count += 1
-            chunk.append(json.loads(row))
             if count % 10000 == 0:
                 pool.map(index_row, chunk)
                 print("Done", count, time.time() - start)
