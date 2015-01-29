@@ -1,4 +1,3 @@
-import csv
 import json
 import time
 
@@ -49,7 +48,7 @@ def row_to_doc(row):
         doc['housenumbers'] = housenumbers
     if type_ in ['village', 'town', 'city', 'commune', 'locality']:
         # Sometimes, a village is in reality an hamlet, so it has both a name
-        # (the hamlet name) and a city (the administrative entity it belongs
+        # (the hamlet name) and a city (the administrative entity it belongs
         # to), this is why we first look if a name exists.
         doc['name'] = name or row.get('city')
     return doc
