@@ -110,7 +110,9 @@ def on_csv(request):
         content = f.read().decode().split('\n')
         rows = csv.DictReader(content, fieldnames=headers, dialect=dialect)
         fieldnames = headers[:]
-        fieldnames.extend(['latitude', 'longitude', 'address'])
+        for key in ['latitude', 'longitude', 'result_address', 'result_score']:
+            if key not in fieldnames:
+                fieldnames.append(key)
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
         writer.writeheader()
@@ -121,7 +123,8 @@ def on_csv(request):
                 row.update({
                     'latitude': results[0].lat,
                     'longitude': results[0].lon,
-                    'address': str(results[0]),
+                    'result_address': str(results[0]),
+                    'result_score': round(results[0].score, 2),
                 })
             else:
                 notfound.debug(q)

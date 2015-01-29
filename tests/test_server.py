@@ -25,4 +25,6 @@ def test_csv_endpoint(client, factory):
     data = resp.data.decode()
     assert 'latitude' in data
     assert 'longitude' in data
+    assert 'result_address' in data
+    assert 'result_score' in data
     assert data.count('Montbrun-Bocage') == 2
