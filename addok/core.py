@@ -335,7 +335,9 @@ class Search(BaseHelper):
             if self.bucket_dry:
                 self.debug('Only commons, manual scan.')
                 count = 0
-                keys = keys = [t.db_key for t in self.tokens]
+                # Scan the less frequent token.
+                self.tokens.sort(key=lambda t: t.frequency)
+                keys = [t.db_key for t in self.tokens]
                 others = keys[1:]
                 for id_, score in DB.zscan_iter(keys[0]):
                     count += 1
