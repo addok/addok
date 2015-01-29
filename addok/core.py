@@ -334,7 +334,19 @@ class Search(BaseHelper):
                 # Do not give priority to autocomplete when only one token.
                 self.autocomplete(self.tokens, skip_commons=True)
             if self.bucket_dry:
-                self.add_to_bucket(keys)
+                if len(keys) == 1:
+                    self.add_to_bucket(keys)
+                else:
+                    self.debug('Only commons, manual scan.')
+                    count = 0
+                    keys = keys = [t.db_key for t in self.tokens]
+                    others = keys[1:]
+                    for id_, score in DB.zscan_iter(keys[0]):
+                        count += 1
+                        if all(DB.zrank(k, id_) for k in others):
+                            self.bucket.add(id_)
+                        if self.bucket_full or count > 200:
+                            break
             if not self.bucket_empty:
                 self.debug('Only common terms. Return.')
                 return True
