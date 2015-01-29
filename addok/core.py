@@ -330,9 +330,6 @@ class Search(BaseHelper):
             if self.geohash_key:
                 keys.append(self.geohash_key)
                 self.debug('Adding geohash %s', self.geohash_key)
-            if len(self.tokens) > 1:
-                # Do not give priority to autocomplete when only one token.
-                self.autocomplete(self.tokens, skip_commons=True)
             if len(keys) == 1 or self.geohash_key:
                 self.add_to_bucket(keys)
             if self.bucket_dry:
@@ -346,6 +343,7 @@ class Search(BaseHelper):
                         self.bucket.add(id_)
                     if self.bucket_full or count > 200:
                         break
+            self.autocomplete(self.tokens, skip_commons=True)
             if not self.bucket_empty:
                 self.debug('Only common terms. Return.')
                 return True
