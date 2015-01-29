@@ -19,12 +19,14 @@ def test_search_should_return_geojson(client, factory):
 def test_csv_endpoint(client, factory):
     factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
     content = ('name,street,postcode,city\n'
-               'boulangerie,rue des avions,31310,Montbrun-Bocage')
+               'Boulangerie Brûlé,rue des avions,31310,Montbrun-Bocage')
     resp = client.post(
-        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv')})
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['street', 'postcode', 'postcode', 'city']})
     data = resp.data.decode()
     assert 'latitude' in data
     assert 'longitude' in data
     assert 'result_address' in data
     assert 'result_score' in data
     assert data.count('Montbrun-Bocage') == 2
+    assert data.count('Boulangerie Brûlé') == 1  # Make sure accents are ok.
