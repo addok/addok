@@ -8,7 +8,7 @@ import redis
 from . import config
 from .pipeline import preprocess_query
 from .textutils.default import (make_fuzzy, compare_ngrams, contains,
-                                startswith, equals)
+                                startswith, equals, ascii)
 from .utils import haversine_distance, km_to_score
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)
@@ -141,11 +141,13 @@ class Result(object):
 
     def score_by_autocomplete_distance(self, query):
         score = 0
-        if equals(query, self.name):
+        query = ascii(query)
+        name = ascii(self.name)
+        if equals(query, name):
             score = 1.0
         elif startswith(query, str(self)):
             score = 0.9
-        elif contains(query, self.name):
+        elif contains(query, name):
             score = 0.7
         if score:
             self.add_score('str_distance', score, ceiling=1.0)

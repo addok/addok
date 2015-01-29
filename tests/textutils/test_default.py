@@ -3,7 +3,7 @@ import pytest
 from addok.textutils.default import (make_fuzzy, compare_ngrams, normalize,
                                      alphanumerize, synonymize, tokenize,
                                      compute_edge_ngrams, contains,
-                                     startswith, equals)
+                                     startswith, equals, ascii)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -119,3 +119,26 @@ def test_startswith(candidate, target):
 ])
 def test_equals(candidate, target):
     assert equals(candidate, target)
+
+
+def test_ascii_should_behave_like_a_string():
+    s = ascii('mystring')
+    assert str(s) == 'mystring'
+
+
+def test_ascii_should_clean_string():
+    s = ascii(u'Aystringé')
+    assert s == 'aystringe'
+
+
+def test_ascii_should_cache_cleaned_string(monkeypatch):
+    s = ascii('mystring')
+    assert s._cache
+
+    def do_not_call_me(x):
+        assert False
+
+    monkeypatch.setattr('addok.textutils.default.alphanumerize',
+                        do_not_call_me)
+
+    ascii(s)  # Should not call alphanumerize.

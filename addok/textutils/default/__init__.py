@@ -74,9 +74,22 @@ def make_fuzzy(word, max=1):
     return neighbors
 
 
+class ascii(str):
+    """Just like a str, but ascii folded and cached."""
+
+    def __new__(cls, value):
+        try:
+            cache = value._cache
+        except AttributeError:
+            cache = alphanumerize(unidecode(value.lower()))
+        obj = str.__new__(cls, cache)
+        obj._cache = cache
+        return obj
+
+
 def compare_ngrams(left, right, N=2, pad_len=0):
-    left = alphanumerize(unidecode(left.lower()))
-    right = alphanumerize(unidecode(right.lower()))
+    left = ascii(left)
+    right = ascii(right)
     if len(left) == 1 and len(right) == 1:
         # NGram.compare returns 0.0 for 1 letter comparison, even if letters
         # are equal.
@@ -85,20 +98,20 @@ def compare_ngrams(left, right, N=2, pad_len=0):
 
 
 def contains(candidate, target):
-    candidate = alphanumerize(unidecode(candidate.lower()))
-    target = alphanumerize(unidecode(target.lower()))
+    candidate = ascii(candidate)
+    target = ascii(target)
     return candidate in target
 
 
 def startswith(candidate, target):
-    candidate = alphanumerize(unidecode(candidate.lower()))
-    target = alphanumerize(unidecode(target.lower()))
+    candidate = ascii(candidate)
+    target = ascii(target)
     return target.startswith(candidate)
 
 
 def equals(candidate, target):
-    candidate = alphanumerize(unidecode(candidate.lower()))
-    target = alphanumerize(unidecode(target.lower()))
+    candidate = ascii(candidate)
+    target = ascii(target)
     return target == candidate
 
 
