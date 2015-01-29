@@ -34,7 +34,7 @@ def live():
     }
     env.system_users = {server: 'addok'}
     env.virtualenv_dir = '/home/addok/.virtualenvs/addok'
-    env.project_dir = '/home/addok/addok/'
+    env.project_dir = '/home/addok/src/'
     env.restart_command = 'pkill -HUP gunicorn'
 
 # Set the default environment.
@@ -47,18 +47,26 @@ live()
 
 @task
 @roles('web')
+def install():
+    """
+    Install the service (tested on Ubuntu 14.04).
+    """
+    sudo('apt install redis-server python3.4-dev python-virtualenv python-pip '
+         'virtualenvwrapper')
+    # run_as_addok('source /usr/local/bin/virtualenvwrapper.sh')
+    run_as_addok('mkvirtualenv addok --python=/usr/bin/python3.4')
+    run_as_addok('git clone {repository} {project_dir}'.format(**env))
+    with cd(env.project_dir):
+        run_as_addok('pip install -r {requirements_file}'.format(**env))
+
+
+@task
+@roles('web')
 def restart():
     """
     Restart the web service.
     """
     sudo(env.restart_command)
-
-
-@task
-@roles('web')
-def shell():
-    cmd = "{virtualenv_dir}/bin/python /home/addok/addok/run.py shell"
-    run_as_addok(cmd.format(virtualenv_dir=env.virtualenv_dir))
 
 
 @task
@@ -109,3 +117,10 @@ def requirements():
     }
     cmd = '{base_command} -r {project_dir}/{requirements_file}'.format(**kw)
     run_as_addok(cmd)
+
+
+@task
+@roles('web')
+def shell():
+    cmd = "{virtualenv_dir}/bin/python /home/addok/addok/run.py shell"
+    run_as_addok(cmd.format(virtualenv_dir=env.virtualenv_dir))
