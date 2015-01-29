@@ -345,6 +345,8 @@ class Search(BaseHelper):
                         self.bucket.add(id_)
                     if self.bucket_full or count > 200:
                         break
+                self.debug('%s results after scan (%s loops)',
+                           len(self.bucket), count)
             self.autocomplete(self.tokens, skip_commons=True)
             if not self.bucket_empty:
                 self.debug('Only common terms. Return.')
