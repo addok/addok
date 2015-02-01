@@ -30,3 +30,12 @@ def test_csv_endpoint(client, factory):
     assert 'result_score' in data
     assert data.count('Montbrun-Bocage') == 2
     assert data.count('Boulangerie Brûlé') == 1  # Make sure accents are ok.
+
+
+def test_csv_endpoint_with_empty_file(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
+    content = ('name,street,postcode,city\n'
+               ',,,')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv')})
+    assert resp.data.decode()

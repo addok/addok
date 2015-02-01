@@ -293,6 +293,8 @@ class Search(BaseHelper):
         self.keys = []
         self.query = query.strip()
         self.preprocess()
+        if not self.tokens:
+            return []
         self.search_all()
         self.set_should_match_threshold()
         for token in self.tokens:
@@ -436,11 +438,13 @@ class Search(BaseHelper):
 
     def preprocess(self):
         self.tokens = []
+        token = None
         for position, token in enumerate(preprocess_query(self.query)):
             token = Token(token, position=position)
             self.tokens.append(token)
-        token.is_last = True
-        self.last_token = token
+        if token:
+            token.is_last = True
+            self.last_token = token
         self.tokens.sort(key=lambda x: len(x), reverse=True)
 
     def search_all(self):
