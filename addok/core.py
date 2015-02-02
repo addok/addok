@@ -334,14 +334,14 @@ class Search(BaseHelper):
                 self.debug('Adding geohash %s', self.geohash_key)
             if len(keys) == 1 or self.geohash_key:
                 self.add_to_bucket(keys)
-            if self.bucket_dry:
-                self.debug('Only commons, manual scan.')
+            if self.bucket_dry and len(keys) > 1:
                 count = 0
                 # Scan the less frequent token.
                 self.tokens.sort(key=lambda t: t.frequency)
-                keys = [t.db_key for t in self.tokens]
-                others = keys[1:]
-                ids = DB.zrevrange(keys[0], 0, 500)
+                first = self.tokens[0].db_key
+                self.debug('Only commons, manual scan on %s.', self.tokens[0])
+                others = [t.db_key for t in self.tokens[1:]]
+                ids = DB.zrevrange(first, 0, 500)
                 for id_ in ids:
                     count += 1
                     if all(DB.zrank(k, id_) for k in others):
