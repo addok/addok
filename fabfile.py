@@ -1,4 +1,4 @@
-from fabric.api import task, env, roles, cd, hide, sudo, execute
+from fabric.api import task, env, roles, cd, hide, sudo, execute, puts
 
 
 env.project_name = 'addok'
@@ -124,3 +124,21 @@ def requirements():
 def shell():
     cmd = "{virtualenv_dir}/bin/python /home/addok/addok/run.py shell"
     run_as_addok(cmd.format(virtualenv_dir=env.virtualenv_dir))
+
+
+@task
+def deploy(verbosity='normal'):
+    """
+    Full server deploy.
+
+    Updates the repository (server-side) and restarts the web service.
+    """
+    if verbosity == 'noisy':
+        hide_args = []
+    else:
+        hide_args = ['running', 'stdout']
+    with hide(*hide_args):
+        puts('Updating repository...')
+        execute(update)
+        puts('Restarting web server...')
+        execute(restart)
