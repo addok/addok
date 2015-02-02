@@ -10,7 +10,7 @@ DB_SETTINGS = {
 BUCKET_LIMIT = 100
 
 # Above this treshold, terms are considered commons.
-COMMON_THRESHOLD = 10000
+COMMON_THRESHOLD = 500
 
 # Min score considered matching the query.
 MATCH_THRESHOLD = 0.9

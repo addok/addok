@@ -338,10 +338,10 @@ class Search(BaseHelper):
                 count = 0
                 # Scan the less frequent token.
                 self.tokens.sort(key=lambda t: t.frequency)
-                first = self.tokens[0].db_key
-                self.debug('Only commons, manual scan on %s.', self.tokens[0])
+                first = self.tokens[0]
+                self.debug('Only commons, manual scan on %s.', first)
                 others = [t.db_key for t in self.tokens[1:]]
-                ids = DB.zrevrange(first, 0, 500)
+                ids = DB.zrevrange(first.db_key, 0, 500)
                 for id_ in ids:
                     count += 1
                     if all(DB.zrank(k, id_) for k in others):
