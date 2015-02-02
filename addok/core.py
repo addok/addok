@@ -341,11 +341,12 @@ class Search(BaseHelper):
                 self.tokens.sort(key=lambda t: t.frequency)
                 keys = [t.db_key for t in self.tokens]
                 others = keys[1:]
-                for id_, score in DB.zscan_iter(keys[0]):
+                ids = DB.zrevrange(keys[0], 0, 200)
+                for id_ in ids:
                     count += 1
                     if all(DB.zrank(k, id_) for k in others):
                         self.bucket.add(id_)
-                    if self.bucket_full or count > 200:
+                    if self.bucket_full:
                         break
                 self.debug('%s results after scan (%s loops)',
                            len(self.bucket), count)
