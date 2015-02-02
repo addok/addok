@@ -12,6 +12,9 @@ BUCKET_LIMIT = 100
 # Above this treshold, terms are considered commons.
 COMMON_THRESHOLD = 10000
 
+# Above this treshold, we avoid intersecting sets.
+INTERSECT_LIMIT = 100000
+
 # Min score considered matching the query.
 MATCH_THRESHOLD = 0.9
 

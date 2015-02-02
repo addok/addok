@@ -339,17 +339,22 @@ class Search(BaseHelper):
                 # Scan the less frequent token.
                 self.tokens.sort(key=lambda t: t.frequency)
                 first = self.tokens[0]
-                self.debug('Only commons, manual scan on %s.', first)
-                others = [t.db_key for t in self.tokens[1:]]
-                ids = DB.zrevrange(first.db_key, 0, 500)
-                for id_ in ids:
-                    count += 1
-                    if all(DB.zrank(k, id_) for k in others):
-                        self.bucket.add(id_)
-                    if self.bucket_full:
-                        break
-                self.debug('%s results after scan (%s loops)',
-                           len(self.bucket), count)
+                if first.frequency < config.INTERSECT_LIMIT:
+                    self.debug('Under INTERSECT_LIMIT, brut force.')
+                    keys = [t.db_key for t in self.tokens]
+                    self.add_to_bucket(keys)
+                else:
+                    self.debug('INTERSECT_LIMIT hit, manual scan on %s', first)
+                    others = [t.db_key for t in self.tokens[1:]]
+                    ids = DB.zrevrange(first.db_key, 0, 500)
+                    for id_ in ids:
+                        count += 1
+                        if all(DB.zrank(k, id_) for k in others):
+                            self.bucket.add(id_)
+                        if self.bucket_full:
+                            break
+                    self.debug('%s results after scan (%s loops)',
+                               len(self.bucket), count)
             self.autocomplete(self.tokens, skip_commons=True)
             if not self.bucket_empty:
                 self.debug('Only common terms. Return.')

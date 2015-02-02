@@ -5,3 +5,4 @@ __pycache__
 notes.md
 .cli_history
 notfound.log
+addok/config/local.py
