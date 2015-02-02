@@ -340,15 +340,22 @@ class Cli(object):
         print(white(keys))
 
     def do_intersect(self, words):
-        """Do a raw intersect between tokens (limit 100).
-        INTERSECT rue des lilas"""
+        """Do a raw intersect between tokens (default limit 100).
+        INTERSECT rue des lilas [LIMIT 100]"""
+        start = time.time()
+        limit = 100
+        if 'LIMIT' in words:
+            words, limit = words.split('LIMIT')
+            limit = int(limit)
         tokens = [token_key(w) for w in preprocess_query(words)]
         DB.zinterstore(words, tokens)
-        ids = DB.zrevrange(words, 0, 100)
+        results = DB.zrevrange(words, 0, limit, withscores=True)
         DB.delete(words)
-        for id_ in ids:
+        for id_, score in results:
             r = SearchResult(id_)
-            print(white(r), blue(r.id))
+            print(white(r), blue(r.id), cyan(score))
+        duration = round((time.time() - start) * 1000, 1)
+        print(magenta("({} in {} ms)".format(len(results), duration)))
 
     def prompt(self):
         command = input("> ")
