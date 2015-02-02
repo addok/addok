@@ -266,7 +266,7 @@ class BaseHelper(object):
 
     def debug(self, *args):
         s = args[0] % args[1:]
-        s = '[{}] {}'.format(str(time.time() - self._start)[:10], s)
+        s = '[{}] {}'.format(str((time.time() - self._start) * 1000)[:5], s)
         print(s)
 
 
