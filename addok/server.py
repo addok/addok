@@ -121,7 +121,8 @@ def on_csv(request):
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
         writer.writeheader()
         for row in rows:
-            q = ' '.join([row[k] for k in columns])
+            # We don't want None in a join.
+            q = ' '.join([row[k] or '' for k in columns])
             results = search(q, autocomplete=False, limit=1)
             if results:
                 row.update({
