@@ -117,7 +117,7 @@ class Result(object):
         housenumber = getattr(self, 'housenumber', None)
         if housenumber:
             properties['name'] = '{} {}'.format(housenumber,
-                                                properties['name'])
+                                                properties.get('name'))
         return {
             "type": "Feature",
             "geometry": {

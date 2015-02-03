@@ -151,3 +151,10 @@ def test_closer_result_should_be_first_for_same_score(factory):
     results = search('rue de la monnaie', lat=48.1, lon=2.2)
     assert len(results) == 3
     assert results[0].id == expected['id']
+
+
+def test_document_without_name_should_not_be_indexed(factory):
+    doc = factory(skip_index=True, city="Montceau-les-Mines")
+    del doc['name']
+    doc.index()
+    assert not search('Montceau-les-Mines')

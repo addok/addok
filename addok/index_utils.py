@@ -34,9 +34,11 @@ def index_pairs(pipe, els):
 
 def index_document(doc, update_ngrams=True):
     key = document_key(doc['id'])
+    name = doc.get('name')
+    if not name:
+        return
     pipe = DB.pipeline()
     index_geohash(pipe, key, doc['lat'], doc['lon'])
-    name = doc['name']
     importance = doc.get('importance', 0.0)
     pair_els = []
     city = doc.get('city')
