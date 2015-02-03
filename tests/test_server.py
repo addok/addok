@@ -56,3 +56,14 @@ def test_csv_endpoint_with_multilines_fields(client, factory):
     assert 'result_score' in data
     # \n as been replaced by \r\n
     assert 'rue des avions\r\n31310\r\nMontbrun-Bocage' in data
+
+
+def test_csv_endpoint_with_escaped_doublequotes(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
+    content = ('name,adresse\n'
+               '"Boulangerie ""Au pain Brûlé""","rue des avions Montbrun"')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['adresse']})
+    data = resp.data.decode()
+    assert 'Boulangerie ""Au pain Brûlé""' in data

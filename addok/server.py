@@ -104,6 +104,9 @@ def on_csv(request):
     if request.method == 'POST':
         f = request.files['data']
         dialect = csv.Sniffer().sniff(f.read(2048).decode())
+        # Escape double quotes with double quotes if needed.
+        # See 2.7 in http://tools.ietf.org/html/rfc4180
+        dialect.doublequote = True
         f.seek(0)
         # Replace bad carriage returns, as per
         # http://tools.ietf.org/html/rfc4180
