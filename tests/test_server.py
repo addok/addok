@@ -54,3 +54,5 @@ def test_csv_endpoint_with_multilines_fields(client, factory):
     assert 'longitude' in data
     assert 'result_address' in data
     assert 'result_score' in data
+    # \n as been replaced by \r\n
+    assert 'rue des avions\r\n31310\r\nMontbrun-Bocage' in data

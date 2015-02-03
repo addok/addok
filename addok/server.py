@@ -105,7 +105,13 @@ def on_csv(request):
         f = request.files['data']
         dialect = csv.Sniffer().sniff(f.read(2048).decode())
         f.seek(0)
-        rows = csv.DictReader(f.read().decode().splitlines(), dialect=dialect)
+        # Replace bad carriage returns, as per
+        # http://tools.ietf.org/html/rfc4180
+        # We may want not to load all file in memory at some point.
+        content = f.read().decode().replace('\r', '').replace('\n', '\r\n')
+        # Keep ends, not to glue lines when a field is multilined.
+        rows = csv.DictReader(content.splitlines(keepends=True),
+                              dialect=dialect)
         fieldnames = rows.fieldnames[:]
         columns = request.form.getlist('columns') or rows.fieldnames
         for key in ['latitude', 'longitude', 'result_address', 'result_score']:
