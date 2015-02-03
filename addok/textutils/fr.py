@@ -80,7 +80,7 @@ def _clean_query(q):
     q = re.sub('c(e|é)dex ?[\d]*', '', q, flags=re.IGNORECASE)
     q = re.sub('bp ?[\d]*', '', q, flags=re.IGNORECASE)
     q = re.sub('cs ?[\d]*', '', q, flags=re.IGNORECASE)
-    q = re.sub('\d{,2}(e|(e|è)me) (e|étage)', '', q, flags=re.IGNORECASE)
+    q = re.sub('\d{,2}(e|[eè]me) ([eé]tage)', '', q, flags=re.IGNORECASE)
     q = re.sub(' {2,}', ' ', q, flags=re.IGNORECASE)
     q = q.strip()
     return q

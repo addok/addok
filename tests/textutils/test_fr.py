@@ -80,6 +80,8 @@ def test_normalize(input, output):
      "Rue Gustave-Delory 59017 Lille"),
     ("Rue Louis des Etages",
      "Rue Louis des Etages"),
+    ("route express",
+     "route express"),
 ])
 def test_clean_query(input, expected):
     assert _clean_query(input) == expected
@@ -92,19 +94,19 @@ def test_clean_query(input, expected):
      '75, rue Boucicaut 92260 Fontenay-aux-Roses'),
     ('rue Boucicaut 92260 Fontenay-aux-Roses',
      'rue Boucicaut 92260 Fontenay-aux-Roses'),
-    ("Maison de l'emploi et de la formation 13, rue de la Tuilerie 70400 Héricourt",
+    ("Maison de l'emploi et de la formation 13, rue de la Tuilerie 70400 Héricourt",  # noqa
      "13, rue de la Tuilerie 70400 Héricourt"),
     # ("Parc d'activités Innopole 166, rue Pierre-et-Marie-Curie 31670 Labège",
     #  "166, rue Pierre-et-Marie-Curie 31670 Labège"),
     # ("32, allée Henri-Sellier Maison des solidarités 31400 Toulouse",
     #  "32, allée Henri-Sellier 31400 Toulouse"),
-    # ("Centre d'Affaires la Boursidiere - BP 160 - Bâtiment Maine 4ème étage Le Plessis Robinson 92357 France",
+    # ("Centre d'Affaires la Boursidiere - BP 160 - Bâtiment Maine 4ème étage Le Plessis Robinson 92357 France",  # noqa
     #  "Le Plessis Robinson 92357 France"),
     ("Tribunal d'instance de Guebwiller 1, place Saint-Léger 68504 Guebwiller",
      "1, place Saint-Léger 68504 Guebwiller"),
     ("Centre social 3 rue du Laurier 73000 CHAMBERY",
      "3 rue du Laurier 73000 CHAMBERY"),
-    ("Maison de la Médiation 72 Chaussée de l'Hôtel de Ville 59650 VILLENEUVE D ASCQ",
+    ("Maison de la Médiation 72 Chaussée de l'Hôtel de Ville 59650 VILLENEUVE D ASCQ",  # noqa
      "72 Chaussée de l'Hôtel de Ville 59650 VILLENEUVE D ASCQ"),
     ("2, Grande rue 62128 Écoust-Saint-Mein",
      "2, Grande rue 62128 Écoust-Saint-Mein"),
