@@ -39,3 +39,18 @@ def test_csv_endpoint_with_empty_file(client, factory):
     resp = client.post(
         '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv')})
     assert resp.data.decode()
+
+
+def test_csv_endpoint_with_multilines_fields(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
+    content = ('name,adresse\n'
+               '"Boulangerie Brûlé","rue des avions\n31310\nMontbrun-Bocage"\n'
+               '"Pâtisserie Crème","rue des avions\n31310\nMontbrun-Bocage"\n')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['adresse']})
+    data = resp.data.decode()
+    assert 'latitude' in data
+    assert 'longitude' in data
+    assert 'result_address' in data
+    assert 'result_score' in data
