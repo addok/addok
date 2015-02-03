@@ -103,11 +103,11 @@ def serve_results(results, query=None):
 def on_csv(request):
     if request.method == 'POST':
         f = request.files['data']
-        first_line = next(f.stream).decode().strip('\n')
+        first_line = next(f.stream).decode().splitlines()[0]
         dialect = csv.Sniffer().sniff(first_line)
         headers = first_line.split(dialect.delimiter)
         columns = request.form.getlist('columns') or headers
-        content = f.read().decode().split('\n')
+        content = f.read().decode().splitlines()
         rows = csv.DictReader(content, fieldnames=headers, dialect=dialect)
         fieldnames = headers[:]
         for key in ['latitude', 'longitude', 'result_address', 'result_score']:
