@@ -37,8 +37,8 @@ Search engine for address. Only address.
 
     python run.py ngrams
 
-If you only want a subset of the data, you can extract it from full file with
-a command like:
+If you only want a subset of the data (the whole BANO dataset requires 20GB of RAM),
+you can extract it from full file with a command like:
 
     sed -n 's/"Île-de-France"/&/p' path/to/full.sjson > idf.sjson
 
