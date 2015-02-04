@@ -510,6 +510,7 @@ class Search(BaseHelper):
             # first, then substitution, etc.).
             fuzzy_words = [w.decode() for w in fuzzy_words]
             fuzzy_words.sort(key=lambda x: try_one.neighbors.index(x))
+            self.debug('Found fuzzy candidates %s', fuzzy_words)
             fuzzy_keys = [token_key(w) for w in fuzzy_words]
             for key in fuzzy_keys:
                 if self.bucket_dry:
