@@ -480,6 +480,7 @@ class Search(BaseHelper):
             return
         self.debug('Fuzzy on. Trying with %s.', tokens)
         tokens.sort(key=lambda t: len(t), reverse=True)
+        common = [t for t in self.common if t.db_key not in self.keys]
         for try_one in tokens:
             if self.bucket_full:
                 break
@@ -493,7 +494,17 @@ class Search(BaseHelper):
             DB.sadd(self.query, *try_one.neighbors)
             interkeys = [pair_key(t) for t in tokens if t.db_key in keys]
             interkeys.append(self.query)
+            # As we are in fuzzy, try to narrow as much as possible by adding
+            # unused commons tokens.
+            if common:
+                interkeys.extend([pair_key(t) for t in common])
             fuzzy_words = DB.sinter(interkeys)
+            if not fuzzy_words:
+                for token in common:
+                    interkeys.remove(pair_key(token))
+                    fuzzy_words = DB.sinter(interkeys)
+                    if fuzzy_words:
+                        break
             DB.delete(self.query)
             # Keep the priority we gave in building fuzzy terms (inversion
             # first, then substitution, etc.).
