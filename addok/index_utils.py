@@ -56,20 +56,24 @@ def index_document(doc, update_ngrams=True):
         els = index_field(pipe, key, context, update_ngrams=update_ngrams)
         pair_els.extend(els)
     housenumbers = doc.get('housenumbers')
-    if housenumbers:
-        del doc['housenumbers']
-        for number, point in housenumbers.items():
-            val = '|'.join([str(number), str(point['lat']), str(point['lon'])])
-            for hn in preprocess(number):
-                doc[housenumber_field_key(hn)] = val
-            index_field(pipe, key, str(number), update_ngrams=update_ngrams)
-            index_geohash(pipe, key, point['lat'], point['lon'])
     # Process name last, to give priority to higher score, in case same token
     # is in two fields (for example: "rue de xxx, ile de france" contains
     # twice "de")
     pair_els.extend(index_field(pipe, key, name, boost=4.0 + importance,
                                 update_ngrams=update_ngrams))
     index_pairs(pipe, pair_els)
+    if housenumbers:
+        del doc['housenumbers']
+        for number, point in housenumbers.items():
+            val = '|'.join([str(number), str(point['lat']), str(point['lon'])])
+            for hn in preprocess(number):
+                doc[housenumber_field_key(hn)] = val
+                # Any housenumber is linked to every document term, but their
+                # are not linked to each other, so we do not add them in the
+                # pair_els.
+                pipe.sadd(pair_key(hn), *pair_els)
+            index_field(pipe, key, str(number), update_ngrams=update_ngrams)
+            index_geohash(pipe, key, point['lat'], point['lon'])
     pipe.hmset(key, doc)
     pipe.execute()
 

@@ -45,8 +45,9 @@ def test_index_document():
     assert DB.exists('p|ru')
     assert DB.exists('p|de')
     assert DB.exists('p|lila')
+    assert DB.exists('p|un')
     assert DB.exists('g|u09dgm7h')
     assert b'd|xxxx' in DB.smembers('g|u09dgm7h')
     assert DB.exists('n|lil')
     assert b'lila' in DB.smembers('n|lil')
-    assert len(DB.keys()) == 10
+    assert len(DB.keys()) == 11
