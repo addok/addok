@@ -400,7 +400,8 @@ class Search(BaseHelper):
 
     def step_fuzzy(self):
         if self._fuzzy and not self.has_cream():
-            self.fuzzy(self.not_found)
+            if self.not_found:
+                self.fuzzy(self.not_found)
             if self.bucket_dry and not self.has_cream():
                 self.fuzzy(self.meaningful)
 
