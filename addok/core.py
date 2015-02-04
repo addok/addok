@@ -253,10 +253,6 @@ class Token(object):
         return self.original.isdigit()
 
 
-class Empty(Exception):
-    pass
-
-
 class BaseHelper(object):
 
     def __init__(self, verbose):
@@ -456,9 +452,6 @@ class Search(BaseHelper):
     def search_all(self):
         for token in self.tokens:
             token.search()
-            if (self.match_all and (not self.fuzzy or not token.fuzzy_keys)
-               and not token.db_key):
-                raise Empty
 
     def autocomplete(self, tokens, skip_commons=False):
         if not self._autocomplete:
