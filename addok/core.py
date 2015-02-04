@@ -404,6 +404,8 @@ class Search(BaseHelper):
                 self.fuzzy(self.not_found)
             if self.bucket_dry and not self.has_cream():
                 self.fuzzy(self.meaningful)
+            if self.bucket_dry and not self.has_cream():
+                self.fuzzy(self.meaningful, include_common=False)
 
     def step_extend_results_reducing_tokens(self):
         if self.has_cream():
@@ -475,16 +477,21 @@ class Search(BaseHelper):
                 self.debug('Trying to extend bucket. Autocomplete %s', key)
                 self.add_to_bucket(keys + [key])
 
-    def fuzzy(self, tokens):
+    def fuzzy(self, tokens, include_common=True):
         if not self.bucket_dry:
             return
         self.debug('Fuzzy on. Trying with %s.', tokens)
         tokens.sort(key=lambda t: len(t), reverse=True)
-        common = [t for t in self.common if t.db_key not in self.keys]
+        allkeys = self.keys[:]
+        if include_common:
+            # As we are in fuzzy, try to narrow as much as possible by adding
+            # unused commons tokens.
+            common = [t for t in self.common if t.db_key not in self.keys]
+            allkeys.extend([t.db_key for t in common])
         for try_one in tokens:
             if self.bucket_full:
                 break
-            keys = self.keys[:]
+            keys = allkeys[:]
             if try_one.db_key in keys:
                 keys.remove(try_one.db_key)
             if try_one.isdigit():
@@ -494,17 +501,7 @@ class Search(BaseHelper):
             DB.sadd(self.query, *try_one.neighbors)
             interkeys = [pair_key(t) for t in tokens if t.db_key in keys]
             interkeys.append(self.query)
-            # As we are in fuzzy, try to narrow as much as possible by adding
-            # unused commons tokens.
-            if common:
-                interkeys.extend([pair_key(t) for t in common])
             fuzzy_words = DB.sinter(interkeys)
-            if not fuzzy_words:
-                for token in common:
-                    interkeys.remove(pair_key(token))
-                    fuzzy_words = DB.sinter(interkeys)
-                    if fuzzy_words:
-                        break
             DB.delete(self.query)
             # Keep the priority we gave in building fuzzy terms (inversion
             # first, then substitution, etc.).
