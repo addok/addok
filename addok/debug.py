@@ -336,8 +336,12 @@ class Cli(object):
         word = list(preprocess_query(word))[0]
         token = Token(word)
         token.make_fuzzy()
-        keys = [n for n in token.neighbors if DB.zcard(token_key(n))]
-        print(white(keys))
+        neighbors = [(n, DB.zcard(token_key(n))) for n in token.neighbors]
+        neighbors.sort(key=lambda n: n[1], reverse=True)
+        for token, freq in neighbors:
+            if freq == 0:
+                break
+            print(white(token), blue(freq))
 
     def do_intersect(self, words):
         """Do a raw intersect between tokens (default limit 100).
