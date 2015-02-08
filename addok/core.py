@@ -83,7 +83,11 @@ class Result(object):
             postcode = getattr(self, 'postcode', None)
             if postcode:
                 label = '{} {}'.format(label, postcode)
-            label = '{} {}'.format(label, city)
+            post_office = getattr(self, 'post_office', None)
+            if post_office:
+                label = '{} {}'.format(label, post_office)
+            else:
+                label = '{} {}'.format(label, city)
         housenumber = getattr(self, 'housenumber', None)
         if housenumber:
             label = '{} {}'.format(housenumber, label)
