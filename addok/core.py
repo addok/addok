@@ -368,10 +368,12 @@ class Search(BaseHelper):
                 return True
 
     def step_bucket_with_meaningful(self):
-        # Avoid running with too less tokens while having commons terms.
-        actual = len(self.meaningful)
-        if actual < 2 and self.common:
-            self.meaningful.extend(self.common[:2 - actual])
+        if len(self.meaningful) == 1 and self.common:
+            # Avoid running with too less tokens while having commons terms.
+            for token in self.common:
+                if token not in self.meaningful:
+                    self.meaningful.append(token)
+                    break  # We want only one more.
         self.keys = [t.db_key for t in self.meaningful]
         if self.bucket_empty:
             self.new_bucket(self.keys, 10)
