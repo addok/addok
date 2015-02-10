@@ -51,9 +51,6 @@ def row_to_doc(row):
         # (the hamlet name) and a city (the administrative entity it belongs
         # to), this is why we first look if a name exists.
         doc['name'] = name or row.get('city')
-    post_office = row.get('post_office')
-    if post_office:
-        doc['post_office'] = post_office
     return doc
 
 
