@@ -398,6 +398,11 @@ class Search(BaseHelper):
                 self.new_bucket(self.keys)
 
     def step_autocomplete(self):
+        if self.bucket_overflow:
+            return
+        if not self._autocomplete:
+            self.debug('Autocomplete not active. Abort.')
+            return
         self.autocomplete(self.meaningful)
 
     def step_fuzzy(self):
@@ -459,9 +464,6 @@ class Search(BaseHelper):
             token.search()
 
     def autocomplete(self, tokens, skip_commons=False):
-        if not self._autocomplete:
-            self.debug('Autocomplete not active. Abort.')
-            return
         self.debug('Autocompleting %s', self.last_token)
         # self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]
