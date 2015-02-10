@@ -24,6 +24,7 @@ def test_csv_endpoint(client, factory):
         '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
                        'columns': ['street', 'postcode', 'postcode', 'city']})
     data = resp.data.decode()
+    assert 'file.geocoded.csv' in resp.headers['Content-Disposition']
     assert 'latitude' in data
     assert 'longitude' in data
     assert 'result_address' in data

@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import logging
+import os
 from pathlib import Path
 
 from werkzeug.exceptions import HTTPException, BadRequest
@@ -139,7 +140,10 @@ def on_csv(request):
             writer.writerow(row)
         output.seek(0)
         response = Response(output.read())
-        response.headers['Content-Disposition'] = 'attachment'
+        filename, ext = os.path.splitext(f.filename)
+        attachment = 'attachment; filename="{name}.geocoded.csv"'.format(
+                                                                 name=filename)
+        response.headers['Content-Disposition'] = attachment
         response.headers['Content-Type'] = 'text/csv'
         cors(response)
         return response
