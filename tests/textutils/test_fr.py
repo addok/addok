@@ -101,6 +101,7 @@ from addok.textutils.fr import (_stemmize, _clean_query, _extract_address,
     ['1y', '1y'],
     ['1z', '1z'],
     ['quimper', 'kinper'],
+    ['georges', 'jeorj'],
 ])
 def test_normalize(input, output):
     assert _stemmize(input) == output

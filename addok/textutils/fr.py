@@ -11,7 +11,7 @@ def _stemmize(s):
     significant."""
     if s not in _CACHE:
         rules = (
-            ("(?<=[^g])g(?=[eyi])", "j"),
+            ("((?<=[^g])g|^g)(?=[eyi])", "j"),
             ("(?<=g)u(?=[aeio])", ""),
             ("c(?=[^hieyw])", "k"),
             ("((?<=[^s])ch|(?<=[^0-9])c)$", "k"),  # final "c", "ch",
