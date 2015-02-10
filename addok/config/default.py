@@ -30,7 +30,7 @@ PROCESSORS = [
     'addok.textutils.default.pipeline.tokenize',
     'addok.textutils.default.pipeline.normalize',
     'addok.textutils.default.pipeline.synonymize',
-    'addok.textutils.fr.stemmize',
+    'addok.textutils.fr.phonemicize',
 ]
 QUERY_PROCESSORS = (
     'addok.textutils.fr.extract_address',

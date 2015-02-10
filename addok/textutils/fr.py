@@ -6,8 +6,8 @@ from addok.utils import yielder
 _CACHE = {}
 
 
-def _stemmize(s):
-    """Very lite French stemming. Try to remove every letter that is not
+def _phonemicize(s):
+    """Very lite French phonemicization. Try to remove every letter that is not
     significant."""
     if s not in _CACHE:
         rules = (
@@ -47,7 +47,7 @@ def _stemmize(s):
         _CACHE[s] = _s
     return _CACHE[s]
 
-stemmize = yielder(_stemmize)
+phonemicize = yielder(_phonemicize)
 
 
 TYPES = [

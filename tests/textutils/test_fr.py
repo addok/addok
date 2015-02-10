@@ -1,6 +1,6 @@
 import pytest
 
-from addok.textutils.fr import (_stemmize, _clean_query, _extract_address,
+from addok.textutils.fr import (_phonemicize, _clean_query, _extract_address,
                                 _glue_ordinal)
 
 
@@ -103,8 +103,8 @@ from addok.textutils.fr import (_stemmize, _clean_query, _extract_address,
     ['quimper', 'kinper'],
     ['georges', 'jeorj'],
 ])
-def test_normalize(input, output):
-    assert _stemmize(input) == output
+def test_phonemicize(input, output):
+    assert _phonemicize(input) == output
 
 
 @pytest.mark.parametrize("input,expected", [
