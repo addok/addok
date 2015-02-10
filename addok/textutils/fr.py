@@ -9,35 +9,36 @@ _CACHE = {}
 def _stemmize(s):
     """Very lite French stemming. Try to remove every letter that is not
     significant."""
-    if not s in _CACHE:
+    if s not in _CACHE:
         rules = (
             ("(?<=[^g])g(?=[eyi])", "j"),
             ("(?<=g)u(?=[aeio])", ""),
             ("c(?=[^hieyw])", "k"),
-            ("((?<=[^s])ch|c)$", "k"),  # final "c", "ch", but not "sch".
+            ("((?<=[^s])ch|(?<=[^0-9])c)$", "k"),  # final "c", "ch",
+                                                   # but not "sch" and not 10c.
             ("(?<=[aeiouy])s(?=[aeiouy])", "z"),
-            ("qu?", "k"),
+            ("((?<=[^0-9])q|^q)u?", "k"),
             ("cc(?=[ie])", "s"),  # Others will hit the c => k and deduplicate
             ("ck", "k"),
             ("ph", "f"),
             ("th$", "te"),  # This t sounds.
-            ("(?<=[^sc])h", ""),
+            ("(?<=[^sc0-9])h", ""),
             ("^h", ""),
             ("sc", "s"),
             ("sh", "ch"),
-            ("w", "v"),
+            ("((?<=[^0-9])w|^w)", "v"),
             ("c(?=[eiy])", "s"),
-            ("y", "i"),
+            ("(?<=[^0-9])y", "i"),
             ("esn", "en"),
             ("oe(?=\\w)", "e"),
-            ("s$", ""),
+            ("(?<=[^0-9])s$", ""),
             ("(?<=u)l?x$", ""),  # eaux, eux, aux, aulx
             ("(?<=u)lt$", "t"),
-            ("(?<=\\w)[dg]$", ""),
-            ("(?<=[^es])t$", ""),
+            ("(?<=[a-z])[dg]$", ""),
+            ("(?<=[^es0-9])t$", ""),
             ("(?<=[aeiou])(m)(?=[pbgf])", "n"),
-            ("(?<=\\w\\w)(e$)", ""),  # Remove "e" at last position only if it
-                                      # follows two letters?
+            ("(?<=[a-z]{2})(e$)", ""),  # Remove "e" at last position only if
+                                        # it follows two letters?
             ("(\\D)(?=\\1)", ""),  # Remove duplicate letters.
         )
         _s = s
