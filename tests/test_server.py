@@ -59,12 +59,12 @@ def test_csv_endpoint_with_multilines_fields(client, factory):
     assert 'rue des avions\r\n31310\r\nMontbrun-Bocage' in data
 
 
-def test_csv_endpoint_with_escaped_doublequotes(client, factory):
+def test_csv_endpoint_with_tab_as_delimiter(client, factory):
     factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
-    content = ('name,adresse\n'
-               '"Boulangerie ""Au pain Brûlé""","rue des avions Montbrun"')
+    content = ('name\tadresse\n'
+               'Boulangerie\true des avions Montbrun')
     resp = client.post(
         '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
                        'columns': ['adresse']})
     data = resp.data.decode()
-    assert 'Boulangerie ""Au pain Brûlé""' in data
+    assert 'Boulangerie\true des avions Montbrun' in data
