@@ -166,6 +166,19 @@ def test_nearby_should_be_included_even_in_overflow(factory, monkeypatch):
     assert expected['id'] in ids
 
 
+def test_autocomplete_should_give_priority_to_nearby(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.BUCKET_LIMIT', 3)
+    monkeypatch.setattr('addok.core.Search.SMALL_BUCKET_LIMIT', 2)
+    expected = factory(name='Le Bourg', lat=48.1, lon=2.2, importance=0.09)
+    factory(name='Le Bourg', lat=-48.1, lon=-2.2, importance=0.1)
+    factory(name='Le Bourg', lat=8.1, lon=42.2, importance=0.1)
+    factory(name='Le Bourg', lat=10, lon=20, importance=0.1)
+    results = search('bou', lat=48.1, lon=2.2, limit=3, verbose=True)
+    assert len(results) == 3
+    ids = [r.id for r in results]
+    assert expected['id'] in ids
+
+
 def test_document_without_name_should_not_be_indexed(factory):
     doc = factory(skip_index=True, city="Montceau-les-Mines")
     del doc['name']

@@ -410,6 +410,8 @@ class Search(BaseHelper):
         if not self._autocomplete:
             self.debug('Autocomplete not active. Abort.')
             return
+        if self.geohash_key:
+            self.autocomplete(self.meaningful, use_geohash=True)
         self.autocomplete(self.meaningful)
 
     def step_fuzzy(self):
@@ -471,7 +473,7 @@ class Search(BaseHelper):
         for token in self.tokens:
             token.search()
 
-    def autocomplete(self, tokens, skip_commons=False):
+    def autocomplete(self, tokens, skip_commons=False, use_geohash=False):
         self.debug('Autocompleting %s', self.last_token)
         # self.last_token.autocomplete()
         keys = [t.db_key for t in tokens if not t.is_last]
@@ -487,7 +489,10 @@ class Search(BaseHelper):
                 continue
             if not self.bucket_overflow or self.last_token in self.not_found:
                 self.debug('Trying to extend bucket. Autocomplete %s', key)
-                self.add_to_bucket(keys + [key])
+                extra_keys = [key]
+                if use_geohash and self.geohash_key:
+                    extra_keys.append(self.geohash_key)
+                self.add_to_bucket(keys + extra_keys)
 
     def fuzzy(self, tokens, include_common=True):
         if not self.bucket_dry:
