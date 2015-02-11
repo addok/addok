@@ -268,6 +268,8 @@ class BaseHelper(object):
 
 class Search(BaseHelper):
 
+    SMALL_BUCKET_LIMIT = 10
+
     def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True,
                  verbose=False):
         super().__init__(verbose=verbose)
@@ -309,6 +311,7 @@ class Search(BaseHelper):
             self.step_no_meaningful_but_common_try_autocomplete,
             self.step_bucket_with_meaningful,
             self.step_reduce_with_other_commons,
+            self.step_ensure_geohash_results_are_included_if_center_is_given,
             self.step_autocomplete,
             self.step_check_bucket_full,
             self.step_check_cream,
@@ -376,13 +379,13 @@ class Search(BaseHelper):
                     break  # We want only one more.
         self.keys = [t.db_key for t in self.meaningful]
         if self.bucket_empty:
-            self.new_bucket(self.keys, 10)
+            self.new_bucket(self.keys, self.SMALL_BUCKET_LIMIT)
             if not self._autocomplete and self.has_cream():
                 # Do not check cream before computing autocomplete when
                 # autocomplete is on.
                 self.debug('Cream found. Returning.')
                 return True
-            if len(self.bucket) == 10:
+            if len(self.bucket) == self.SMALL_BUCKET_LIMIT:
                 # Do not rerun if bucket with limit 10 has returned less
                 # than 10 results.
                 self.new_bucket(self.keys)
@@ -396,6 +399,11 @@ class Search(BaseHelper):
                 self.meaningful.append(token)
                 self.keys = [t.db_key for t in self.meaningful]
                 self.new_bucket(self.keys)
+
+    def step_ensure_geohash_results_are_included_if_center_is_given(self):
+        if self.bucket_overflow and self.geohash_key:
+            self.debug('Bucket overflow and center, force nearby look up')
+            self.add_to_bucket(self.keys + [self.geohash_key], self.limit)
 
     def step_autocomplete(self):
         if self.bucket_overflow:
@@ -428,16 +436,17 @@ class Search(BaseHelper):
 
     @property
     def geohash_key(self):
-        if self.lat and self.lon and not self._geohash_key:
+        if self.lat and self.lon and self._geohash_key is None:
             geoh = geohash.encode(self.lat, self.lon, config.GEOHASH_PRECISION)
-            neighbors = geohash.neighbors(geoh)
+            neighbors = geohash.expand(geoh)
             neighbors = [geohash_key(n) for n in neighbors]
             self._geohash_key = 'gx|{}'.format(geoh)
             self.debug('Compute geohash key %s', self._geohash_key)
             total = DB.sunionstore(self._geohash_key, neighbors)
             if not total:
+                self.debug('Empty geohash key, deleting %s', self._geohash_key)
                 DB.delete(self._geohash_key)
-                self._geohash_key = None
+                self._geohash_key = False
             else:
                 DB.expire(self._geohash_key, 10)
         return self._geohash_key
@@ -543,10 +552,10 @@ class Search(BaseHelper):
                 DB.delete(self.query)
         return set(ids)
 
-    def add_to_bucket(self, keys):
+    def add_to_bucket(self, keys, limit=None):
         self.debug('Adding to bucket with keys %s', keys)
         self.matched_keys.update([k for k in keys if k.startswith('w|')])
-        limit = config.BUCKET_LIMIT - len(self.bucket)
+        limit = limit or (config.BUCKET_LIMIT - len(self.bucket))
         self.bucket.update(self.intersect(keys, limit))
         self.debug('%s ids in bucket so far', len(self.bucket))
 

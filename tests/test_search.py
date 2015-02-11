@@ -153,6 +153,19 @@ def test_closer_result_should_be_first_for_same_score(factory):
     assert results[0].id == expected['id']
 
 
+def test_nearby_should_be_included_even_in_overflow(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.BUCKET_LIMIT', 3)
+    monkeypatch.setattr('addok.core.Search.SMALL_BUCKET_LIMIT', 2)
+    expected = factory(name='Le Bourg', lat=48.1, lon=2.2, importance=0.09)
+    factory(name='Le Bourg', lat=-48.1, lon=-2.2, importance=0.1)
+    factory(name='Le Bourg', lat=8.1, lon=42.2, importance=0.1)
+    factory(name='Le Bourg', lat=10, lon=20, importance=0.1)
+    results = search('bourg', lat=48.1, lon=2.2, limit=3, verbose=True)
+    assert len(results) == 3
+    ids = [r.id for r in results]
+    assert expected['id'] in ids
+
+
 def test_document_without_name_should_not_be_indexed(factory):
     doc = factory(skip_index=True, city="Montceau-les-Mines")
     del doc['name']
