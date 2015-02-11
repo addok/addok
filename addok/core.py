@@ -620,7 +620,7 @@ class Search(BaseHelper):
 
     @property
     def pass_should_match_threshold(self):
-        len(self.matched_keys) >= self.should_match_threshold
+        return len(self.matched_keys) >= self.should_match_threshold
 
 
 class Reverse(BaseHelper):
