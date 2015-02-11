@@ -1,6 +1,6 @@
 from functools import wraps
 from importlib import import_module
-from math import radians, cos, sin, asin, sqrt, exp
+from math import asin, cos, exp, radians, sin, sqrt
 
 
 def import_by_path(path):

@@ -5,13 +5,12 @@ import logging
 import re
 import readline
 import time
-
 from pathlib import Path
 
 import geohash
 
-from .core import (DB, Search, document_key, token_frequency, make_fuzzy,
-                   token_key, SearchResult, Token, reverse, pair_key)
+from .core import (DB, Search, SearchResult, Token, document_key, make_fuzzy,
+                   pair_key, reverse, token_frequency, token_key)
 from .pipeline import preprocess_query
 from .textutils.default import compare_ngrams
 from .utils import haversine_distance, km_to_score

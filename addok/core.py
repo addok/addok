@@ -1,5 +1,4 @@
 import time
-
 from math import ceil
 
 import geohash
@@ -7,8 +6,8 @@ import redis
 
 from . import config
 from .pipeline import preprocess_query
-from .textutils.default import (make_fuzzy, compare_ngrams, contains,
-                                startswith, equals, ascii)
+from .textutils.default import (ascii, compare_ngrams, contains, equals,
+                                make_fuzzy, startswith)
 from .utils import haversine_distance, km_to_score
 
 DB = redis.StrictRedis(**config.DB_SETTINGS)

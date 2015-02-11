@@ -1,7 +1,6 @@
 from . import config
 from .utils import import_by_path
 
-
 PROCESSORS = [import_by_path(path) for path in config.PROCESSORS]
 QUERY_PROCESSORS = [import_by_path(path) for path in config.QUERY_PROCESSORS]
 

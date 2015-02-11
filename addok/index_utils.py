@@ -1,8 +1,8 @@
 import geohash
 
 from . import config
-from .core import (DB, token_key, document_key, housenumber_field_key,
-                   edge_ngram_key, geohash_key, pair_key)
+from .core import (DB, document_key, edge_ngram_key, geohash_key,
+                   housenumber_field_key, pair_key, token_key)
 from .pipeline import preprocess
 from .textutils.default import compute_edge_ngrams
 

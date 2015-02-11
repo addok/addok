@@ -1,11 +1,9 @@
 import json
 import time
-
 from multiprocessing import Pool
 
 from addok.core import DB
 from addok.index_utils import index_document, index_edge_ngrams
-
 
 FIELDS = [
     'source_id', 'housenumber', 'name', 'postcode', 'city', 'source', 'lat',

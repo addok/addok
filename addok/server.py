@@ -5,11 +5,11 @@ import logging
 import os
 from pathlib import Path
 
-from werkzeug.exceptions import HTTPException, BadRequest
+from werkzeug.exceptions import BadRequest, HTTPException
 from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Request, Response
 
-from .core import search, reverse
+from .core import reverse, search
 
 url_map = Map([
     Rule('/search/', endpoint='search'),

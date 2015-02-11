@@ -2,7 +2,6 @@ import re
 
 from addok.utils import yielder
 
-
 _CACHE = {}
 
 
