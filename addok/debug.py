@@ -151,7 +151,8 @@ class Cli(object):
                                         blue(format_scores(result))))
         duration = round((time.time() - start) * 1000, 1)
         formatter = red if duration > 50 else green
-        print(formatter("({} ms)".format(duration)))
+        print(formatter("{} ms".format(duration)), '/',
+              cyan('{} results'.format(len(results))))
 
     def do_search(self, query):
         """Issue a search (default command, can be omitted):
