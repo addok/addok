@@ -25,8 +25,8 @@ from addok.debug import Cli
 from addok.server import app
 from addok.import_utils import import_from_stream_json, create_edge_ngrams
 
-if __name__ == '__main__':
 
+def main():
     args = docopt(__doc__, version='Addok 0.1')
 
     if args['serve']:
@@ -41,3 +41,6 @@ if __name__ == '__main__':
             import_from_stream_json(path)
     elif args['ngrams']:
         create_edge_ngrams()
+
+if __name__ == '__main__':
+    main()
