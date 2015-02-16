@@ -44,7 +44,6 @@ setup(
     package_data={
         '': ['resources/*', 'requirements.txt'],
     },
-    # scripts=['bin/addok.py'],
     entry_points={
         'console_scripts': ['addok=run:main'],
     },
