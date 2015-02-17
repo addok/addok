@@ -4,7 +4,7 @@ Addok: search engine for address. Only address.
 Usage:
     run.py serve [--port=<number>] [--host=<string>] [options]
     run.py shell
-    run.py import <filepath>...
+    run.py import [<filepath>...]
     run.py ngrams
 
 Examples:
@@ -19,11 +19,14 @@ Options:
     --debug             optionnaly run in debug mode
 """
 
+import sys
+
 from docopt import docopt
 
 from addok.debug import Cli
 from addok.server import app
-from addok.import_utils import import_from_stream_json, create_edge_ngrams
+from addok.import_utils import (import_from_stream_json, create_edge_ngrams,
+                                import_from_stream_json_file)
 
 
 def main():
@@ -38,7 +41,10 @@ def main():
         cli()
     elif args['import']:
         for path in args['<filepath>']:
-            import_from_stream_json(path)
+            import_from_stream_json_file(path)
+        if not sys.stdin.isatty():  # Any best way to check for data in stdin?
+            print('Import from stdin')
+            import_from_stream_json(sys.stdin)
     elif args['ngrams']:
         create_edge_ngrams()
 

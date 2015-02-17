@@ -59,28 +59,32 @@ def index_row(row):
     index_document(doc, update_ngrams=False)
 
 
-def import_from_stream_json(filepath, limit=None):
+def import_from_stream_json_file(filepath, limit=None):
     print('Importing from', filepath)
+    with open(filepath) as f:
+        import_from_stream_json(f, limit=limit)
+
+
+def import_from_stream_json(content, limit=None):
 
     start = time.time()
-    with open(filepath) as f:
-        pool = Pool()
-        count = 0
-        chunk = []
-        for row in f:
-            try:
-                chunk.append(json.loads(row))
-            except ValueError:
-                continue
-            count += 1
-            if count % 10000 == 0:
-                pool.map(index_row, chunk)
-                print("Done", count, time.time() - start)
-                chunk = []
-        if chunk:
+    pool = Pool()
+    count = 0
+    chunk = []
+    for row in content:
+        try:
+            chunk.append(json.loads(row))
+        except ValueError:
+            continue
+        count += 1
+        if count % 10000 == 0:
             pool.map(index_row, chunk)
-        pool.close()
-        pool.join()
+            print("Done", count, time.time() - start)
+            chunk = []
+    if chunk:
+        pool.map(index_row, chunk)
+    pool.close()
+    pool.join()
     print('Done', count, 'in', time.time() - start)
 
 
