@@ -41,9 +41,7 @@ setup(
     packages=find_packages(exclude=['tests']),
     install_requires=install_requires,
     extras_require={'test': ['pytest']},
-    package_data={
-        '': ['resources/*', 'requirements.txt'],
-    },
+    include_package_data=True,
     entry_points={
         'console_scripts': ['addok=run:main'],
     },

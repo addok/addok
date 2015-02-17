@@ -22,7 +22,7 @@ GEOHASH_PRECISION = 8
 
 MAX_DOC_IMPORTANCE = 0.1
 
-RESOURCES_ROOT = Path(__file__).parent.parent.parent.joinpath('resources')
+RESOURCES_ROOT = Path(__file__).parent.parent.joinpath('resources')
 SYNONYMS_PATH = 'synonyms.txt'
 
 # Pipeline stream to be used.
