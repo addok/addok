@@ -43,6 +43,6 @@ setup(
     extras_require={'test': ['pytest']},
     include_package_data=True,
     entry_points={
-        'console_scripts': ['addok=run:main'],
+        'console_scripts': ['addok=addok.bin:main'],
     },
 )
