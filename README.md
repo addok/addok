@@ -26,7 +26,7 @@ Search engine for address. Only address.
 
 # Import data
 
-1. Download [BANO data](bano.openstreetmap.fr/data/full.sjson.gz) and uncompress
+1. Download [BANO data](http://bano.openstreetmap.fr/data/full.sjson.gz) and uncompress
    it
 
 2. Run import command
