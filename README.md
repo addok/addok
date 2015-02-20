@@ -13,7 +13,7 @@ Search engine for address. Only address.
 
 1. Install dependencies
     
-    sudo apt-get install redis-server python3.4 python-pip python-virtualenv virtualenvwrapper
+    sudo apt-get install redis-server python3.4 python3.4-dev python-pip python-virtualenv virtualenvwrapper
 
 1. create a virtualenv
 
