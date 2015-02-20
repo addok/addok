@@ -13,7 +13,7 @@ Search engine for address. Only address.
 
 1. Install dependencies
     
-    sudo apt-get install redis-server python3.4 python-pip python-virtualenv
+    sudo apt-get install redis-server python3.4 python-pip python-virtualenv virtualenvwrapper
 
 1. create a virtualenv
 
@@ -21,7 +21,7 @@ Search engine for address. Only address.
 
 1. install python packages
 
-    pip install -r requirements.txt
+    pip install git+https://github.com/etalab/addok.git
 
 
 # Import data
@@ -31,11 +31,11 @@ Search engine for address. Only address.
 
 2. Run import command
 
-    python run.py import path/to/full.sjson
+    addok import path/to/full.sjson
 
 3. Index edge ngrams
 
-    python run.py ngrams
+    addok ngrams
 
 If you only want a subset of the data (the whole BANO dataset requires 20GB of RAM),
 you can extract it from full file with a command like:
@@ -48,7 +48,7 @@ you can extract it from full file with a command like:
 Addok comes with a built-in shell that allows you to inspect the internals of 
 addok:
 
-    python run.py shell
+    addok shell
 
 
 # Serve
@@ -60,4 +60,4 @@ for example:
 
 For debug, you can run the simple Werzeug server:
 
-    python run.py serve
+    addok serve
