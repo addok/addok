@@ -1,4 +1,7 @@
+import time
+
 import geohash
+from multiprocessing import Pool
 
 from . import config
 from .core import (DB, document_key, edge_ngram_key, geohash_key,
@@ -80,6 +83,10 @@ def index_document(doc, update_ngrams=True):
         els = index_field(pipe, key, postcode, boost=boost,
                           update_ngrams=update_ngrams)
         pair_els.extend(els)
+    street = doc.get('street')
+    if street:
+        els = index_field(pipe, key, street, update_ngrams=update_ngrams)
+        pair_els.extend(els)
     context = doc.get('context')
     if context:
         els = index_field(pipe, key, context, update_ngrams=update_ngrams)
@@ -134,3 +141,30 @@ def deindex_geohash(key, lat, lon):
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
     geok = geohash_key(geoh)
     DB.srem(geok, key)
+
+
+def index_ngram_key(key):
+    key = key.decode()
+    _, token = key.split('|')
+    if token.isdigit():
+        return
+    index_edge_ngrams(DB, token)
+
+
+def create_edge_ngrams():
+    start = time.time()
+    pool = Pool()
+    count = 0
+    chunk = []
+    for key in DB.scan_iter(match='w|*'):
+        count += 1
+        chunk.append(key)
+        if count % 10000 == 0:
+            pool.map(index_ngram_key, chunk)
+            print("Done", count, time.time() - start)
+            chunk = []
+    if chunk:
+        pool.map(index_ngram_key, chunk)
+    pool.close()
+    pool.join()
+    print('Done', count, 'in', time.time() - start)

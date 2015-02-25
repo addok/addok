@@ -6,3 +6,4 @@ notes.md
 .cli_history
 notfound.log
 addok/config/local.py
+addok.egg-info/

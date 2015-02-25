@@ -31,7 +31,7 @@ Search engine for address. Only address.
 
 2. Run import command
 
-    addok import path/to/full.sjson
+    addok import bano path/to/full.sjson
 
 3. Index edge ngrams
 
@@ -41,6 +41,21 @@ If you only want a subset of the data (the whole BANO dataset requires 20GB of R
 you can extract it from full file with a command like:
 
     sed -n 's/"Île-de-France"/&/p' path/to/full.sjson > idf.sjson
+
+
+## Import from Nominatim
+
+Once you have a [Nominatim]() database up and running, just run:
+
+    addok import nominatim --user ybon
+
+If you want only POIs (no street nor addresses):
+
+    addok import nominatim --user ybon --no-address
+
+If you want only addresses (no POIs):
+
+    addok import nominatim --user ybon --only-address
 
 
 # Shell

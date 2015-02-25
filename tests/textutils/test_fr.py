@@ -156,6 +156,8 @@ def test_clean_query(input, expected):
     #  "32, allée Henri-Sellier 31400 Toulouse"),
     # ("Centre d'Affaires la Boursidiere - BP 160 - Bâtiment Maine 4ème étage Le Plessis Robinson 92357 France",  # noqa
     #  "Le Plessis Robinson 92357 France"),
+    # ("21 Rue Clef 34 Rue Daubenton",
+    # "21 Rue Clef"),
     ("Tribunal d'instance de Guebwiller 1, place Saint-Léger 68504 Guebwiller",
      "1, place Saint-Léger 68504 Guebwiller"),
     ("Centre social 3 rue du Laurier 73000 CHAMBERY",
@@ -171,7 +173,7 @@ def test_clean_query(input, expected):
     ("Non matching pattern",
      "Non matching pattern"),
 ])
-def test_match_address(input, expected):
+def test_extract_address(input, expected):
     assert _extract_address(input) == expected
 
 
