@@ -45,7 +45,7 @@ you can extract it from full file with a command like:
 
 ## Import from Nominatim
 
-Once you have a [Nominatim]() database up and running, just run:
+Once you have a [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim) database up and running, just run:
 
     addok import nominatim --user ybon
 
