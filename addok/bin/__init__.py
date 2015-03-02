@@ -34,7 +34,7 @@ from docopt import docopt
 
 from addok.debug import Cli
 from addok.server import app
-from addok.importer import bano, nominatim
+from addok.importer import bano
 from addok.index_utils import create_edge_ngrams
 
 
@@ -55,6 +55,10 @@ def main():
             if not sys.stdin.isatty():  # Any better way to check for stdin?
                 bano.import_from_stdin(sys.stdin)
         elif args['nominatim']:
+            # Do not import at load time, because we don't want to have a
+            # hard dependency to psycopg2, which is imported on nominatim
+            # module.
+            from addok.importer import nominatim
             nominatim.import_from_sql(
                 dbname=args['--dbname'], user=args['--user'],
                 limit=args['--limit'], onlyaddress=args['--only-address'],
