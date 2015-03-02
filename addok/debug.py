@@ -121,6 +121,10 @@ class Cli(object):
     def _search(self, query, verbose=False, bucket=False):
         start = time.time()
         limit = 10
+        autocomplete = True
+        if 'AUTOCOMPLETE' in query:
+            query, autocomplete = query.split('AUTOCOMPLETE')
+            autocomplete = bool(int(autocomplete))
         if 'LIMIT' in query:
             query, limit = query.split('LIMIT')
             limit = int(limit)
@@ -132,7 +136,8 @@ class Cli(object):
         else:
             lat = None
             lon = None
-        helper = Search(limit=limit, verbose=verbose)
+        helper = Search(limit=limit, verbose=verbose,
+                        autocomplete=autocomplete)
         results = helper(query, lat=lat, lon=lon)
         if bucket:  # Means we want all the bucket
             results = helper._sorted_bucket

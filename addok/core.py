@@ -667,10 +667,10 @@ class Reverse(BaseHelper):
         return self.results[:self.limit]
 
 
-def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=0,
+def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=False,
            lat=None, lon=None, verbose=False):
     helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit,
-                    verbose=verbose)
+                    verbose=verbose, autocomplete=autocomplete)
     return helper(query, lat=lat, lon=lon)
 
 
