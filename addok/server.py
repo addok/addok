@@ -118,7 +118,8 @@ def on_csv(request):
                               dialect=dialect)
         fieldnames = rows.fieldnames[:]
         columns = request.form.getlist('columns') or rows.fieldnames
-        for key in ['latitude', 'longitude', 'result_address', 'result_score']:
+        for key in ['latitude', 'longitude', 'result_address', 'result_score',
+                    'result_type', 'result_id']:
             if key not in fieldnames:
                 fieldnames.append(key)
         output = io.StringIO()
@@ -134,6 +135,8 @@ def on_csv(request):
                     'longitude': results[0].lon,
                     'result_address': str(results[0]),
                     'result_score': round(results[0].score, 2),
+                    'result_type': results[0].type,
+                    'result_id': results[0].id,
                 })
             else:
                 notfound.debug(q)
