@@ -47,7 +47,7 @@ live()
 
 @task
 @roles('web')
-def install():
+def setup():
     """
     Install the service (tested on Ubuntu 14.04).
     """
@@ -74,11 +74,6 @@ def restart():
 def update(action='check'):
     """
     Update the repository (server-side).
-
-    By default, if the requirements file changed in the repository then the
-    requirements will be updated. Use ``action='force'`` to force
-    updating requirements. Anything else other than ``'check'`` will avoid
-    updating requirements at all.
     """
     with cd(env.project_dir):
         remote, dest_branch = env.remote_ref.split('/', 1)
@@ -90,33 +85,22 @@ def update(action='check'):
         if not changed_files and action != 'force':
             # No changes, we can exit now.
             return
-        if action == 'check':
-            reqs_changed = env.requirements_file in changed_files
-        else:
-            reqs_changed = False
         run_as_addok('git merge {remote_ref}'.format(**env))
         run_as_addok('find -name "*.pyc" -delete')
         if action == "clean":
             run_as_addok('git clean -df')
-    if reqs_changed or action == 'force':
-        execute(requirements)
+        execute(install)
 
 
 @task
 @roles('web')
-def requirements():
+def install():
     """
     Update the requirements.
     """
-    base_command = '{virtualenv_dir}/bin/pip install'.format(
-        virtualenv_dir=env.virtualenv_dir)
-    kw = {
-        "base_command": base_command,
-        "project_dir": env.project_dir,
-        "requirements_file": env.requirements_file,
-    }
-    cmd = '{base_command} -r {project_dir}/{requirements_file}'.format(**kw)
-    run_as_addok(cmd)
+    puts('Installing...')
+    cmd = '{virtualenv_dir}/bin/python setup.py develop'
+    run_as_addok(cmd.format(**env))
 
 
 @task
