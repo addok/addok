@@ -139,3 +139,75 @@ def test_deindex_document_should_not_affect_other_docs():
 
 def test_deindex_document_should_not_fail_if_id_do_not_exist():
     deindex_document('xxxxx')
+
+
+def test_should_be_possible_to_define_fields_from_config(config):
+    config.FIELDS = [
+        {'key': 'custom'},
+        {'key': 'special'},
+    ]
+    doc = {
+        'id': 'xxxx',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'custom': 'rue',
+        'special': 'Lilas',
+        'thisone': 'is not indexed',
+    }
+    index_document(doc)
+    assert DB.exists('d|xxxx')
+    assert DB.exists('w|lila')
+    assert DB.exists('w|ru')
+    assert not DB.exists('w|indexed')
+
+
+def test_should_be_possible_to_override_boost_from_config(config):
+    config.FIELDS = [
+        {'key': 'name', 'boost': 5},
+        {'key': 'city'},
+    ]
+    doc = {
+        'id': 'xxxx',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'name': 'Lilas',
+        'city': 'Cergy'
+    }
+    index_document(doc)
+    assert DB.exists('d|xxxx')
+    assert DB.zscore('w|lila', 'd|xxxx') == 5
+    assert DB.zscore('w|serji', 'd|xxxx') == 1
+
+
+def test_should_be_possible_to_override_boost_with_callable(config):
+    config.FIELDS = [
+        {'key': 'name', 'boost': lambda doc: 5},
+        {'key': 'city'},
+    ]
+    doc = {
+        'id': 'xxxx',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'name': 'Lilas',
+        'city': 'Cergy'
+    }
+    index_document(doc)
+    assert DB.exists('d|xxxx')
+    assert DB.zscore('w|lila', 'd|xxxx') == 5
+    assert DB.zscore('w|serji', 'd|xxxx') == 1
+
+
+def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
+    config.FIELDS = [
+        {'key': 'name', 'null': False},
+        {'key': 'city'},
+    ]
+    doc = {
+        'id': 'xxxx',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'name': '',
+        'city': 'Cergy'
+    }
+    index_document(doc)
+    assert not DB.exists('d|xxxx')

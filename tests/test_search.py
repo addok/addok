@@ -89,8 +89,8 @@ def test_should_not_return_housenumber_if_number_is_also_in_name(housenumber):
 
 def test_should_do_autocomplete_on_last_term(street):
     street.update(name='rue de Wambrechies', city="Bondues")
-    assert search('avenue wambre')
-    assert not search('wambre avenue')
+    assert search('avenue wambre', autocomplete=True)
+    assert not search('wambre avenue', autocomplete=True)
 
 
 def test_synonyms_should_be_replaced(street, monkeypatch):
@@ -127,7 +127,7 @@ def test_found_term_is_autocompleted_if_missing_results(factory, monkeypatch):
     monkeypatch.setattr('addok.config.BUCKET_LIMIT', 3)
     factory(name="rue de la montagne", city="Vitry")
     factory(name="rue du mont", city="Vitry")
-    assert len(search('rue mont')) == 2
+    assert len(search('rue mont', autocomplete=True)) == 2
 
 
 def test_found_term_is_not_autocompleted_if_enough_results(factory,
@@ -138,7 +138,7 @@ def test_found_term_is_not_autocompleted_if_enough_results(factory,
     factory(name="rue du mont", city="Vitry")
     factory(name="rue du mont", city="Paris")
     factory(name="rue du mont", city="Lille")
-    results = search('rue mont', limit=2)
+    results = search('rue mont', limit=2, autocomplete=True)
     ids = [r.id for r in results]
     assert len(ids) == 2
     assert montagne['id'] not in ids
@@ -173,7 +173,7 @@ def test_autocomplete_should_give_priority_to_nearby(factory, monkeypatch):
     factory(name='Le Bourg', lat=-48.1, lon=-2.2, importance=0.1)
     factory(name='Le Bourg', lat=8.1, lon=42.2, importance=0.1)
     factory(name='Le Bourg', lat=10, lon=20, importance=0.1)
-    results = search('bou', lat=48.1, lon=2.2, limit=3, verbose=True)
+    results = search('bou', lat=48.1, lon=2.2, limit=3, autocomplete=True)
     assert len(results) == 3
     ids = [r.id for r in results]
     assert expected['id'] in ids

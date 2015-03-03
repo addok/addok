@@ -38,3 +38,19 @@ QUERY_PROCESSORS = (
     'addok.textutils.fr.clean_query',
     'addok.textutils.fr.glue_ordinal',
 )
+
+# Fields to be indexed
+FIELDS = [
+    {'key': 'name', 'boost': 4, 'null': False},
+    {'key': 'street'},
+    {'key': 'postcode',
+     'boost': lambda doc: 1.2 if doc.get('type') == 'commune' else 1},
+    {'key': 'city'},
+    {'key': 'housenumbers', 'type': 'housenumbers'}
+]
+
+# Weight of a document own importance:
+IMPORTANCE_WEIGHT = 0.1
+
+# Default score for the relation token => document
+DEFAULT_BOOST = 1.0

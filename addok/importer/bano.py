@@ -36,7 +36,7 @@ def row_to_doc(row):
         "context": context,
         "type": type_,
         "name": name,
-        "importance": row.get('importance', 0.0) * 0.1
+        "importance": row.get('importance', 0.0)
     }
     housenumbers = row.get('housenumbers')
     if housenumbers:

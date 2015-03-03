@@ -20,13 +20,19 @@ def deindex_edge_ngrams(token):
         DB.srem(edge_ngram_key(ngram), token)
 
 
-def index_field(pipe, key, string, boost=1.0, update_ngrams=True):
+def extract_tokens(tokens, string, boost):
     els = list(preprocess(string))
-    for s in els:
-        pipe.zadd(token_key(s), 1.0 / len(els) * boost, key)
+    boost = config.DEFAULT_BOOST / len(els) * boost
+    for token in els:
+        if token not in tokens or tokens.get(token) < boost:
+            tokens[token] = boost
+
+
+def index_tokens(pipe, tokens, key, update_ngrams=True):
+    for token, boost in tokens.items():
+        pipe.zadd(token_key(token), boost, key)
         if update_ngrams:
-            index_edge_ngrams(pipe, s)
-    return els
+            index_edge_ngrams(pipe, token)
 
 
 def deindex_field(key, string):
@@ -64,52 +70,48 @@ def deindex_pairs(els):
                     DB.srem(pair_key(el2), el)
 
 
+def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
+    if not housenumbers:
+        return
+    del doc['housenumbers']
+    to_index = {}
+    for number, point in housenumbers.items():
+        val = '|'.join([str(number), str(point['lat']), str(point['lon'])])
+        for hn in preprocess(number):
+            doc[housenumber_field_key(hn)] = val
+            # Pair every document term to each housenumber, but do not pair
+            # housenumbers together.
+            pipe.sadd(pair_key(hn), *tokens.keys())
+            to_index[hn] = config.DEFAULT_BOOST
+        index_geohash(pipe, key, point['lat'], point['lon'])
+    index_tokens(pipe, to_index, key, update_ngrams)
+
+
 def index_document(doc, update_ngrams=True):
     key = document_key(doc['id'])
-    name = doc.get('name')
-    if not name:
-        return
     pipe = DB.pipeline()
+    housenumbers = None
     index_geohash(pipe, key, doc['lat'], doc['lon'])
-    importance = doc.get('importance', 0.0)
-    pair_els = []
-    city = doc.get('city')
-    if city and city != name:
-        pair_els.extend(index_field(pipe, key, city,
-                                    update_ngrams=update_ngrams))
-    postcode = doc.get('postcode')
-    if postcode:
-        boost = 1.2 if doc['type'] == 'commune' else 1
-        els = index_field(pipe, key, postcode, boost=boost,
-                          update_ngrams=update_ngrams)
-        pair_els.extend(els)
-    street = doc.get('street')
-    if street:
-        els = index_field(pipe, key, street, update_ngrams=update_ngrams)
-        pair_els.extend(els)
-    context = doc.get('context')
-    if context:
-        els = index_field(pipe, key, context, update_ngrams=update_ngrams)
-        pair_els.extend(els)
-    housenumbers = doc.get('housenumbers')
-    # Process name last, to give priority to higher score, in case same token
-    # is in two fields (for example: "rue de xxx, ile de france" contains
-    # twice "de")
-    pair_els.extend(index_field(pipe, key, name, boost=4.0 + importance,
-                                update_ngrams=update_ngrams))
-    index_pairs(pipe, pair_els)
-    if housenumbers:
-        del doc['housenumbers']
-        for number, point in housenumbers.items():
-            val = '|'.join([str(number), str(point['lat']), str(point['lon'])])
-            for hn in preprocess(number):
-                doc[housenumber_field_key(hn)] = val
-                # Any housenumber is linked to every document term, but their
-                # are not linked to each other, so we do not add them in the
-                # pair_els.
-                pipe.sadd(pair_key(hn), *pair_els)
-            index_field(pipe, key, str(number), update_ngrams=update_ngrams)
-            index_geohash(pipe, key, point['lat'], point['lon'])
+    importance = doc.get('importance', 0.0) * config.IMPORTANCE_WEIGHT
+    tokens = {}
+    for field in config.FIELDS:
+        value = doc.get(field['key'])
+        if not value:
+            if not field.get('null', True):
+                # A mandatory field is null.
+                return
+            continue
+        if field.get('type') == 'housenumbers':
+            housenumbers = value
+        else:
+            boost = field.get('boost', config.DEFAULT_BOOST)
+            if callable(boost):
+                boost = boost(doc)
+            boost = boost + importance
+            extract_tokens(tokens, value, boost=boost)
+    index_tokens(pipe, tokens, key, update_ngrams)
+    index_pairs(pipe, tokens.keys())
+    index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams)
     pipe.hmset(key, doc)
     pipe.execute()
 
