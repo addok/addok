@@ -77,6 +77,7 @@ def test_should_give_priority_to_housenumber_if_match(housenumber):
     assert not results[0].housenumber
     results = search('11 rue des berges')
     assert results[0].housenumber == '11'
+    assert results[0].type == 'housenumber'
 
 
 def test_should_not_return_housenumber_if_number_is_also_in_name(housenumber):

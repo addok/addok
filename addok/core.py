@@ -104,6 +104,7 @@ class Result(object):
                 self.housenumber = raw
                 self.lat = lat
                 self.lon = lon
+                self.type = 'housenumber'
                 break
 
     def to_geojson(self):
