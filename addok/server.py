@@ -10,6 +10,7 @@ from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Request, Response
 
 from .core import reverse, search
+from . import config
 
 url_map = Map([
     Rule('/search/', endpoint='search'),
@@ -92,7 +93,9 @@ def serve_results(results, query=None):
     results = {
         "type": "FeatureCollection",
         "version": "draft",
-        "features": [r.to_geojson() for r in results]
+        "features": [r.to_geojson() for r in results],
+        "attribution": config.ATTRIBUTION,
+        "licence": config.LICENCE,
     }
     if query:
         results['query'] = query

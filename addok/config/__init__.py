@@ -3,7 +3,7 @@ import re
 
 from importlib import import_module
 
-from .default import *
+from .default import *  # noqa
 
 try:
     user_settings = import_module(os.environ["ADDOK_CONFIG_MODULE"])

@@ -14,6 +14,8 @@ def test_search_should_return_geojson(client, factory):
     assert data['type'] == 'FeatureCollection'
     assert len(data['features']) == 1
     assert data['features'][0]['properties']['name'] == 'rue des avions'
+    assert 'attribution' in data
+    assert 'licence' in data
 
 
 def test_csv_endpoint(client, factory):

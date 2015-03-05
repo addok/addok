@@ -54,3 +54,11 @@ IMPORTANCE_WEIGHT = 0.1
 
 # Default score for the relation token => document
 DEFAULT_BOOST = 1.0
+
+# Data attribution
+# Can also be an object {source: attribution}
+ATTRIBUTION = "BANO"
+
+# Data licence
+# Can also be an object {source: licence}
+LICENCE = "ODbL"
