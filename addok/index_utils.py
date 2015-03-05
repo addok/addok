@@ -4,10 +4,33 @@ import geohash
 from multiprocessing import Pool
 
 from . import config
-from .core import (DB, document_key, edge_ngram_key, geohash_key,
-                   housenumber_field_key, pair_key, token_key)
+from .db import DB
 from .pipeline import preprocess
 from .textutils.default import compute_edge_ngrams
+
+
+def token_key(s):
+    return 'w|{}'.format(s)
+
+
+def document_key(s):
+    return 'd|{}'.format(s)
+
+
+def housenumber_field_key(s):
+    return 'h|{}'.format(s)
+
+
+def edge_ngram_key(s):
+    return 'n|{}'.format(s)
+
+
+def geohash_key(s):
+    return 'g|{}'.format(s)
+
+
+def pair_key(s):
+    return 'p|{}'.format(s)
 
 
 def index_edge_ngrams(pipe, token):

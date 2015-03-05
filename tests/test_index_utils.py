@@ -1,4 +1,4 @@
-from addok.core import DB
+from addok.db import DB
 from addok.index_utils import (index_edge_ngrams, index_document,
                                deindex_document)
 

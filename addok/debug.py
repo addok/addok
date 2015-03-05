@@ -9,8 +9,9 @@ from pathlib import Path
 
 import geohash
 
-from .core import (DB, Search, SearchResult, Token, document_key, make_fuzzy,
+from .core import (Search, SearchResult, Token, document_key, make_fuzzy,
                    pair_key, reverse, token_frequency, token_key)
+from .db import DB
 from .pipeline import preprocess_query
 from .textutils.default import compare_ngrams
 from .utils import haversine_distance, km_to_score

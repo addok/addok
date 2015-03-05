@@ -13,7 +13,7 @@ def pytest_configure(config):
 
 
 def pytest_runtest_teardown(item, nextitem):
-    from addok.core import DB
+    from addok.db import DB
     assert DB.connection_pool.connection_kwargs['db'] == 15
     DB.flushdb()
 

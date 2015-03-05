@@ -2,39 +2,14 @@ import time
 from math import ceil
 
 import geohash
-import redis
 
 from . import config
+from .db import DB
 from .pipeline import preprocess_query
+from .index_utils import edge_ngram_key, geohash_key, pair_key, token_key
 from .textutils.default import (ascii, compare_ngrams, contains, equals,
                                 make_fuzzy, startswith)
 from .utils import haversine_distance, km_to_score
-
-DB = redis.StrictRedis(**config.DB_SETTINGS)
-
-
-def token_key(s):
-    return 'w|{}'.format(s)
-
-
-def document_key(s):
-    return 'd|{}'.format(s)
-
-
-def housenumber_field_key(s):
-    return 'h|{}'.format(s)
-
-
-def edge_ngram_key(s):
-    return 'n|{}'.format(s)
-
-
-def geohash_key(s):
-    return 'g|{}'.format(s)
-
-
-def pair_key(s):
-    return 'p|{}'.format(s)
 
 
 def token_key_frequency(key):

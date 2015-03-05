@@ -1,4 +1,4 @@
-from addok.core import DB
+from addok.db import DB
 
 
 def test_connection_port_is_not_default_one():
