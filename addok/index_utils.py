@@ -1,7 +1,7 @@
 import time
+from multiprocessing import Pool
 
 import geohash
-from multiprocessing import Pool
 
 from . import config
 from .db import DB

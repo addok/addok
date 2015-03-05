@@ -5,8 +5,8 @@ import geohash
 
 from . import config
 from .db import DB
-from .pipeline import preprocess_query
 from .index_utils import edge_ngram_key, geohash_key, pair_key, token_key
+from .pipeline import preprocess_query
 from .textutils.default import (ascii, compare_ngrams, contains, equals,
                                 make_fuzzy, startswith)
 from .utils import haversine_distance, km_to_score
