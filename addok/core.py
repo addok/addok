@@ -48,7 +48,8 @@ class Result(object):
     def load_db_field(self, key, value):
         if key.startswith('h|'):
             self.housenumbers[key[2:]] = value
-        setattr(self, key, value)
+        else:
+            setattr(self, key, value)
 
     def __str__(self):
         label = self.name
