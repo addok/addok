@@ -129,19 +129,21 @@ class Result(object):
         score = 0
         query = ascii(query)
         name = ascii(self.name)
-        if equals(query, name):
+        label = str(self)
+        if equals(query, name) or equals(query, label):
             score = 1.0
-        elif startswith(query, str(self)):
+        elif startswith(query, label):
             score = 0.9
         elif contains(query, name):
             score = 0.7
         if score:
             self.add_score('str_distance', score, ceiling=1.0)
         else:
-            self.score_by_ngram_distance(query)
+            self.score_by_ngram_distance(query, label)
 
-    def score_by_ngram_distance(self, query):
-        score = compare_ngrams(str(self), query)
+    def score_by_ngram_distance(self, query, label=None):
+        # Label can be given, so we cache all the preprocessing on the string.
+        score = compare_ngrams(label or str(self), query)
         self.add_score('str_distance', score, ceiling=1.0)
 
     def score_by_geo_distance(self, center):
