@@ -107,10 +107,20 @@ class Result(object):
                 self.type = 'housenumber'
                 break
 
+    @property
+    def keys(self):
+        to_filter = ['importance', 'housenumbers', 'lat', 'lon']
+        for key in self.__dict__.keys():
+            if key.startswith('_') or key in to_filter:
+                continue
+            yield key
+
     def to_geojson(self):
-        properties = {"label": str(self)}
-        keys = ['name', 'type', 'city', 'housenumber', 'score', 'postcode']
-        for key in keys:
+        properties = {
+            "label": str(self),
+            "score": self.score,
+        }
+        for key in self.keys:
             val = getattr(self, key, None)
             if val:
                 properties[key] = val

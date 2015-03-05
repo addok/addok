@@ -13,7 +13,11 @@ def test_search_should_return_geojson(client, factory):
     data = json.loads(resp.data.decode())
     assert data['type'] == 'FeatureCollection'
     assert len(data['features']) == 1
-    assert data['features'][0]['properties']['name'] == 'rue des avions'
+    feature = data['features'][0]
+    assert feature['properties']['name'] == 'rue des avions'
+    assert feature['properties']['id']
+    assert feature['properties']['type']
+    assert feature['properties']['score']
     assert 'attribution' in data
     assert 'licence' in data
 
