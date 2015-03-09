@@ -508,8 +508,10 @@ class Search(BaseHelper):
                 continue
             self.debug('Going fuzzy with %s', try_one)
             try_one.make_fuzzy(fuzzy=self.fuzzy)
+            # Only retains tokens that have been seen in the index at least
+            # once with the other tokens.
             DB.sadd(self.query, *try_one.neighbors)
-            interkeys = [pair_key(t) for t in tokens if t.db_key in keys]
+            interkeys = [pair_key(k[2:]) for k in keys]
             interkeys.append(self.query)
             fuzzy_words = DB.sinter(interkeys)
             DB.delete(self.query)
