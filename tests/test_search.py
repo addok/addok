@@ -185,3 +185,10 @@ def test_document_without_name_should_not_be_indexed(factory):
     del doc['name']
     doc.index()
     assert not search('Montceau-les-Mines')
+
+
+def test_score_is_not_greater_than_one(factory):
+    factory(name='rue de paris', importance=1)
+    results = search('rue de paris')
+    assert len(results) == 1
+    assert results[0].score == 1

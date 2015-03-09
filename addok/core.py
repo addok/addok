@@ -37,7 +37,8 @@ class Result(object):
         self._scores = {}
         self.load(_id)
         if self.MAX_IMPORTANCE:
-            self.add_score('importance', float(self.importance),
+            self.add_score('importance',
+                           float(self.importance) * config.IMPORTANCE_WEIGHT,
                            self.MAX_IMPORTANCE)
 
     def load(self, _id):
@@ -52,6 +53,9 @@ class Result(object):
             setattr(self, key, value)
 
     def __str__(self):
+        return getattr(config, 'LABEL', self._label)()
+
+    def _label(self):
         label = self.name
         city = getattr(self, 'city', None)
         if city and city != self.name:
