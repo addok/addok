@@ -91,7 +91,7 @@ def _extract_address(q):
     m = extract_address_pattern.search(q)
     return m.group() if m else q
 extract_address_pattern = re.compile(
-    '(\d+( ?(bis|ter))?(,? )?(' + TYPES_REGEX + ') .*(\d{5})?).*',
+    '(\d+( *(bis|ter))?,? +(' + TYPES_REGEX + ') .*(\d{5})?).*',
     flags=re.IGNORECASE)
 extract_address = yielder(_extract_address)
 

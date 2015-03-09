@@ -170,6 +170,15 @@ def test_clean_query(input, expected):
      "Le Haut de la Rue du Bois 77122 Monthyon"),
     ("Sous la Rue du Temple 62800 Liévin",
      "Sous la Rue du Temple 62800 Liévin"),
+    # Two spaces after housenumber.
+    ("resid goelands 28  impasse des petrels 76460 Saint-valery-en-caux",
+     "28  impasse des petrels 76460 Saint-valery-en-caux"),
+    # Two spaces after bis.
+    ("resid goelands 28  bis impasse des petrels 76460 Saint-valery-en-caux",
+     "28  bis impasse des petrels 76460 Saint-valery-en-caux"),
+    # No spaces after bis.
+    ("resid goelands 28bis impasse des petrels 76460 Saint-valery-en-caux",
+     "28bis impasse des petrels 76460 Saint-valery-en-caux"),
     ("Non matching pattern",
      "Non matching pattern"),
 ])
