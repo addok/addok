@@ -194,6 +194,7 @@ class ReverseResult(Result):
             self.housenumber = closer[0]
             self.lat = closer[1]
             self.lon = closer[2]
+            self.type = "housenumber"
 
 
 class Token(object):
@@ -272,7 +273,7 @@ class Search(BaseHelper):
         self.min = self.limit
         self._autocomplete = autocomplete
 
-    def __call__(self, query, lat=None, lon=None, filters=None):
+    def __call__(self, query, lat=None, lon=None, **filters):
         self.lat = lat
         self.lon = lon
         self._geohash_key = None
@@ -282,8 +283,6 @@ class Search(BaseHelper):
         self.not_found = []
         self.common = []
         self.keys = []
-        if not filters:
-            filters = {}
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
         self.filters = [filter_key(k, v) for k, v in filters.items()]
         self.query = query.strip()
@@ -628,13 +627,15 @@ class Search(BaseHelper):
 
 class Reverse(BaseHelper):
 
-    def __call__(self, lat, lon, limit=1):
+    def __call__(self, lat, lon, limit=1, **filters):
         self.lat = lat
         self.lon = lon
         self.keys = set([])
         self.results = []
         self.limit = limit
         self.fetched = []
+        self.check_housenumber = filters.get('type') in [None, "housenumber"]
+        self.filters = [filter_key(k, v) for k, v in filters.items()]
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
         self.fetch(hashes)
@@ -656,13 +657,21 @@ class Reverse(BaseHelper):
         self.debug('Fetching %s', hashes)
         for h in hashes:
             k = geohash_key(h)
-            self.keys.update(DB.smembers(k))
+            self.intersect(k)
             self.fetched.append(h)
+
+    def intersect(self, key):
+        if self.filters:
+            keys = DB.sinter([key] + self.filters)
+        else:
+            keys = DB.smembers(key)
+        self.keys.update(keys)
 
     def convert(self):
         for _id in self.keys:
             r = ReverseResult(_id)
-            r.load_closer(self.lat, self.lon)
+            if self.check_housenumber:
+                r.load_closer(self.lat, self.lon)
             r.score_by_geo_distance((self.lat, self.lon))
             self.results.append(r)
             self.debug(r, r.distance, r.score)
@@ -671,12 +680,12 @@ class Reverse(BaseHelper):
 
 
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=False,
-           lat=None, lon=None, verbose=False, filters=None):
+           lat=None, lon=None, verbose=False, **filters):
     helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit,
                     verbose=verbose, autocomplete=autocomplete)
-    return helper(query, lat=lat, lon=lon, filters=filters)
+    return helper(query, lat=lat, lon=lon, **filters)
 
 
-def reverse(lat, lon, limit=1, verbose=False):
+def reverse(lat, lon, limit=1, verbose=False, **filters):
     helper = Reverse(verbose=verbose)
-    return helper(lat, lon, limit)
+    return helper(lat, lon, limit, **filters)

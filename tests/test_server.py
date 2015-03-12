@@ -34,7 +34,7 @@ def test_search_can_be_filtered(client, factory):
     assert feature['properties']['type'] == 'city'
 
 
-def test_filters_can_be_combined(client, factory):
+def test_search_filters_can_be_combined(client, factory):
     factory(name='rue de Paris', type="street", postcode="77000")
     factory(name='avenue de Paris', type="street", postcode="22000")
     factory(name='Paris', type="city")
@@ -100,3 +100,31 @@ def test_csv_endpoint_with_tab_as_delimiter(client, factory):
                        'columns': ['adresse']})
     data = resp.data.decode()
     assert 'Boulangerie\true des avions Montbrun' in data
+
+
+def test_reverse_should_return_geojson(client, factory):
+    factory(name='rue des avions', lat=44, lon=4)
+    resp = client.get('/reverse/', query_string={'lat': '44', 'lon': '4'})
+    data = json.loads(resp.data.decode())
+    assert data['type'] == 'FeatureCollection'
+    assert len(data['features']) == 1
+    feature = data['features'][0]
+    assert feature['properties']['name'] == 'rue des avions'
+    assert feature['properties']['id']
+    assert feature['properties']['type']
+    assert feature['properties']['score']
+    assert 'attribution' in data
+    assert 'licence' in data
+
+
+def test_reverse_can_be_filtered(client, factory):
+    factory(lat=48.234545, lon=5.235445, type="street")
+    factory(lat=48.234546, lon=5.235446, type="city")
+    resp = client.get('/reverse/', query_string={'lat': '48.234545',
+                                                 'lon': '5.235446',
+                                                 'type': 'city'})
+    data = json.loads(resp.data.decode())
+    assert data['type'] == 'FeatureCollection'
+    assert len(data['features']) == 1
+    feature = data['features'][0]
+    assert feature['properties']['type'] == 'city'

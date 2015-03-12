@@ -48,6 +48,15 @@ def app(environ, start_response):
     return response(environ, start_response)
 
 
+def match_filters(request):
+    filters = {}
+    for name in config.FILTERS:
+        value = request.args.get(name)
+        if value:
+            filters[name] = value
+    return filters
+
+
 def on_search(request):
     query = request.args.get('q', '')
     if not query:
@@ -68,13 +77,9 @@ def on_search(request):
     except (ValueError, TypeError):
         lat = None
         lon = None
-    filters = {}
-    for name in config.FILTERS:
-        value = request.args.get(name)
-        if value:
-            filters[name] = value
+    filters = match_filters(request)
     results = search(query, limit=limit, autocomplete=autocomplete, lat=lat,
-                     lon=lon, filters=filters)
+                     lon=lon, **filters)
     if not results:
         notfound.debug(query)
     return serve_results(results, query=query)
@@ -90,7 +95,8 @@ def on_reverse(request):
         limit = int(request.args.get('limit'))
     except (ValueError, TypeError):
         limit = 1
-    results = reverse(lat=lat, lon=lon, limit=limit)
+    filters = match_filters(request)
+    results = reverse(lat=lat, lon=lon, limit=limit, **filters)
     return serve_results(results)
 
 
