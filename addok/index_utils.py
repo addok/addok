@@ -33,6 +33,10 @@ def pair_key(s):
     return 'p|{}'.format(s)
 
 
+def filter_key(k, v):
+    return 'f|{}|{}'.format(k, v)
+
+
 def index_edge_ngrams(pipe, token):
     for ngram in compute_edge_ngrams(token):
         pipe.sadd(edge_ngram_key(ngram), token)
@@ -110,6 +114,31 @@ def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
     index_tokens(pipe, to_index, key, update_ngrams)
 
 
+def index_filters(pipe, key, doc):
+    for name in config.FILTERS:
+        value = doc.get(name)
+        if value:
+            # We need a SortedSet because it will be used in intersect with
+            # tokens SortedSets.
+            pipe.zadd(filter_key(name, value), 1, key)
+    # Special case for housenumber type, because it's not a real type
+    if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
+       and doc.get(config.HOUSENUMBERS_FIELD):
+        pipe.zadd(filter_key("type", "housenumber"), 1, key)
+
+
+def deindex_filters(key, doc):
+    for name in config.FILTERS:
+        # Doc is raw from DB, so it has byte keys.
+        value = doc.get(name.encode())
+        if value:
+            # Doc is raw from DB, so it has byte values.
+            DB.zrem(filter_key(name, value.decode()), key)
+    if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
+       and doc.get(config.HOUSENUMBERS_FIELD):
+        DB.zrem(filter_key("type", "housenumber"), key)
+
+
 def index_document(doc, update_ngrams=True):
     key = document_key(doc['id'])
     pipe = DB.pipeline()
@@ -118,13 +147,14 @@ def index_document(doc, update_ngrams=True):
     importance = doc.get('importance', 0.0) * config.IMPORTANCE_WEIGHT
     tokens = {}
     for field in config.FIELDS:
-        value = doc.get(field['key'])
+        name = field['key']
+        value = doc.get(name)
         if not value:
             if not field.get('null', True):
                 # A mandatory field is null.
                 return
             continue
-        if field.get('type') == 'housenumbers':
+        if name == config.HOUSENUMBERS_FIELD:
             housenumbers = value
         else:
             boost = field.get('boost', config.DEFAULT_BOOST)
@@ -134,6 +164,7 @@ def index_document(doc, update_ngrams=True):
             extract_tokens(tokens, value, boost=boost)
     index_tokens(pipe, tokens, key, update_ngrams)
     index_pairs(pipe, tokens.keys())
+    index_filters(pipe, key, doc)
     index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams)
     pipe.hmset(key, doc)
     pipe.execute()
@@ -150,6 +181,7 @@ def deindex_document(id_):
     for name, value in doc.items():
         pair_els.extend(deindex_field(key, value))
     deindex_pairs(pair_els)
+    deindex_filters(key, doc)
 
 
 def index_geohash(pipe, key, lat, lon):

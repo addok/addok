@@ -5,7 +5,8 @@ import geohash
 
 from . import config
 from .db import DB
-from .index_utils import edge_ngram_key, geohash_key, pair_key, token_key
+from .index_utils import (edge_ngram_key, filter_key, geohash_key, pair_key,
+                          token_key)
 from .pipeline import preprocess_query
 from .textutils.default import (ascii, compare_ngrams, contains, equals,
                                 make_fuzzy, startswith)
@@ -271,7 +272,7 @@ class Search(BaseHelper):
         self.min = self.limit
         self._autocomplete = autocomplete
 
-    def __call__(self, query, lat=None, lon=None):
+    def __call__(self, query, lat=None, lon=None, filters=None):
         self.lat = lat
         self.lon = lon
         self._geohash_key = None
@@ -281,6 +282,10 @@ class Search(BaseHelper):
         self.not_found = []
         self.common = []
         self.keys = []
+        if not filters:
+            filters = {}
+        self.check_housenumber = filters.get('type') in [None, "housenumber"]
+        self.filters = [filter_key(k, v) for k, v in filters.items()]
         self.query = query.strip()
         self.preprocess()
         if not self.tokens:
@@ -542,6 +547,8 @@ class Search(BaseHelper):
         if not limit > 0:
             limit = config.BUCKET_LIMIT
         ids = []
+        if self.filters:
+            keys.extend(self.filters)
         if keys:
             if len(keys) == 1:
                 ids = DB.zrevrange(keys[0], 0, limit - 1)
@@ -570,7 +577,8 @@ class Search(BaseHelper):
             if _id in self.results:
                 continue
             result = SearchResult(_id)
-            result.match_housenumber(self.tokens)
+            if self.check_housenumber:
+                result.match_housenumber(self.tokens)
             if self._autocomplete:
                 result.score_by_autocomplete_distance(self.query)
             else:
@@ -663,10 +671,10 @@ class Reverse(BaseHelper):
 
 
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=False,
-           lat=None, lon=None, verbose=False):
+           lat=None, lon=None, verbose=False, filters=None):
     helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit,
                     verbose=verbose, autocomplete=autocomplete)
-    return helper(query, lat=lat, lon=lon)
+    return helper(query, lat=lat, lon=lon, filters=filters)
 
 
 def reverse(lat, lon, limit=1, verbose=False):

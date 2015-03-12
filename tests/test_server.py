@@ -22,6 +22,32 @@ def test_search_should_return_geojson(client, factory):
     assert 'licence' in data
 
 
+def test_search_can_be_filtered(client, factory):
+    factory(name='rue de Paris', type="street")
+    factory(name='Paris', type="city")
+    resp = client.get('/search/', query_string={'q': 'paris', 'type': 'city'})
+    data = json.loads(resp.data.decode())
+    assert data['type'] == 'FeatureCollection'
+    assert len(data['features']) == 1
+    feature = data['features'][0]
+    assert feature['properties']['name'] == 'Paris'
+    assert feature['properties']['type'] == 'city'
+
+
+def test_filters_can_be_combined(client, factory):
+    factory(name='rue de Paris', type="street", postcode="77000")
+    factory(name='avenue de Paris', type="street", postcode="22000")
+    factory(name='Paris', type="city")
+    resp = client.get('/search/', query_string={'q': 'paris', 'type': 'street',
+                                                'postcode': '77000'})
+    data = json.loads(resp.data.decode())
+    assert data['type'] == 'FeatureCollection'
+    assert len(data['features']) == 1
+    feature = data['features'][0]
+    assert feature['properties']['name'] == 'rue de Paris'
+    assert feature['properties']['type'] == 'street'
+
+
 def test_csv_endpoint(client, factory):
     factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
     content = ('name,street,postcode,city\n'

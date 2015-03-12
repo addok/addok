@@ -16,3 +16,12 @@ else:
     for attr in dir(user_settings):
         if re.search('^[A-Z]', attr):
             globals()[attr] = getattr(user_settings, attr)
+finally:
+    HOUSENUMBERS_FIELD = None
+    NAME_FIELD = None
+    for field in FIELDS:
+        key = field['key']
+        if field.get('type') == 'housenumbers' or key == 'housenumbers':
+            HOUSENUMBERS_FIELD = key
+        elif field.get('type') == 'name' or key == 'name':
+            NAME_FIELD = key

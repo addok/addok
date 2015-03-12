@@ -40,13 +40,15 @@ QUERY_PROCESSORS = (
 )
 
 # Fields to be indexed
+# If you want a housenumbers field but need to name it differently, just add
+# type="housenumbers" to your field.
 FIELDS = [
     {'key': 'name', 'boost': 4, 'null': False},
     {'key': 'street'},
     {'key': 'postcode',
      'boost': lambda doc: 1.2 if doc.get('type') == 'commune' else 1},
     {'key': 'city'},
-    {'key': 'housenumbers', 'type': 'housenumbers'}
+    {'key': 'housenumbers'}
 ]
 
 # Weight of a document own importance:
@@ -62,3 +64,6 @@ ATTRIBUTION = "BANO"
 # Data licence
 # Can also be an object {source: licence}
 LICENCE = "ODbL"
+
+# Available filters (remember that every filter means bigger index)
+FILTERS = ["type", "postcode"]

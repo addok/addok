@@ -66,7 +66,11 @@ def test_index_document():
     assert DB.exists('n|andrez')
     assert b'andrezi' in DB.smembers('n|andrez')
     assert b'lila' in DB.smembers('n|lil')
-    assert len(DB.keys()) == 17
+    assert DB.exists('f|type|street')
+    assert b'd|xxxx' in DB.zrange('f|type|street', 0, -1)
+    assert DB.exists('f|type|housenumber')
+    assert b'd|xxxx' in DB.zrange('f|type|housenumber', 0, -1)
+    assert len(DB.keys()) == 19
 
 
 def test_deindex_document():
@@ -86,6 +90,7 @@ def test_deindex_document():
     assert not DB.exists('n|andr')
     assert not DB.exists('n|andre')
     assert not DB.exists('n|andrez')
+    assert not DB.exists('f|type|street')
     assert len(DB.keys()) == 0
 
 
@@ -134,7 +139,11 @@ def test_deindex_document_should_not_affect_other_docs():
     assert DB.exists('n|par')
     assert DB.exists('n|lil')
     assert b'lila' in DB.smembers('n|lil')
-    assert len(DB.keys()) == 15
+    assert DB.exists('f|type|street')
+    assert b'd|xxxx2' in DB.zrange('f|type|street', 0, -1)
+    assert DB.exists('f|type|housenumber')
+    assert b'd|xxxx2' in DB.zrange('f|type|housenumber', 0, -1)
+    assert len(DB.keys()) == 17
 
 
 def test_deindex_document_should_not_fail_if_id_do_not_exist():

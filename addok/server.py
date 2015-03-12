@@ -68,8 +68,13 @@ def on_search(request):
     except (ValueError, TypeError):
         lat = None
         lon = None
+    filters = {}
+    for name in config.FILTERS:
+        value = request.args.get(name)
+        if value:
+            filters[name] = value
     results = search(query, limit=limit, autocomplete=autocomplete, lat=lat,
-                     lon=lon)
+                     lon=lon, filters=filters)
     if not results:
         notfound.debug(query)
     return serve_results(results, query=query)

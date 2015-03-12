@@ -9,6 +9,7 @@ from pathlib import Path
 
 import geohash
 
+from . import config
 from .core import (Search, SearchResult, Token, make_fuzzy, reverse,
                    token_frequency)
 from .db import DB
@@ -120,27 +121,42 @@ class Cli(object):
                 else:
                     state -= 1
 
+    @staticmethod
+    def _match_option(key, string):
+        matchs = re.findall('{} [^A-Z]*'.format(key), string)
+        option = None
+        if matchs:
+            option = matchs[0]
+            string = string.replace(option, '')
+            option = option.replace(key, '')
+        return string, option
+
     def _search(self, query, verbose=False, bucket=False):
         start = time.time()
         limit = 10
         autocomplete = True
+        lat = None
+        lon = None
+        filters = {}
         if 'AUTOCOMPLETE' in query:
-            query, autocomplete = query.split('AUTOCOMPLETE')
+            query, autocomplete = self._match_option('AUTOCOMPLETE', query)
             autocomplete = bool(int(autocomplete))
         if 'LIMIT' in query:
-            query, limit = query.split('LIMIT')
+            query, limit = self._match_option('LIMIT', query)
             limit = int(limit)
         if 'CENTER' in query:
-            query, center = query.split('CENTER')
+            query, center = self._match_option('CENTER', query)
             lat, lon = center.split()
             lat = float(lat)
             lon = float(lon)
-        else:
-            lat = None
-            lon = None
+        for name in config.FILTERS:
+            name = name.upper()
+            if name in query:
+                query, value = self._match_option(name, query)
+                filters[name.lower()] = value.strip()
         helper = Search(limit=limit, verbose=verbose,
                         autocomplete=autocomplete)
-        results = helper(query, lat=lat, lon=lon)
+        results = helper(query, lat=lat, lon=lon, filters=filters)
         if bucket:  # Means we want all the bucket
             results = helper._sorted_bucket
 

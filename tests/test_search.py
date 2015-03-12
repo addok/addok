@@ -192,3 +192,40 @@ def test_score_is_not_greater_than_one(factory):
     results = search('rue de paris')
     assert len(results) == 1
     assert results[0].score == 1
+
+
+def test_search_can_be_filtered(factory):
+    street = factory(name="rue de Paris", type="street")
+    city = factory(name="Paris", type="city")
+    results = search("paris", filters={"type": "street"})
+    ids = [r.id for r in results]
+    assert street['id'] in ids
+    assert city['id'] not in ids
+
+
+def test_housenumber_type_can_be_filtered(factory):
+    street_without_housenumber = factory(name="avenue de Paris", type="street")
+    street_with_housenumber = factory(name="rue de Paris", type="street",
+                                      housenumbers={'11': {'lat': '48.3254',
+                                                           'lon': '2.256'}})
+    results = search("paris", filters={"type": "housenumber"})
+    ids = [r.id for r in results]
+    assert street_with_housenumber['id'] in ids
+    assert street_without_housenumber['id'] not in ids
+
+
+def test_housenumber_are_not_computed_if_another_type_is_asked(factory):
+    factory(name="rue de Bamako", type="street",
+            housenumbers={'11': {'lat': '48.3254', 'lon': '2.256'}})
+
+    results = search("11 rue de bamako")
+    assert len(results) == 1
+    assert results[0].type == "housenumber"
+
+    results = search("11 rue de bamako", filters={"type": "housenumber"})
+    assert len(results) == 1
+    assert results[0].type == "housenumber"
+
+    results = search("11 rue de bamako", filters={"type": "street"})
+    assert len(results) == 1
+    assert results[0].type == "street"
