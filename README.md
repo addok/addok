@@ -13,15 +13,15 @@ Search engine for address. Only address.
 
 1. Install dependencies:
 
-    sudo apt-get install redis-server python3.4 python3.4-dev python-pip python-virtualenv virtualenvwrapper
+        sudo apt-get install redis-server python3.4 python3.4-dev python-pip python-virtualenv virtualenvwrapper
 
 1. create a virtualenv:
 
-    mkvirtualenv addok --python=/usr/bin/python3.4
+        mkvirtualenv addok --python=/usr/bin/python3.4
 
 1. install python packages:
 
-    pip install git+https://github.com/etalab/addok.git
+        pip install git+https://github.com/etalab/addok.git
 
 
 # Import data
