@@ -31,11 +31,11 @@ Search engine for address. Only address.
 
 2. Run import command:
 
-    addok import bano path/to/full.sjson
+        addok import bano path/to/full.sjson
 
 3. Index edge ngrams:
 
-    addok ngrams
+        addok ngrams
 
 If you only want a subset of the data (the whole BANO dataset requires 20GB of RAM),
 you can extract it from full file with a command like:
