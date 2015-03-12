@@ -1,0 +1,17 @@
+language: python
+python:
+    - "3.4"
+sudo: false
+services:
+    - redis-server
+install:
+    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
+script: py.test
+notifications:
+    irc:
+        channels:
+            - "irc.freenode.net#etalab"
+        on_success: change
+        on_failure: always
+    email: false
