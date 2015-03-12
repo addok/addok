@@ -4,17 +4,17 @@ Addok: search engine for address. Only address.
 Usage:
     addok serve [--port=<number>] [--host=<string>] [options]
     addok shell
-    addok import (bano [<filepath>...] | nominatim [options])
+    addok batch (bano [<filepath>...] | nominatim [options])
     addok ngrams
 
 Examples:
     addok serve --port 5432 --debug
     addok shell
-    addok import bano path/to/bano-full.csv
-    addok import bano < cat path/to/bano-full.csv
-    addok import nominatim
-    addok import nominatim --only-address
-    addok import ngrams
+    addok batch bano path/to/bano-full.csv
+    addok batch bano < cat path/to/bano-full.csv
+    addok batch nominatim
+    addok batch nominatim --only-address
+    addok batch ngrams
 
 Options:
     -h --help           print this message and exit
@@ -34,7 +34,7 @@ from docopt import docopt
 
 from addok.debug import Cli
 from addok.server import app
-from addok.importer import bano
+from addok.batch import bano
 from addok.index_utils import create_edge_ngrams
 
 
@@ -48,17 +48,17 @@ def main():
     elif args['shell']:
         cli = Cli()
         cli()
-    elif args['import']:
+    elif args['batch']:
         if args['bano']:
             for path in args['<filepath>']:
-                bano.import_from_file(path)
+                bano.process_file(path)
             if not sys.stdin.isatty():  # Any better way to check for stdin?
-                bano.import_from_stdin(sys.stdin)
+                bano.process_stdin(sys.stdin)
         elif args['nominatim']:
             # Do not import at load time, because we don't want to have a
             # hard dependency to psycopg2, which is imported on nominatim
             # module.
-            from addok.importer import nominatim
+            from addok.batch import nominatim
             nominatim.import_from_sql(
                 dbname=args['--dbname'], user=args['--user'],
                 limit=args['--limit'], onlyaddress=args['--only-address'],

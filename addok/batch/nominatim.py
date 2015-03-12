@@ -3,7 +3,7 @@
 import psycopg2
 import psycopg2.extras
 
-from .utils import iter_import
+from .utils import batch
 
 
 class NominatimExport(object):
@@ -165,4 +165,4 @@ def row_to_doc(row):
 def import_from_sql(**kwargs):
     print('Import from Nominatim DB')
     with NominatimExport(**kwargs) as exporter:
-        iter_import(map(row_to_doc, exporter))
+        batch(map(row_to_doc, exporter))

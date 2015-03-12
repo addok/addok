@@ -1,7 +1,7 @@
 """Import data from the BANO project."""
 import json
 
-from .utils import iter_import
+from .utils import batch
 
 
 def row_to_doc(row):
@@ -49,11 +49,11 @@ def row_to_doc(row):
     return doc
 
 
-def import_from_file(filepath):
+def process_file(filepath):
     with open(filepath) as f:
-        iter_import(map(row_to_doc, f))
+        batch(map(row_to_doc, f))
 
 
-def import_from_stdin(stdin):
+def process_stdin(stdin):
     print('Import from stdin')
-    iter_import(map(row_to_doc, stdin))
+    batch(map(row_to_doc, stdin))

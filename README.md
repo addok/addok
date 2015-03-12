@@ -31,9 +31,9 @@ Search engine for address. Only address.
 1. Download [BANO data](http://bano.openstreetmap.fr/data/full.sjson.gz) and uncompress
    it
 
-2. Run import command:
+2. Run batch command:
 
-        addok import bano path/to/full.sjson
+        addok batch bano path/to/full.sjson
 
 3. Index edge ngrams:
 
@@ -44,20 +44,26 @@ you can extract it from full file with a command like:
 
     sed -n 's/"Île-de-France"/&/p' path/to/full.sjson > idf.sjson
 
+If you want to manage diffs, you can add an `_action` key with one of the following
+values:
+
+    - `update`: will first deindex document
+    - `delete`: will deindex document; only key `id` is required then
+
 
 ## Import from Nominatim
 
 Once you have a [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim) database up and running, just run:
 
-    addok import nominatim --user ybon
+    addok batch nominatim --user ybon
 
 If you want only POIs (no street nor addresses):
 
-    addok import nominatim --user ybon --no-address
+    addok batch nominatim --user ybon --no-address
 
 If you want only addresses (no POIs):
 
-    addok import nominatim --user ybon --only-address
+    addok batch nominatim --user ybon --only-address
 
 
 # Shell
@@ -70,7 +76,7 @@ addok:
 
 # Serve
 
-Addok exposes an experimental WSGI interface, you can run it with gunicorn
+Addok exposes an very minimal WSGI interface, you can run it with gunicorn
 for example:
 
     gunicorn addok.server:app
