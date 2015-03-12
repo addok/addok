@@ -120,11 +120,11 @@ def index_filters(pipe, key, doc):
         if value:
             # We need a SortedSet because it will be used in intersect with
             # tokens SortedSets.
-            pipe.zadd(filter_key(name, value), 1, key)
+            pipe.sadd(filter_key(name, value), key)
     # Special case for housenumber type, because it's not a real type
     if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
        and doc.get(config.HOUSENUMBERS_FIELD):
-        pipe.zadd(filter_key("type", "housenumber"), 1, key)
+        pipe.sadd(filter_key("type", "housenumber"), key)
 
 
 def deindex_filters(key, doc):
@@ -133,10 +133,10 @@ def deindex_filters(key, doc):
         value = doc.get(name.encode())
         if value:
             # Doc is raw from DB, so it has byte values.
-            DB.zrem(filter_key(name, value.decode()), key)
+            DB.srem(filter_key(name, value.decode()), key)
     if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
        and doc.get(config.HOUSENUMBERS_FIELD):
-        DB.zrem(filter_key("type", "housenumber"), key)
+        DB.srem(filter_key("type", "housenumber"), key)
 
 
 def index_document(doc, update_ngrams=True):

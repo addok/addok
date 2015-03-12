@@ -67,9 +67,9 @@ def test_index_document():
     assert b'andrezi' in DB.smembers('n|andrez')
     assert b'lila' in DB.smembers('n|lil')
     assert DB.exists('f|type|street')
-    assert b'd|xxxx' in DB.zrange('f|type|street', 0, -1)
+    assert b'd|xxxx' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
-    assert b'd|xxxx' in DB.zrange('f|type|housenumber', 0, -1)
+    assert b'd|xxxx' in DB.smembers('f|type|housenumber')
     assert len(DB.keys()) == 19
 
 
@@ -140,9 +140,9 @@ def test_deindex_document_should_not_affect_other_docs():
     assert DB.exists('n|lil')
     assert b'lila' in DB.smembers('n|lil')
     assert DB.exists('f|type|street')
-    assert b'd|xxxx2' in DB.zrange('f|type|street', 0, -1)
+    assert b'd|xxxx2' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
-    assert b'd|xxxx2' in DB.zrange('f|type|housenumber', 0, -1)
+    assert b'd|xxxx2' in DB.smembers('f|type|housenumber')
     assert len(DB.keys()) == 17
 
 
