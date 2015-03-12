@@ -156,7 +156,7 @@ class Cli(object):
                 filters[name.lower()] = value.strip()
         helper = Search(limit=limit, verbose=verbose,
                         autocomplete=autocomplete)
-        results = helper(query, lat=lat, lon=lon, filters=filters)
+        results = helper(query, lat=lat, lon=lon, **filters)
         if bucket:  # Means we want all the bucket
             results = helper._sorted_bucket
 
