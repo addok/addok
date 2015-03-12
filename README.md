@@ -11,15 +11,15 @@ Search engine for address. Only address.
 
 # Install
 
-1. Install dependencies
-    
+1. Install dependencies:
+
     sudo apt-get install redis-server python3.4 python3.4-dev python-pip python-virtualenv virtualenvwrapper
 
-1. create a virtualenv
+1. create a virtualenv:
 
     mkvirtualenv addok --python=/usr/bin/python3.4
 
-1. install python packages
+1. install python packages:
 
     pip install git+https://github.com/etalab/addok.git
 
@@ -29,11 +29,11 @@ Search engine for address. Only address.
 1. Download [BANO data](http://bano.openstreetmap.fr/data/full.sjson.gz) and uncompress
    it
 
-2. Run import command
+2. Run import command:
 
     addok import bano path/to/full.sjson
 
-3. Index edge ngrams
+3. Index edge ngrams:
 
     addok ngrams
 
