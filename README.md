@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/etalab/addok.svg?branch=master)](https://travis-ci.org/etalab/addok)
+
 # Addok
 
 Search engine for address. Only address.
