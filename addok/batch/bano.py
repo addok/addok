@@ -9,6 +9,8 @@ def row_to_doc(row):
         row = json.loads(row)
     except ValueError:
         return
+    if row.get('_action') == "delete":
+        return row
     dep_id_len = 3 if row['id'].startswith('97') else 2
     dep_id = str(row['id'])[:dep_id_len]
     context = [dep_id]
