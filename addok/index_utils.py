@@ -178,8 +178,11 @@ def deindex_document(id_):
     DB.delete(key)
     deindex_geohash(key, doc[b'lat'], doc[b'lon'])
     pair_els = []
-    for name, value in doc.items():
-        pair_els.extend(deindex_field(key, value))
+    for field in config.FIELDS:
+        name = field['key']
+        value = doc.get(name.encode())
+        if value:
+            pair_els.extend(deindex_field(key, value))
     deindex_pairs(pair_els)
     deindex_filters(key, doc)
 
