@@ -110,8 +110,7 @@ class Cli(object):
 
     @property
     def history_file(self):
-        directory = Path(__file__).parent.parent
-        return str(directory.joinpath(self.HISTORY_FILE))
+        return str(Path(config.LOG_DIR).joinpath(self.HISTORY_FILE))
 
     def completer(self, text, state):
         for cmd in self.COMMANDS.keys():

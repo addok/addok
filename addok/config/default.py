@@ -67,3 +67,5 @@ LICENCE = "ODbL"
 
 # Available filters (remember that every filter means bigger index)
 FILTERS = ["type", "postcode"]
+
+LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)

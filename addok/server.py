@@ -2,7 +2,9 @@ import csv
 import io
 import json
 import logging
+import logging.handlers
 import os
+
 from pathlib import Path
 
 from werkzeug.exceptions import BadRequest, HTTPException
@@ -19,16 +21,10 @@ url_map = Map([
 ])
 
 
-class NotFoundLogHandler(logging.FileHandler):
-
-    def __init__(filename, *args, **kwargs):
-        path = str(Path(__file__).parent.parent.joinpath('notfound.log'))
-        super().__init__(path, *args, **kwargs)
-
-
 notfound = logging.getLogger('notfound')
 notfound.setLevel(logging.DEBUG)
-notfound.addHandler(NotFoundLogHandler())
+filename = Path(config.LOG_DIR).joinpath('notfound.log')
+notfound.addHandler(logging.handlers.TimedRotatingFileHandler(str(filename)))
 
 
 def app(environ, start_response):

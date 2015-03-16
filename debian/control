@@ -1,0 +1,12 @@
+Source: addok
+Section: python
+Priority: extra
+Maintainer: Yohan Boniface <yohan.boniface@data.gouv.fr>
+Build-Depends: debhelper (>= 9), python, dh-virtualenv (>= 0.6)
+Standards-Version: 3.9.5
+
+Package: addok
+Architecture: any
+Pre-Depends: dpkg (>= 1.16.1), python3.4-minimal, ${misc:Pre-Depends}
+Depends: ${python:Depends}, ${misc:Depends}
+Description: Search engine for address. Only address. 

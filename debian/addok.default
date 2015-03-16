@@ -1,0 +1,3 @@
+HOST=0.0.0.0
+PORT=7878
+ADDOK_LOG_DIR=/var/log/addok

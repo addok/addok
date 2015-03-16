@@ -1,0 +1,22 @@
+#!/bin/bash
+NAME=addok
+case "$1" in
+    configure)
+        echo "Make daemon autostart"
+        update-rc.d $NAME defaults
+        echo "Change permissions on log directory"
+        chmod 777 /var/log/addok
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        # Do nothing
+        ;;
+    *)
+
+        echo "Unrecognized postinst argument '$1'"
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
