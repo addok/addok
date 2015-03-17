@@ -65,11 +65,15 @@ def index_tokens(pipe, tokens, key, update_ngrams=True):
 def deindex_field(key, string):
     els = list(preprocess(string.decode()))
     for s in els:
-        tkey = token_key(s)
-        DB.zrem(tkey, key)
-        if not DB.exists(tkey):
-            deindex_edge_ngrams(s)
+        deindex_token(key, s)
     return els
+
+
+def deindex_token(key, token):
+    tkey = token_key(token)
+    DB.zrem(tkey, key)
+    if not DB.exists(tkey):
+        deindex_edge_ngrams(token)
 
 
 def index_pairs(pipe, els):
@@ -114,6 +118,24 @@ def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
     index_tokens(pipe, to_index, key, update_ngrams)
 
 
+def deindex_housenumbers(key, doc, tokens):
+    for field, value in doc.items():
+        field = field.decode()
+        if not field.startswith('h|'):
+            continue
+        number, lat, lon = value.decode().split('|')
+        hn = field[2:]
+        for token in tokens:
+            k = '|'.join(['didx', hn, token])
+            commons = DB.zinterstore(k, [token_key(hn), token_key(token)])
+            DB.delete(k)
+            if not commons:
+                DB.srem(pair_key(hn), token)
+                DB.srem(pair_key(token), hn)
+        deindex_geohash(key, lat, lon)
+        deindex_token(key, hn)
+
+
 def index_filters(pipe, key, doc):
     for name in config.FILTERS:
         value = doc.get(name)
@@ -134,8 +156,7 @@ def deindex_filters(key, doc):
         if value:
             # Doc is raw from DB, so it has byte values.
             DB.srem(filter_key(name, value.decode()), key)
-    if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
-       and doc.get(config.HOUSENUMBERS_FIELD):
+    if "type" in config.FILTERS:
         DB.srem(filter_key("type", "housenumber"), key)
 
 
@@ -177,14 +198,15 @@ def deindex_document(id_):
         return
     DB.delete(key)
     deindex_geohash(key, doc[b'lat'], doc[b'lon'])
-    pair_els = []
+    tokens = []
     for field in config.FIELDS:
         name = field['key']
         value = doc.get(name.encode())
         if value:
-            pair_els.extend(deindex_field(key, value))
-    deindex_pairs(pair_els)
+            tokens.extend(deindex_field(key, value))
+    deindex_pairs(tokens)
     deindex_filters(key, doc)
+    deindex_housenumbers(key, doc, tokens)
 
 
 def index_geohash(pipe, key, lat, lon):

@@ -38,7 +38,7 @@ DOC = {
 
 
 def test_index_document():
-    index_document(DOC)
+    index_document(DOC.copy())
     assert DB.exists('d|xxxx')
     assert DB.type('d|xxxx') == b'hash'
     assert DB.exists('w|ru')
@@ -74,7 +74,7 @@ def test_index_document():
 
 
 def test_deindex_document():
-    index_document(DOC)
+    index_document(DOC.copy())
     deindex_document(DOC['id'])
     assert not DB.exists('d|xxxx')
     assert not DB.exists('w|de')
@@ -109,7 +109,7 @@ def test_deindex_document_should_not_affect_other_docs():
             }
         }
     }
-    index_document(DOC)
+    index_document(DOC.copy())
     index_document(DOC2)
     deindex_document(DOC['id'])
     assert not DB.exists('d|xxxx')
