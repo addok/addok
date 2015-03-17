@@ -73,7 +73,7 @@ def test_index_document():
     assert len(DB.keys()) == 19
 
 
-def test_deindex_document():
+def test_deindex_document_should_deindex():
     index_document(DOC.copy())
     deindex_document(DOC['id'])
     assert not DB.exists('d|xxxx')

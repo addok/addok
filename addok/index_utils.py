@@ -88,9 +88,10 @@ def index_pairs(pipe, els):
 
 
 def deindex_pairs(els):
-    els = set(els)  # Unique values.
+    els = list(set(els))  # Unique values.
+    loop = 0
     for el in els:
-        for el2 in els:
+        for el2 in els[loop:]:
             if el != el2:
                 key = '|'.join(['didx', el, el2])
                 # Do we have other documents that share el and el2?
@@ -99,6 +100,7 @@ def deindex_pairs(els):
                 if not commons:
                     DB.srem(pair_key(el), el2)
                     DB.srem(pair_key(el2), el)
+        loop += 1
 
 
 def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
