@@ -167,7 +167,7 @@ def index_document(doc, update_ngrams=True):
     pipe = DB.pipeline()
     housenumbers = None
     index_geohash(pipe, key, doc['lat'], doc['lon'])
-    importance = doc.get('importance', 0.0) * config.IMPORTANCE_WEIGHT
+    importance = float(doc.get('importance', 0.0)) * config.IMPORTANCE_WEIGHT
     tokens = {}
     for field in config.FIELDS:
         name = field['key']
