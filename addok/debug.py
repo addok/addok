@@ -301,7 +301,8 @@ class Cli(object):
             'connected_clients']
         for key in keys:
             print('{}: {}'.format(white(key), blue(info[key])))
-        print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
+        if 'db0' in info:
+            print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
 
     def do_dbkey(self, key):
         """Print raw content of a DB key.
