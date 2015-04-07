@@ -1,3 +1,4 @@
+import codecs
 import csv
 import io
 import json
@@ -133,6 +134,7 @@ def on_csv(request):
             if key not in fieldnames:
                 fieldnames.append(key)
         output = io.StringIO()
+        output.write(codecs.BOM_UTF8.decode('utf-8'))
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
         writer.writeheader()
         for row in rows:
