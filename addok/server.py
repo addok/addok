@@ -134,6 +134,7 @@ def on_csv(request):
             if key not in fieldnames:
                 fieldnames.append(key)
         output = io.StringIO()
+        # Make Excel happy with UTF-8
         output.write(codecs.BOM_UTF8.decode('utf-8'))
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
         writer.writeheader()
