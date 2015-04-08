@@ -102,6 +102,7 @@ from addok.textutils.fr import (_phonemicize, _clean_query, _extract_address,
     ['1z', '1z'],
     ['quimper', 'kinper'],
     ['georges', 'jeorj'],
+    ['h', 'h'],
 ])
 def test_phonemicize(input, output):
     assert _phonemicize(input) == output
