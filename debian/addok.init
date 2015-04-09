@@ -9,7 +9,7 @@
 # Description:       addok gunicorn server daemon
 ### END INIT INFO
 
-# Author: Yohan Boniface <yohan.boniface@data.gouv.fr>
+# Author: Yohan Boniface <yohanboniface@free.fr>
 
 # Do NOT "set -e"
 
