@@ -49,6 +49,8 @@ def deindex_edge_ngrams(token):
 
 def extract_tokens(tokens, string, boost):
     els = list(preprocess(string))
+    if not els:
+        return
     boost = config.DEFAULT_BOOST / len(els) * boost
     for token in els:
         if tokens.get(token, 0) < boost:
