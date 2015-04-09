@@ -51,7 +51,7 @@ def extract_tokens(tokens, string, boost):
     els = list(preprocess(string))
     boost = config.DEFAULT_BOOST / len(els) * boost
     for token in els:
-        if token not in tokens or tokens.get(token) < boost:
+        if tokens.get(token, 0) < boost:
             tokens[token] = boost
 
 
