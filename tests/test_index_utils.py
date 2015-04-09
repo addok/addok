@@ -220,3 +220,15 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
     }
     index_document(doc)
     assert not DB.exists('d|xxxx')
+
+
+def test_field_with_only_non_alphanumeric_chars_is_not_indexed():
+    doc = {
+        'id': 'xxxx',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'name': 'Lilas',
+        'city': '//'
+    }
+    index_document(doc)
+    assert 'city' not in DB.hgetall('d|xxxx')
