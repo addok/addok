@@ -104,8 +104,6 @@ class NominatimExport(object):
             row['city'] = name
 
     def add_housenumbers(self, row):
-        if not row['name'] or not row['postcode']:
-            return
         sql = """SELECT housenumber, ST_X(ST_Centroid(geometry)) as lon,
             ST_Y(ST_Centroid(geometry)) as lat
             FROM placex
