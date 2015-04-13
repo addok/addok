@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-DB_SETTINGS = {
+DB = {
     'host': 'localhost',
     'port': 6379,
     'db': 0
@@ -20,8 +20,6 @@ INTERSECT_LIMIT = 100000
 MATCH_THRESHOLD = 0.9
 
 GEOHASH_PRECISION = 8
-
-MAX_DOC_IMPORTANCE = 0.1
 
 RESOURCES_ROOT = Path(__file__).parent.parent.joinpath('resources')
 SYNONYMS_PATH = RESOURCES_ROOT.joinpath('synonyms').joinpath('fr.txt')

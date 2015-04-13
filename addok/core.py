@@ -165,7 +165,7 @@ class Result(object):
 
 class SearchResult(Result):
 
-    MAX_IMPORTANCE = config.MAX_DOC_IMPORTANCE
+    MAX_IMPORTANCE = config.IMPORTANCE_WEIGHT
 
 
 class ReverseResult(Result):
