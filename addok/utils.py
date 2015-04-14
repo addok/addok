@@ -3,6 +3,14 @@ from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
 
 
+def iter_pipe(pipe, processors):
+    if isinstance(pipe, str):
+        pipe = [pipe]
+    for it in processors:
+        pipe = it(pipe)
+    yield from pipe
+
+
 def import_by_path(path):
     """
     Import functions or class by their path. Should be of the form:

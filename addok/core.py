@@ -5,12 +5,17 @@ import geohash
 
 from . import config
 from .db import DB
-from .index_utils import (edge_ngram_key, filter_key, geohash_key, pair_key,
-                          token_key)
-from .pipeline import preprocess_query
+from .index_utils import (PROCESSORS, edge_ngram_key, filter_key, geohash_key,
+                          pair_key, token_key)
 from .textutils.default import (ascii, compare_ngrams, contains, equals,
                                 make_fuzzy, startswith)
-from .utils import haversine_distance, km_to_score
+from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
+
+QUERY_PROCESSORS = [import_by_path(path) for path in config.QUERY_PROCESSORS]
+
+
+def preprocess_query(s):
+    return list(iter_pipe(s, QUERY_PROCESSORS + PROCESSORS))
 
 
 def token_key_frequency(key):

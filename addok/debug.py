@@ -11,10 +11,9 @@ import geohash
 
 from . import config
 from .core import (Search, SearchResult, Token, make_fuzzy, reverse,
-                   token_frequency)
+                   token_frequency, preprocess_query)
 from .db import DB
 from .index_utils import document_key, pair_key, token_key
-from .pipeline import preprocess_query
 from .textutils.default import compare_ngrams
 from .utils import haversine_distance, km_to_score
 

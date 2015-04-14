@@ -7,6 +7,7 @@ DB = {
     'db': 0
 }
 
+
 # Max number of results to be retrieved from db and scored.
 BUCKET_LIMIT = 100
 
@@ -36,6 +37,10 @@ QUERY_PROCESSORS = (
     'addok.textutils.fr.clean_query',
     'addok.textutils.fr.glue_ordinal',
 )
+BATCH_PROCESSORS = (
+    'addok.batch.default.to_json',
+)
+
 
 # Fields to be indexed
 # If you want a housenumbers field but need to name it differently, just add
@@ -67,3 +72,18 @@ LICENCE = "ODbL"
 FILTERS = ["type", "postcode"]
 
 LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)
+
+NOMINATIM_CREDENTIALS = {
+    'dbname': 'nominatim'
+}
+NOMINATIM_PROCESSORS = (
+    'addok.batch.nominatim.query',
+    'addok.batch.nominatim.get_context',
+    'addok.batch.nominatim.get_housenumbers',
+    'addok.batch.nominatim.row_to_doc',
+)
+NOMINATIM_NOADDRESS = False
+NOMINATIM_ONLYADDRESS = False
+NOMINATIM_LIMIT = None
+NOMINATIM_ITERSIZE = 1000
+NOMINATIM_MODE = 'full'

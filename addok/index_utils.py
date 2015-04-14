@@ -4,9 +4,19 @@ from multiprocessing import Pool
 import geohash
 
 from . import config
+from .utils import import_by_path, iter_pipe
 from .db import DB
-from .pipeline import preprocess
 from .textutils.default import compute_edge_ngrams
+
+
+PROCESSORS = [import_by_path(path) for path in config.PROCESSORS]
+
+
+def preprocess(s):
+    if s not in _CACHE:
+        _CACHE[s] = list(iter_pipe(s, PROCESSORS))
+    return _CACHE[s]
+_CACHE = {}
 
 
 def token_key(s):

@@ -69,15 +69,17 @@ you can extract it from full file with a command like:
 
 Once you have a [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim) database up and running, just run:
 
-    addok batch nominatim --user ybon
+    addok batch nominatim --dbuser ybon
 
 If you want only POIs (no street nor addresses):
 
-    addok batch nominatim --user ybon --no-address
+    addok batch nominatim --dbuser ybon --nominatim-mode=noaddress
 
 If you want only addresses (no POIs):
 
-    addok batch nominatim --user ybon --only-address
+    addok batch nominatim --dbuser ybon --nominatim-mode=onlyaddress
+
+Check out the available [settings for Nominatim](config.md#nominatim-settings).
 
 ## More options
 
