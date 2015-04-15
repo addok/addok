@@ -20,10 +20,10 @@ that points to it:
 Some settings are used to define how addok will deal with the system it's
 installed on.
 
-#### DB (dict)
+#### REDIS (dict)
 Defines the Redis database settings:
 
-    DB = {
+    REDIS = {
         'host': 'localhost',
         'port': 6379,
         'db': 0

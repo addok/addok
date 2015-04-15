@@ -6,8 +6,8 @@ from werkzeug.wrappers import BaseResponse
 
 
 def pytest_configure(config):
-    from addok.config import DB
-    DB['db'] = 15
+    from addok.config import REDIS
+    REDIS['db'] = 15
     import logging
     logging.basicConfig(level=logging.DEBUG)
 

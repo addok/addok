@@ -2,4 +2,4 @@ import redis
 
 from . import config
 
-DB = redis.StrictRedis(**config.DB)
+DB = redis.StrictRedis(**config.REDIS)

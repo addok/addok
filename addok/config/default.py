@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-DB = {
+REDIS = {
     'host': 'localhost',
     'port': 6379,
     'db': 0
