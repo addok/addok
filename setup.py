@@ -40,7 +40,7 @@ setup(
     keywords='address openstreetmap geocoding',
     packages=find_packages(exclude=['tests']),
     install_requires=install_requires,
-    extras_require={'test': ['pytest']},
+    extras_require={'test': ['pytest'], 'docs': 'mkdocs'},
     include_package_data=True,
     entry_points={
         'console_scripts': ['addok=addok.bin:main'],
