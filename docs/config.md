@@ -171,7 +171,7 @@ Credential for connecting to PostgreSQL database.
     }
 
 #### PSQL_EXTRAWHERE (string)
-Optionally add a where clause to the default query.
+Optionnaly add a where clause to the default query.
 
     PSQL_EXTRAWHERE = ''
 
