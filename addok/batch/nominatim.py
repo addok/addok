@@ -45,6 +45,7 @@ def query(*args):
 
     for row in cur.__iter__():
         yield dict(row)
+    cur.close()
 
 
 @yielder
