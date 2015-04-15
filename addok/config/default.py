@@ -76,17 +76,35 @@ LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)
 LOG_BATCH_QUERIES = False
 LOG_NOT_FOUND = False
 
-NOMINATIM_CREDENTIALS = {
+PSQL = {
     'dbname': 'nominatim'
 }
-NOMINATIM_PROCESSORS = (
-    'addok.batch.nominatim.query',
+PSQL_PROCESSORS = (
+    'addok.batch.psql.query',
     'addok.batch.nominatim.get_context',
     'addok.batch.nominatim.get_housenumbers',
     'addok.batch.nominatim.row_to_doc',
 )
-NOMINATIM_NOADDRESS = False
-NOMINATIM_ONLYADDRESS = False
-NOMINATIM_LIMIT = None
-NOMINATIM_ITERSIZE = 1000
-NOMINATIM_MODE = 'full'
+PSQL_QUERY = """SELECT osm_type,osm_id,class,type,admin_level,rank_search,
+             place_id,parent_place_id,street,postcode,
+             (extratags->'ref') as ref,
+             ST_X(ST_Centroid(geometry)) as lon,
+             ST_Y(ST_Centroid(geometry)) as lat,
+             name->'name' as name, name->'short_name' as short_name,
+             name->'official_name' as official_name,
+             name->'alt_name' as alt_name
+             FROM placex
+             WHERE name ? 'name'
+             {extrawhere}
+             ORDER BY place_id
+             {limit}
+             """
+PSQL_EXTRAWHERE = ''
+# If you only want addresses
+# PSQL_EXTRAWHERE = "AND class='highway' AND osm_type='W'"
+# If you don't want any address
+# PSQL_EXTRAWHERE = ("AND (class!='highway' OR osm_type='W') "
+#                    "AND class!='place'")
+
+PSQL_LIMIT = None
+PSQL_ITERSIZE = 1000

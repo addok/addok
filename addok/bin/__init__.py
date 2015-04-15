@@ -4,7 +4,7 @@ Addok: search engine for address. Only address.
 Usage:
     addok serve [--port=<number>] [--host=<string>] [options]
     addok shell
-    addok batch [nominatim] [<filepath>...] [options]
+    addok batch [<filepath>...] [options]
     addok ngrams
 
 Examples:
@@ -12,8 +12,7 @@ Examples:
     addok shell
     addok batch path/to/bano-full.csv
     addok batch < cat path/to/bano-full.csv
-    addok batch nominatim
-    addok batch nominatim --only-address
+    addok batch --dbuser myname --dbname mydb
     addok batch ngrams
 
 Options:
@@ -21,11 +20,10 @@ Options:
     --port=<number>     optionnaly pass a server port [default: 7878]
     --host=<string>     optionnaly pass a server port [default: 127.0.0.1]
     --debug             optionnaly run in debug mode
-    --dbname=<string>   override dbname [default: nominatim]
-    --dbuser=<string>   override dbuser [default: nominatim]
+    --dbname=<string>   override dbname
+    --dbuser=<string>   override dbuser
     --dbhost=<string>   override dbhost
     --dbport=<string>   override dbport
-    --nominatim-mode    One of full | only-address | no-address
     --limit=<number>    add an optional limit
 """
 
@@ -51,23 +49,23 @@ def main():
         cli = Cli()
         cli()
     elif args['batch']:
-        if args['nominatim']:
-            if args['--dbname']:
-                config.NOMINATIM_CREDENTIALS['dbname'] = args['--dbname']
-            if args['--dbuser']:
-                config.NOMINATIM_CREDENTIALS['user'] = args['--dbuser']
-            if args['--dbhost']:
-                config.NOMINATIM_CREDENTIALS['host'] = args['--dbhost']
-            if args['--dbport']:
-                config.NOMINATIM_CREDENTIALS['port'] = args['--dbport']
-            if args['--nominatim-mode']:
-                config.NOMINATIM_MODE = args['--nominatim-mode']
-            batch.process_nominatim()
-        else:
+        if args['<filepath>']:
             for path in args['<filepath>']:
                 batch.process_file(path)
-            if not sys.stdin.isatty():  # Any better way to check for stdin?
-                batch.process_stdin(sys.stdin)
+        elif not sys.stdin.isatty():  # Any better way to check for stdin?
+            batch.process_stdin(sys.stdin)
+        else:
+            if args['--dbname']:
+                config.PSQL['dbname'] = args['--dbname']
+            if args['--dbuser']:
+                config.PSQL['user'] = args['--dbuser']
+            if args['--dbhost']:
+                config.PSQL['host'] = args['--dbhost']
+            if args['--dbport']:
+                config.PSQL['port'] = args['--dbport']
+            if args['--limit']:
+                config.PSQL_LIMIT = args['--limit']
+            batch.process_psql()
     elif args['ngrams']:
         create_edge_ngrams()
 

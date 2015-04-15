@@ -48,8 +48,8 @@ Then you need to index ngrams:
 
 ### Example with BANO
 
-1. Download [BANO data](http://bano.openstreetmap.fr/data/full.sjson.gz) and uncompress
-   it
+1. Download [BANO data](http://bano.openstreetmap.fr/data/full.sjson.gz) and
+   uncompress it
 
 2. Run batch command:
 
@@ -67,19 +67,13 @@ you can extract it from full file with a command like:
 
 ## Import from Nominatim
 
-Once you have a [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim) database up and running, just run:
+Once you have a [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim)
+database up and running, just run:
 
-    addok batch nominatim --dbuser ybon
+    addok batch --dbuser ybon
+    addok ngrams
 
-If you want only POIs (no street nor addresses):
-
-    addok batch nominatim --dbuser ybon --nominatim-mode=noaddress
-
-If you want only addresses (no POIs):
-
-    addok batch nominatim --dbuser ybon --nominatim-mode=onlyaddress
-
-Check out the available [settings for Nominatim](config.md#nominatim-settings).
+Check out the available [settings for PSQL](config.md#postgresql-settings).
 
 ## More options
 

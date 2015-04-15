@@ -158,36 +158,44 @@ Min score used to consider a result may *match* the query.
 
     MATCH_THRESHOLD = 0.9
 
-## Nominatim settings
+## PostgreSQL settings
 
-#### NOMINATIM_CREDENTIALS (dict)
-Credential for connecting to Nominatim database
+Addok can query any PostgreSQL database. By default, it's configured to
+query a Nominatim db.
 
-    NOMINATIM_CREDENTIALS = {
+#### PSQL (dict)
+Credential for connecting to PostgreSQL database.
+
+    PSQL = {
         'dbname': 'nominatim'
     }
 
-#### NOMINATIM_ITERSIZE (int)
+#### PSQL_EXTRAWHERE (string)
+Optionally add a where clause to the default query.
+
+    PSQL_EXTRAWHERE = ''
+
+#### PSQL_ITERSIZE (int)
 Size of the connection cursor.
 
-    NOMINATIM_ITERSIZE = 1000
+    PSQL_ITERSIZE = 1000
 
-#### NOMINATIM_LIMIT (int)
-Optional limit when querying Nominatim.
+#### PSQL_LIMIT (int)
+Optional limit when querying PostgreSQL.
 
-    NOMINATIM_LIMIT = None
+    PSQL_LIMIT = None
 
-#### NOMINATIM_PROCESSORS (iterable)
-Iterable of module to preprocess Nominatim data.
+#### PSQL_PROCESSORS (iterable)
+Iterable of modules to preprocess PostgreSQL data.
 
-    NOMINATIM_PROCESSORS = (
-        'addok.batch.nominatim.query',
+    PSQL_PROCESSORS = (
+        'addok.batch.psql.query',
         'addok.batch.nominatim.get_context',
         'addok.batch.nominatim.get_housenumbers',
         'addok.batch.nominatim.row_to_doc',
     )
 
-#### NOMINATIM_MODE (string)
-Nominatim import mode, one of `full`, `noaddress`, `onlyaddress`.
+#### PSQL_QUERY (string)
+Default query run when importing from PostgreSQL.
 
-    NOMINATIM_MODE = 'full'
+    PSQL_QUERY = 'SELECT …'

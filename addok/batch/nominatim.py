@@ -3,49 +3,8 @@
 import psycopg2
 import psycopg2.extras
 
-from addok import config
 from addok.utils import yielder
-
-
-connection = psycopg2.connect(**config.NOMINATIM_CREDENTIALS)
-
-BASE_QUERY = """SELECT osm_type,osm_id,class,type,admin_level,rank_search,
-             place_id,parent_place_id,street,postcode,
-             (extratags->'ref') as ref,
-             ST_X(ST_Centroid(geometry)) as lon,
-             ST_Y(ST_Centroid(geometry)) as lat,
-             name->'name' as name, name->'short_name' as short_name,
-             name->'official_name' as official_name,
-             name->'alt_name' as alt_name
-             FROM placex
-             WHERE name ? 'name'
-             {extrawhere}
-             ORDER BY place_id
-             {limit}
-             """
-
-
-def query(*args):
-    extrawhere = ""
-    if config.NOMINATIM_MODE == 'noaddress':
-        extrawhere = ("AND (class!='highway' OR osm_type='W') "
-                      "AND class!='place'")
-    elif config.NOMINATIM_MODE == 'onlyaddress':
-        extrawhere = "AND class='highway' AND osm_type='W'"
-    limit = ''
-    if config.NOMINATIM_LIMIT:
-        limit = 'LIMIT {limit}'.format(limit=config.NOMINATIM_LIMIT)
-    # We use python format because SQL one doesn't handle empty strings.
-    sql = BASE_QUERY.format(extrawhere=extrawhere, limit=limit)
-    cur = connection.cursor("nominatim",
-                            cursor_factory=psycopg2.extras.DictCursor)
-    cur.itersize = config.NOMINATIM_ITERSIZE
-    cur.execute(sql)
-    print('Query executed with itersize', cur.itersize)
-
-    for row in cur.__iter__():
-        yield dict(row)
-    cur.close()
+from .psql import connection
 
 
 @yielder
@@ -81,7 +40,7 @@ def add_parent_data(parent, row):
 
 @yielder
 def get_housenumbers(row):
-    if config.NOMINATIM_MODE != 'noaddress' and row['class'] == 'highway':
+    if row['class'] == 'highway':
         sql = """SELECT housenumber, ST_X(ST_Centroid(geometry)) as lon,
             ST_Y(ST_Centroid(geometry)) as lat
             FROM placex
