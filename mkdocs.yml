@@ -6,6 +6,6 @@ pages:
 - [import.md, Import]
 - [api.md, API]
 - [shell.md, Shell]
-theme: journal
+theme: readthedocs
 repo_url: https://github.com/etalab/addok
 site_description: Search engine for address. Only address.

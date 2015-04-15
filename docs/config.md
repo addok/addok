@@ -77,6 +77,12 @@ The licence of the data returned by the API. Can be a simple string, or a dict
 
     LICENCE = "ODbL"
 
+#### LOG_BATCH_QUERIES (boolean)
+Turn this to `True` to log every query received through batch request. *Note:
+only the queries are logged, not any of the other received content.*
+
+    LOG_BATCH_QUERIES = False
+
 #### PROCESSORS (iterable of python paths)
 Define the various functions to preprocess the text, before indexing and
 searching. It's an `iterable` of python paths. Some functions are built in

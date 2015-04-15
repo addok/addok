@@ -27,6 +27,13 @@ notfound.setLevel(logging.DEBUG)
 filename = Path(config.LOG_DIR).joinpath('notfound.log')
 notfound.addHandler(logging.handlers.TimedRotatingFileHandler(str(filename)))
 
+if config.LOG_BATCH_QUERIES:
+    log_queries = logging.getLogger('queries')
+    log_queries.setLevel(logging.DEBUG)
+    filename = Path(config.LOG_DIR).joinpath('batch_queries.log')
+    log_queries.addHandler(
+        logging.handlers.TimedRotatingFileHandler(str(filename)))
+
 
 def app(environ, start_response):
     urls = url_map.bind_to_environ(environ)
@@ -141,6 +148,8 @@ def on_csv(request):
         for row in rows:
             # We don't want None in a join.
             q = ' '.join([row[k] or '' for k in columns])
+            if config.LOG_BATCH_QUERIES:
+                log_queries.debug(q)
             results = search(q, autocomplete=False, limit=1)
             if results:
                 row.update({

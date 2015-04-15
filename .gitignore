@@ -16,3 +16,4 @@ debian/addok.debhelper.log
 debian/files
 site/
 notfound.log*
+batch_queries.log*
