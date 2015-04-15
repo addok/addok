@@ -74,6 +74,7 @@ FILTERS = ["type", "postcode"]
 LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)
 
 LOG_BATCH_QUERIES = False
+LOG_NOT_FOUND = False
 
 NOMINATIM_CREDENTIALS = {
     'dbname': 'nominatim'

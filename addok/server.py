@@ -21,11 +21,12 @@ url_map = Map([
     Rule('/csv/', endpoint='csv'),
 ])
 
-
-notfound = logging.getLogger('notfound')
-notfound.setLevel(logging.DEBUG)
-filename = Path(config.LOG_DIR).joinpath('notfound.log')
-notfound.addHandler(logging.handlers.TimedRotatingFileHandler(str(filename)))
+if config.LOG_NOT_FOUND:
+    notfound = logging.getLogger('notfound')
+    notfound.setLevel(logging.DEBUG)
+    filename = Path(config.LOG_DIR).joinpath('notfound.log')
+    notfound.addHandler(
+        logging.handlers.TimedRotatingFileHandler(str(filename)))
 
 if config.LOG_BATCH_QUERIES:
     log_queries = logging.getLogger('queries')
@@ -84,7 +85,7 @@ def on_search(request):
     filters = match_filters(request)
     results = search(query, limit=limit, autocomplete=autocomplete, lat=lat,
                      lon=lon, **filters)
-    if not results:
+    if config.LOG_NOT_FOUND and not results:
         notfound.debug(query)
     return serve_results(results, query=query)
 
@@ -160,7 +161,7 @@ def on_csv(request):
                     'result_type': results[0].type,
                     'result_id': results[0].id,
                 })
-            else:
+            elif config.LOG_NOT_FOUND:
                 notfound.debug(q)
             writer.writerow(row)
         output.seek(0)

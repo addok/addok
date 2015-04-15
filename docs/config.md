@@ -83,6 +83,12 @@ only the queries are logged, not any of the other received content.*
 
     LOG_BATCH_QUERIES = False
 
+#### LOG_NOT_FOUND (boolean)
+Turn this to `True` to log every not found query both through the `search`
+endpoint or the `csv` one.
+
+    LOG_NOT_FOUND = False
+
 #### PROCESSORS (iterable of python paths)
 Define the various functions to preprocess the text, before indexing and
 searching. It's an `iterable` of python paths. Some functions are built in
