@@ -10,10 +10,10 @@ available** for example.
 ## Registering your custom config file
 
 An Addok config file is simply a python file that define some keys. This file
-needs to be in your pythonpath, and you need to define an environment variable
+can be anywhere in your system, and you need to define an environment variable
 that points to it:
 
-    export ADDOK_CONFIG_MODULE=path.to.my.config
+    export ADDOK_CONFIG_MODULE=path/to/local.py
 
 ## Environment settings
 
