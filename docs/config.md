@@ -94,9 +94,9 @@ is on the pythonpath).
 Additional processors that are run only at query time.
 
     QUERY_PROCESSORS = (
-        'addok.textutils.fr.extract_address',
-        'addok.textutils.fr.clean_query',
-        'addok.textutils.fr.glue_ordinal',
+        'addok.textutils.fr_FR.extract_address',
+        'addok.textutils.fr_FR.clean_query',
+        'addok.textutils.fr_FR.glue_ordinal',
     )
 
 #### SYNONYMS_PATH (path)
