@@ -19,23 +19,5 @@
 
         pip install addok
 
-## Install via Ubuntu package
-
-1. Install Redis:
-
-        sudo apt-get install redis-server
-
-1. Add ppa:
-
-        sudo add-apt-repository ppa:etalab/ppa
-
-1. Update cache:
-
-        sudo apt-get update
-
-1. Install package:
-
-        sudo apt-get install addok
-
 ## What to do next?
 Now you certainly want to [configure Addok](config.md), or directly [import data](import.md).

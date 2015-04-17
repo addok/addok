@@ -17,3 +17,5 @@ debian/files
 site/
 notfound.log*
 batch_queries.log*
+build/
+dist/

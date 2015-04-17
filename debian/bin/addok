@@ -1,4 +1,0 @@
-#!/bin/bash
-[ -r /etc/default/addok ] && . /etc/default/addok
-export ADDOK_LOG_DIR=$ADDOK_LOG_DIR
-/usr/share/python/addok/bin/addok "$@"
