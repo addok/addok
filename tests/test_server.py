@@ -10,6 +10,7 @@ def test_search_without_query_should_return_400(client):
 def test_search_should_return_geojson(client, factory):
     factory(name='rue des avions')
     resp = client.get('/search/', query_string={'q': 'avions'})
+    assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
     data = json.loads(resp.data.decode())
     assert data['type'] == 'FeatureCollection'
     assert len(data['features']) == 1

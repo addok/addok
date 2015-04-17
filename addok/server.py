@@ -116,6 +116,7 @@ def serve_results(results, query=None):
     if query:
         results['query'] = query
     response = Response(json.dumps(results), mimetype='text/plain')
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
     cors(response)
     return response
 
