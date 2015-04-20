@@ -77,11 +77,11 @@ The licence of the data returned by the API. Can be a simple string, or a dict
 
     LICENCE = "ODbL"
 
-#### LOG_BATCH_QUERIES (boolean)
-Turn this to `True` to log every query received through batch request. *Note:
-only the queries are logged, not any of the other received content.*
+#### LOG_QUERIES (boolean)
+Turn this to `True` to log every query received and firt result if any. *Note:
+only the queries are logged, not any of the other received data.*
 
-    LOG_BATCH_QUERIES = False
+    LOG_QUERIES = False
 
 #### LOG_NOT_FOUND (boolean)
 Turn this to `True` to log every not found query both through the `search`

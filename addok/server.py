@@ -22,18 +22,29 @@ url_map = Map([
 ])
 
 if config.LOG_NOT_FOUND:
-    notfound = logging.getLogger('notfound')
-    notfound.setLevel(logging.DEBUG)
+    notfound_logger = logging.getLogger('notfound')
+    notfound_logger.setLevel(logging.DEBUG)
     filename = Path(config.LOG_DIR).joinpath('notfound.log')
-    notfound.addHandler(
+    notfound_logger.addHandler(
         logging.handlers.TimedRotatingFileHandler(str(filename)))
 
-if config.LOG_BATCH_QUERIES:
-    log_queries = logging.getLogger('queries')
-    log_queries.setLevel(logging.DEBUG)
-    filename = Path(config.LOG_DIR).joinpath('batch_queries.log')
-    log_queries.addHandler(
+
+def log_notfound(query):
+    if config.LOG_NOT_FOUND:
+        notfound_logger.debug(query)
+
+
+if config.LOG_QUERIES:
+    query_logger = logging.getLogger('queries')
+    query_logger.setLevel(logging.DEBUG)
+    filename = Path(config.LOG_DIR).joinpath('queries.log')
+    query_logger.addHandler(
         logging.handlers.TimedRotatingFileHandler(str(filename)))
+
+
+def log_query(query, results):
+    if config.LOG_QUERIES:
+        query_logger.debug('%s\t%s', query, str(results[0]) if results else '')
 
 
 def app(environ, start_response):
@@ -85,8 +96,9 @@ def on_search(request):
     filters = match_filters(request)
     results = search(query, limit=limit, autocomplete=autocomplete, lat=lat,
                      lon=lon, **filters)
-    if config.LOG_NOT_FOUND and not results:
-        notfound.debug(query)
+    if not results:
+        log_notfound(query)
+    log_query(query, results)
     return serve_results(results, query=query)
 
 
@@ -150,9 +162,8 @@ def on_csv(request):
         for row in rows:
             # We don't want None in a join.
             q = ' '.join([row[k] or '' for k in columns])
-            if config.LOG_BATCH_QUERIES:
-                log_queries.debug(q)
             results = search(q, autocomplete=False, limit=1)
+            log_query(q, results)
             if results:
                 row.update({
                     'latitude': results[0].lat,
@@ -162,8 +173,8 @@ def on_csv(request):
                     'result_type': results[0].type,
                     'result_id': results[0].id,
                 })
-            elif config.LOG_NOT_FOUND:
-                notfound.debug(q)
+            else:
+                log_notfound(q)
             writer.writerow(row)
         output.seek(0)
         response = Response(output.read())
