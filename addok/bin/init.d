@@ -28,9 +28,12 @@ SCRIPTNAME=/etc/init.d/$NAME
 . "$VIRTUALENV_ROOT/bin/activate"
 DAEMON="$VIRTUALENV_ROOT/bin/gunicorn"
 
-# Expot ADDOK_CONFIG_MODULE if defined in default/addok, and for workarounding
+# Export ADDOK_CONFIG_MODULE if defined in default/addok, and for workarounding
 # issues when forwarding env vars to sudo.
-[ -z "$ADDOK_CONFIG_MODULE" ] && export ADDOK_CONFIG_MODULE=ADDOK_CONFIG_MODULE
+[ -n "$ADDOK_CONFIG_MODULE" ] && export ADDOK_CONFIG_MODULE=ADDOK_CONFIG_MODULE
+[ -n "$LC_ALL" ] && export LC_ALL=$LC_ALL
+[ -n "$LANG" ] && export LANG=$LANG
+[ -n "$LANGUAGE" ] && export LANGUAGE=$LANGUAGE
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
