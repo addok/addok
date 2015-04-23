@@ -5,4 +5,4 @@ ngram==3.3.0
 python-geohash==0.8.5
 redis==2.10.3
 Unidecode==0.04.17
-Werkzeug==0.9.6
+Werkzeug==0.10.4
