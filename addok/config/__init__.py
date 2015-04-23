@@ -14,6 +14,7 @@ if localpath:
     except IOError as e:
         print('Unable to import', localpath, 'from', 'ADDOK_CONFIG_MODULE')
     else:
+        print('Loaded local config from', localpath)
         for key in dir(d):
             if key.isupper():
                 globals()[key] = getattr(d, key)

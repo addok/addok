@@ -28,6 +28,10 @@ SCRIPTNAME=/etc/init.d/$NAME
 . "$VIRTUALENV_ROOT/bin/activate"
 DAEMON="$VIRTUALENV_ROOT/bin/gunicorn"
 
+# Expot ADDOK_CONFIG_MODULE if defined in default/addok, and for workarounding
+# issues when forwarding env vars to sudo.
+[ -z "$ADDOK_CONFIG_MODULE" ] && export ADDOK_CONFIG_MODULE=ADDOK_CONFIG_MODULE
+
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
 
@@ -36,7 +40,7 @@ DAEMON="$VIRTUALENV_ROOT/bin/gunicorn"
 # and status_of_proc is working.
 . /lib/lsb/init-functions
 
-DAEMON_ARGS="addok.server:app -b $HOST:$PORT -w 4 -p $PIDFILE -D --name $NAME"
+DAEMON_ARGS="addok.server:app -b $HOST:$PORT -w 4 -p $PIDFILE -D --name $NAME --error-logfile $ADDOK_LOG_DIR/server-error.log --log-file=$ADDOK_LOG_DIR/server.log"
 
 #
 # Function that starts the daemon/service
@@ -47,8 +51,8 @@ do_start()
     #   0 if daemon has been started
     #   1 if daemon was already running
     #   2 if daemon could not be started
-    start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null || return 1
-    start-stop-daemon --start --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_ARGS || return 2
+    ADDOK_CONFIG_MODULE=$ADDOK_CONFIG_MODULE start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null || return 1
+    ADDOK_CONFIG_MODULE=$ADDOK_CONFIG_MODULE start-stop-daemon --start --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_ARGS || return 2
 }
 
 #
@@ -61,7 +65,7 @@ do_stop()
     #   1 if daemon was already stopped
     #   2 if daemon could not be stopped
     #   other if a failure occurred
-    start-stop-daemon --quiet --stop --pidfile $PIDFILE
+    ADDOK_CONFIG_MODULE=$ADDOK_CONFIG_MODULE start-stop-daemon --quiet --stop --pidfile $PIDFILE
     RETVAL="$?"
     [ "$RETVAL" = 2 ] && return 2
     # Wait for children to finish too if this is a daemon that forks
@@ -70,7 +74,7 @@ do_stop()
     # that waits for the process to drop all resources that could be
     # needed by services started subsequently.  A last resort is to
     # sleep for some time.
-    start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+    ADDOK_CONFIG_MODULE=$ADDOK_CONFIG_MODULE start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
     [ "$?" = 2 ] && return 2
     # Many daemons don't delete their pidfiles when they exit.
     rm -f $PIDFILE
@@ -81,7 +85,7 @@ do_stop()
 # Function that sends a SIGHUP to the daemon/service
 #
 do_reload() {
-    start-stop-daemon --stop --signal HUP --quiet --pidfile $PIDFILE
+    ADDOK_CONFIG_MODULE=$ADDOK_CONFIG_MODULE start-stop-daemon --stop --signal HUP --quiet --pidfile $PIDFILE
     return 0
 }
 
