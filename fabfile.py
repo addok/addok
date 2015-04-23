@@ -8,6 +8,9 @@ env.remote_ref = 'origin/master'
 env.requirements_file = 'requirements.txt'
 env.use_ssh_config = True
 env.shell = "/bin/bash -c"  # Default uses -l option that we don't want.
+env.virtualenv_dir = '/home/addok/.virtualenvs/addok'
+env.project_dir = '/home/addok/src/'
+env.restart_command = 'sudo service addok restart'
 
 
 def run_as_addok(*args, **kwargs):
@@ -23,22 +26,34 @@ def run_as_addok(*args, **kwargs):
 # =============================================================================
 
 @task
-def live():
+def dev():
     """
-    Use the live deployment environment on Etalab servers.
-    You need the "ban" server to be referenced in your ~/.ssh/config file.
+    Use the dev deployment environment on Etalab servers.
+    You need the "banapidev" server to be referenced in your ~/.ssh/config
+    file.
     """
-    server = 'ban'
+    server = 'banapidev'
     env.roledefs = {
         'web': [server],
     }
     env.system_users = {server: 'addok'}
-    env.virtualenv_dir = '/home/addok/.virtualenvs/addok'
-    env.project_dir = '/home/addok/src/'
-    env.restart_command = 'pkill -HUP gunicorn'
+
+
+@task
+def live():
+    """
+    Use the live deployment environment on Etalab servers.
+    You need the "banapi" server to be referenced in your ~/.ssh/config file.
+    """
+    server = 'banapi'
+    env.roledefs = {
+        'web': [server],
+    }
+    env.system_users = {server: 'addok'}
+
 
 # Set the default environment.
-live()
+dev()
 
 
 # =============================================================================
@@ -66,7 +81,7 @@ def restart():
     """
     Restart the web service.
     """
-    sudo(env.restart_command)
+    run_as_addok(env.restart_command)
 
 
 @task
