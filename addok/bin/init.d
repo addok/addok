@@ -30,7 +30,7 @@ DAEMON="$VIRTUALENV_ROOT/bin/gunicorn"
 
 # Export ADDOK_CONFIG_MODULE if defined in default/addok, and for workarounding
 # issues when forwarding env vars to sudo.
-[ -n "$ADDOK_CONFIG_MODULE" ] && export ADDOK_CONFIG_MODULE=ADDOK_CONFIG_MODULE
+[ -z "$ADDOK_CONFIG_MODULE" ] && export ADDOK_CONFIG_MODULE=ADDOK_CONFIG_MODULE
 [ -n "$LC_ALL" ] && export LC_ALL=$LC_ALL
 [ -n "$LANG" ] && export LANG=$LANG
 [ -n "$LANGUAGE" ] && export LANGUAGE=$LANGUAGE
