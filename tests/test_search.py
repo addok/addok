@@ -88,6 +88,15 @@ def test_should_not_return_housenumber_if_number_is_also_in_name(housenumber):
     assert results[0].housenumber == '11'
 
 
+def test_return_housenumber_if_number_included_in_bigger_one(factory):
+    factory(name='rue 1814',
+            housenumbers={'8': {'lat': '48.3254', 'lon': '2.256'}})
+    results = search('rue 1814')
+    assert not results[0].housenumber
+    results = search('8 rue 1814')
+    assert results[0].housenumber == '8'
+
+
 def test_should_do_autocomplete_on_last_term(street):
     street.update(name='rue de Wambrechies', city="Bondues")
     assert search('avenue wambre', autocomplete=True)

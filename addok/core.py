@@ -79,10 +79,11 @@ class Result(object):
 
     def match_housenumber(self, tokens):
         originals = [t.original for t in tokens]
-        for token in tokens:
-            if token.original in self.housenumbers:
-                raw, lat, lon = self.housenumbers[token.original].split('|')
-                if raw in self.name and originals.count(token.original) != 2:
+        name_tokens = self.name.split()
+        for original in originals:
+            if original in self.housenumbers:
+                raw, lat, lon = self.housenumbers[original].split('|')
+                if raw in name_tokens and originals.count(original) != 2:
                     # Consider that user is not requesting a housenumber if
                     # token is also in name (ex. rue du 8 mai), unless this
                     # token is twice in the query (8 rue du 8 mai).
