@@ -43,7 +43,10 @@ DAEMON="$VIRTUALENV_ROOT/bin/gunicorn"
 # and status_of_proc is working.
 . /lib/lsb/init-functions
 
-DAEMON_ARGS="addok.server:app -b $HOST:$PORT -w 4 -p $PIDFILE -D --name $NAME --error-logfile $ADDOK_LOG_DIR/server-error.log --log-file=$ADDOK_LOG_DIR/server.log"
+RUN_WITH_USER=''
+[ -n "$USER" ] && RUN_WITH_USER="-u $USER"
+
+DAEMON_ARGS="addok.server:app -b $HOST:$PORT -w 4 -p $PIDFILE -D --name $NAME --error-logfile $ADDOK_LOG_DIR/server-error.log --log-file=$ADDOK_LOG_DIR/server.log $RUN_WITH_USER"
 
 #
 # Function that starts the daemon/service
