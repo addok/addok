@@ -51,7 +51,8 @@ FIELDS = [
     {'key': 'postcode',
      'boost': lambda doc: 1.2 if doc.get('type') == 'commune' else 1},
     {'key': 'city'},
-    {'key': 'housenumbers'}
+    {'key': 'housenumbers'},
+    {'key': 'context'},
 ]
 
 # Weight of a document own importance:
