@@ -250,10 +250,10 @@ class Cli(object):
         if not doc:
             print(red('Not found.'))
             return
-        self._print_field_index_details(doc[b'name'].decode(), _id)
-        self._print_field_index_details(doc[b'postcode'].decode(), _id)
-        self._print_field_index_details(doc[b'city'].decode(), _id)
-        self._print_field_index_details(doc[b'context'].decode(), _id)
+        for field in config.FIELDS:
+            key = field['key'].encode()
+            if key in doc:
+                self._print_field_index_details(doc[key].decode(), _id)
 
     def do_bestscore(self, word):
         """Return document linked to word with higher score.
