@@ -16,7 +16,8 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Addok server"
 NAME="addok"
-PIDFILE=/var/run/$NAME.pid
+RUNDIR=/var/run/$NAME
+PIDFILE="$RUNDIR/$NAME.pid"
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Read configuration variable file if it is present
@@ -43,8 +44,14 @@ DAEMON="$VIRTUALENV_ROOT/bin/gunicorn"
 # and status_of_proc is working.
 . /lib/lsb/init-functions
 
-RUN_WITH_USER=''
-[ -n "$USER" ] && RUN_WITH_USER="-u $USER"
+mkdir -p $RUNDIR
+if [ -n "$USER" ]
+then
+    chown "$USER" "$RUNDIR"
+    RUN_WITH_USER="-u $USER"
+else
+    RUN_WITH_USER=''
+fi
 
 DAEMON_ARGS="addok.server:app -b $HOST:$PORT -w 4 -p $PIDFILE -D --name $NAME --error-logfile $ADDOK_LOG_DIR/server-error.log --log-file=$ADDOK_LOG_DIR/server.log $RUN_WITH_USER"
 
