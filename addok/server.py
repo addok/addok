@@ -136,15 +136,21 @@ def serve_results(results, query=None):
 def on_csv(request):
     if request.method == 'POST':
         f = request.files['data']
-        dialect = csv.Sniffer().sniff(f.read(4096).decode())
+        encoding = 'utf-8'
+        try:
+            extract = f.read(4096).decode(encoding)
+        except (LookupError, UnicodeDecodeError):
+            raise BadRequest('Unknown encoding {}'.format(encoding))
+        dialect = csv.Sniffer().sniff(extract)
         # Escape double quotes with double quotes if needed.
         # See 2.7 in http://tools.ietf.org/html/rfc4180
         dialect.doublequote = True
         f.seek(0)
         # Replace bad carriage returns, as per
         # http://tools.ietf.org/html/rfc4180
-        # We may want not to load all file in memory at some point.
-        content = f.read().decode().replace('\r', '').replace('\n', '\r\n')
+        # We may want not to load whole file in memory at some point.
+        content = f.read().decode(encoding)
+        content = content.replace('\r', '').replace('\n', '\r\n')
         # Keep ends, not to glue lines when a field is multilined.
         rows = csv.DictReader(content.splitlines(keepends=True),
                               dialect=dialect)
@@ -155,8 +161,9 @@ def on_csv(request):
             if key not in fieldnames:
                 fieldnames.append(key)
         output = io.StringIO()
-        # Make Excel happy with UTF-8
-        output.write(codecs.BOM_UTF8.decode('utf-8'))
+        if encoding == 'utf-8':
+            # Make Excel happy with UTF-8
+            output.write(codecs.BOM_UTF8.decode('utf-8'))
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
         writer.writeheader()
         for row in rows:
@@ -177,12 +184,14 @@ def on_csv(request):
                 log_notfound(q)
             writer.writerow(row)
         output.seek(0)
-        response = Response(output.read())
+        response = Response(output.read().encode(encoding))
+        output.seek(0)
         filename, ext = os.path.splitext(f.filename)
         attachment = 'attachment; filename="{name}.geocoded.csv"'.format(
                                                                  name=filename)
         response.headers['Content-Disposition'] = attachment
-        response.headers['Content-Type'] = 'text/csv'
+        content_type = 'text/csv; charset={encoding}'.format(encoding=encoding)
+        response.headers['Content-Type'] = content_type
         cors(response)
         return response
     elif request.method == 'OPTIONS':
