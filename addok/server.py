@@ -18,7 +18,8 @@ from . import config
 url_map = Map([
     Rule('/search/', endpoint='search'),
     Rule('/reverse/', endpoint='reverse'),
-    Rule('/csv/', endpoint='csv'),
+    Rule('/search/csv/', endpoint='search.csv'),
+    Rule('/csv/', endpoint='search.csv'),  # Retrocompat.
 ])
 
 if config.LOG_NOT_FOUND:
@@ -55,87 +56,130 @@ def app(environ, start_response):
         return e(environ, start_response)
     else:
         request = Request(environ)
-        if endpoint == 'search':
-            response = on_search(request)
-        elif endpoint == 'reverse':
-            response = on_reverse(request)
-        elif endpoint == 'csv':
-            response = on_csv(request)
+        response = View.serve(endpoint, request)
     return response(environ, start_response)
 
 
-def match_filters(request):
-    filters = {}
-    for name in config.FILTERS:
-        value = request.args.get(name)
-        if value:
-            filters[name] = value
-    return filters
+class WithEndPoint(type):
+
+    endpoints = {}
+
+    def __new__(mcs, name, bases, attrs, **kwargs):
+        cls = super().__new__(mcs, name, bases, attrs)
+        if hasattr(cls, 'endpoint'):
+            mcs.endpoints[cls.endpoint] = cls
+        return cls
 
 
-def on_search(request):
-    query = request.args.get('q', '')
-    if not query:
-        response = Response('Missing query', status=400)
-        cors(response)
+class View(object, metaclass=WithEndPoint):
+
+    def __init__(self, request):
+        self.request = request
+
+    def match_filters(self):
+        filters = {}
+        for name in config.FILTERS:
+            value = self.request.args.get(name)
+            if value:
+                filters[name] = value
+        return filters
+
+    @classmethod
+    def serve(cls, endpoint, request):
+        Class = WithEndPoint.endpoints.get(endpoint)
+        if not Class:
+            raise BadRequest()
+        view = Class(request)
+        if request.method == 'POST' and hasattr(view, 'post'):
+            response = view.post()
+        elif view.request.method == 'GET' and hasattr(view, 'get'):
+            response = view.get()
+        elif view.request.method == 'OPTIONS':
+            response = view.options()
+        else:
+            raise BadRequest()
+        return cls.cors(response)
+
+    def to_geojson(self, results, query=None):
+        results = {
+            "type": "FeatureCollection",
+            "version": "draft",
+            "features": [r.to_geojson() for r in results],
+            "attribution": config.ATTRIBUTION,
+            "licence": config.LICENCE,
+        }
+        if query:
+            results['query'] = query
+        response = Response(json.dumps(results), mimetype='text/plain')
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
         return response
-    try:
-        limit = int(request.args.get('limit'))
-    except (ValueError, TypeError):
-        limit = 5
-    try:
-        autocomplete = int(request.args.get('autocomplete')) == '1'
-    except (ValueError, TypeError):
-        autocomplete = True
-    try:
-        lat = float(request.args.get('lat'))
-        lon = float(request.args.get('lon'))
-    except (ValueError, TypeError):
-        lat = None
-        lon = None
-    filters = match_filters(request)
-    results = search(query, limit=limit, autocomplete=autocomplete, lat=lat,
-                     lon=lon, **filters)
-    if not results:
-        log_notfound(query)
-    log_query(query, results)
-    return serve_results(results, query=query)
+
+    def options(self):
+        return Response('')
+
+    @staticmethod
+    def cors(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
+        return response
 
 
-def on_reverse(request):
-    try:
-        lat = float(request.args.get('lat'))
-        lon = float(request.args.get('lon'))
-    except (ValueError, TypeError):
-        raise BadRequest()
-    try:
-        limit = int(request.args.get('limit'))
-    except (ValueError, TypeError):
-        limit = 1
-    filters = match_filters(request)
-    results = reverse(lat=lat, lon=lon, limit=limit, **filters)
-    return serve_results(results)
+class Search(View):
+
+    endpoint = 'search'
+
+    def get(self):
+        query = self.request.args.get('q', '')
+        if not query:
+            return Response('Missing query', status=400)
+        try:
+            limit = int(self.request.args.get('limit'))
+        except (ValueError, TypeError):
+            limit = 5
+        try:
+            autocomplete = int(self.request.args.get('autocomplete')) == '1'
+        except (ValueError, TypeError):
+            autocomplete = True
+        try:
+            lat = float(self.request.args.get('lat'))
+            lon = float(self.request.args.get('lon'))
+        except (ValueError, TypeError):
+            lat = None
+            lon = None
+        filters = self.match_filters()
+        results = search(query, limit=limit, autocomplete=autocomplete,
+                         lat=lat, lon=lon, **filters)
+        if not results:
+            log_notfound(query)
+        log_query(query, results)
+        return self.to_geojson(results, query=query)
 
 
-def serve_results(results, query=None):
-    results = {
-        "type": "FeatureCollection",
-        "version": "draft",
-        "features": [r.to_geojson() for r in results],
-        "attribution": config.ATTRIBUTION,
-        "licence": config.LICENCE,
-    }
-    if query:
-        results['query'] = query
-    response = Response(json.dumps(results), mimetype='text/plain')
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    cors(response)
-    return response
+class Reverse(View):
+
+    endpoint = 'reverse'
+
+    def get(self):
+        try:
+            lat = float(self.request.args.get('lat'))
+            lon = float(self.request.args.get('lon'))
+        except (ValueError, TypeError):
+            raise BadRequest()
+        try:
+            limit = int(self.request.args.get('limit'))
+        except (ValueError, TypeError):
+            limit = 1
+        filters = self.match_filters()
+        results = reverse(lat=lat, lon=lon, limit=limit, **filters)
+        return self.to_geojson(results)
 
 
-def on_csv(request):
-    if request.method == 'POST':
-        f = request.files['data']
+class CSVSearch(View):
+
+    endpoint = 'search.csv'
+
+    def post(self):
+        f = self.request.files['data']
         encoding = 'utf-8'
         try:
             extract = f.read(4096).decode(encoding)
@@ -155,7 +199,7 @@ def on_csv(request):
         rows = csv.DictReader(content.splitlines(keepends=True),
                               dialect=dialect)
         fieldnames = rows.fieldnames[:]
-        columns = request.form.getlist('columns') or rows.fieldnames
+        columns = self.request.form.getlist('columns') or rows.fieldnames
         for key in ['latitude', 'longitude', 'result_address', 'result_score',
                     'result_type', 'result_id']:
             if key not in fieldnames:
@@ -192,14 +236,4 @@ def on_csv(request):
         response.headers['Content-Disposition'] = attachment
         content_type = 'text/csv; charset={encoding}'.format(encoding=encoding)
         response.headers['Content-Type'] = content_type
-        cors(response)
         return response
-    elif request.method == 'OPTIONS':
-        response = Response('')
-        cors(response)
-        return response
-
-
-def cors(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
