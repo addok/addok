@@ -25,5 +25,7 @@ for field in FIELDS:
     key = field['key']
     if field.get('type') == 'housenumbers' or key == 'housenumbers':
         HOUSENUMBERS_FIELD = key
+        field['type'] = 'housenumbers'
     elif field.get('type') == 'name' or key == 'name':
         NAME_FIELD = key
+        field['type'] = 'name'

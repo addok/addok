@@ -129,3 +129,23 @@ def test_reverse_can_be_filtered(client, factory):
     assert len(data['features']) == 1
     feature = data['features'][0]
     assert feature['properties']['type'] == 'city'
+
+
+def test_csv_reverse_endpoint(client, factory):
+    factory(name='rue des brûlés', postcode='31310', city='Montbrun-Bocage',
+            lat=10.22334401, lon=12.33445501)
+    content = ('latitude,longitude\n'
+               '10.223344,12.334455')
+    resp = client.post(
+        '/reverse/csv/',
+        data={'data': (io.BytesIO(content.encode()), 'file.csv')})
+    data = resp.data.decode()
+    assert 'file.geocoded.csv' in resp.headers['Content-Disposition']
+    assert 'result_latitude' in data
+    assert '10.22334401' in data
+    assert 'result_longitude' in data
+    assert '12.33445501' in data
+    assert 'result_address' in data
+    assert 'result_distance' in data
+    assert 'Montbrun-Bocage' in data
+    assert 'rue des brûlés' in data
