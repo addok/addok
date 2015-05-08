@@ -93,7 +93,7 @@ Parameters:
 Same response format as the `/search/` enpoint.
 
 
-### /csv/
+### /search/csv/
 
 Batch geocode a csv file.
 
@@ -102,3 +102,13 @@ Batch geocode a csv file.
 - **data**: csv file to be processed
 - **columns**: define the columns of the csv to be concatenated to create the
 search string (one column by `column` parameter)
+
+
+### /reverse/csv/
+
+Batch reverse geocode a csv file.
+
+#### Parameters
+
+- **data**: csv file to be processed; must contain columns `latitude` (or `lat`) and
+  `longitude` (or `lon` or `lng`)
