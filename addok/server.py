@@ -27,8 +27,9 @@ if config.LOG_NOT_FOUND:
     notfound_logger = logging.getLogger('notfound')
     notfound_logger.setLevel(logging.DEBUG)
     filename = Path(config.LOG_DIR).joinpath('notfound.log')
-    notfound_logger.addHandler(
-        logging.handlers.TimedRotatingFileHandler(str(filename)))
+    handler = logging.handlers.TimedRotatingFileHandler(str(filename),
+                                                        when='midnight')
+    notfound_logger.addHandler(handler)
 
 
 def log_notfound(query):
@@ -40,8 +41,9 @@ if config.LOG_QUERIES:
     query_logger = logging.getLogger('queries')
     query_logger.setLevel(logging.DEBUG)
     filename = Path(config.LOG_DIR).joinpath('queries.log')
-    query_logger.addHandler(
-        logging.handlers.TimedRotatingFileHandler(str(filename)))
+    handler = logging.handlers.TimedRotatingFileHandler(str(filename),
+                                                        when='midnight')
+    query_logger.addHandler(handler)
 
 
 def log_query(query, results):
