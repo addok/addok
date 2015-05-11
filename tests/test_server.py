@@ -23,6 +23,11 @@ def test_search_should_return_geojson(client, factory):
     assert 'licence' in data
 
 
+def test_search_without_trailing_slash_should_not_be_redirected(client):
+    resp = client.get('/search', query_string={'q': 'avions'})
+    assert resp.status_code == 200
+
+
 def test_search_can_be_filtered(client, factory):
     factory(name='rue de Paris', type="street")
     factory(name='Paris', type="city")
@@ -116,6 +121,11 @@ def test_reverse_should_return_geojson(client, factory):
     assert feature['properties']['score']
     assert 'attribution' in data
     assert 'licence' in data
+
+
+def test_reverse_without_trailing_slash_should_not_be_redirected(client):
+    resp = client.get('/reverse', query_string={'lat': '44', 'lon': '4'})
+    assert resp.status_code == 200
 
 
 def test_reverse_can_be_filtered(client, factory):

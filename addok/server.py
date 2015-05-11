@@ -21,7 +21,7 @@ url_map = Map([
     Rule('/search/csv/', endpoint='search.csv'),
     Rule('/reverse/csv/', endpoint='reverse.csv'),
     Rule('/csv/', endpoint='search.csv'),  # Retrocompat.
-])
+], strict_slashes=False)
 
 if config.LOG_NOT_FOUND:
     notfound_logger = logging.getLogger('notfound')
