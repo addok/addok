@@ -179,11 +179,18 @@ class BaseCSV(View):
 
     def post(self):
         f = self.request.files['data']
-        encoding = 'utf-8'
+        input_encoding = 'utf-8'
+        output_encoding = 'utf-8'
+        file_encoding = f.mimetype_params.get('charset')
+        # When file_encoding is passed as charset in the file mimetype,
+        # Werkzeug will reencode the content to utf-8 for us, so don't try
+        # to reencode.
+        if not file_encoding:
+            input_encoding = self.request.args.get('encoding', input_encoding)
         try:
-            extract = f.read(4096).decode(encoding)
+            extract = f.read(4096).decode(input_encoding)
         except (LookupError, UnicodeDecodeError):
-            raise BadRequest('Unknown encoding {}'.format(encoding))
+            raise BadRequest('Unknown encoding {}'.format(input_encoding))
         dialect = csv.Sniffer().sniff(extract)
         # Escape double quotes with double quotes if needed.
         # See 2.7 in http://tools.ietf.org/html/rfc4180
@@ -192,7 +199,7 @@ class BaseCSV(View):
         # Replace bad carriage returns, as per
         # http://tools.ietf.org/html/rfc4180
         # We may want not to load whole file in memory at some point.
-        content = f.read().decode(encoding)
+        content = f.read().decode(input_encoding)
         content = content.replace('\r', '').replace('\n', '\r\n')
         # Keep ends, not to glue lines when a field is multilined.
         rows = csv.DictReader(content.splitlines(keepends=True),
@@ -203,7 +210,7 @@ class BaseCSV(View):
             if key not in fieldnames:
                 fieldnames.append(key)
         output = io.StringIO()
-        if encoding == 'utf-8':
+        if output_encoding == 'utf-8':
             # Make Excel happy with UTF-8
             output.write(codecs.BOM_UTF8.decode('utf-8'))
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
@@ -212,13 +219,14 @@ class BaseCSV(View):
             self.process_row(row)
             writer.writerow(row)
         output.seek(0)
-        response = Response(output.read().encode(encoding))
+        response = Response(output.read().encode(output_encoding))
         output.seek(0)
         filename, ext = os.path.splitext(f.filename)
         attachment = 'attachment; filename="{name}.geocoded.csv"'.format(
                                                                  name=filename)
         response.headers['Content-Disposition'] = attachment
-        content_type = 'text/csv; charset={encoding}'.format(encoding=encoding)
+        content_type = 'text/csv; charset={encoding}'.format(
+            encoding=output_encoding)
         response.headers['Content-Type'] = content_type
         return response
 
