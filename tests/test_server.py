@@ -80,6 +80,15 @@ def test_csv_endpoint_with_empty_file(client, factory):
     assert resp.data.decode()
 
 
+def test_csv_endpoint_with_bad_column(client, factory):
+    content = ('name,street,postcode,city\n'
+               ',,,')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': 'xxxxx'})
+    assert resp.status_code == 400
+
+
 def test_csv_endpoint_with_multilines_fields(client, factory):
     factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
     content = ('name,adresse\n'

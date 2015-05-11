@@ -53,12 +53,12 @@ def app(environ, start_response):
     urls = url_map.bind_to_environ(environ)
     try:
         endpoint, args = urls.match()
+        request = Request(environ)
+        response = View.serve(endpoint, request)
     except HTTPException as e:
         return e(environ, start_response)
     else:
-        request = Request(environ)
-        response = View.serve(endpoint, request)
-    return response(environ, start_response)
+        return response(environ, start_response)
 
 
 class WithEndPoint(type):
@@ -209,6 +209,10 @@ class BaseCSV(View):
                               dialect=dialect)
         fieldnames = rows.fieldnames[:]
         self.columns = self.request.form.getlist('columns') or rows.fieldnames
+        for column in self.columns:
+            if column not in fieldnames:
+                raise BadRequest("Cannot found column '{}' in columns "
+                                 "{}".format(column, fieldnames))
         for key in self.result_headers:
             if key not in fieldnames:
                 fieldnames.append(key)
