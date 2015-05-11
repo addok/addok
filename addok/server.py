@@ -186,7 +186,7 @@ class BaseCSV(View):
         # Werkzeug will reencode the content to utf-8 for us, so don't try
         # to reencode.
         if not file_encoding:
-            input_encoding = self.request.args.get('encoding', input_encoding)
+            input_encoding = self.request.form.get('encoding', input_encoding)
         try:
             extract = f.read(4096).decode(input_encoding)
         except (LookupError, UnicodeDecodeError):
@@ -195,6 +195,9 @@ class BaseCSV(View):
         # Escape double quotes with double quotes if needed.
         # See 2.7 in http://tools.ietf.org/html/rfc4180
         dialect.doublequote = True
+        delimiter = self.request.form.get('delimiter')
+        if delimiter:
+            dialect.delimiter = delimiter
         f.seek(0)
         # Replace bad carriage returns, as per
         # http://tools.ietf.org/html/rfc4180
