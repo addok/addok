@@ -48,7 +48,13 @@ if config.LOG_QUERIES:
 
 def log_query(query, results):
     if config.LOG_QUERIES:
-        query_logger.debug('%s\t%s', query, str(results[0]) if results else '')
+        if results:
+            result = str(results[0])
+            score = str(round(results[0].score, 2))
+        else:
+            result = '-'
+            score = '-'
+        query_logger.debug('\t'.join([query, result, score]))
 
 
 def app(environ, start_response):
