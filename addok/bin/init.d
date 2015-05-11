@@ -19,6 +19,7 @@ NAME="addok"
 RUNDIR=/var/run/$NAME
 PIDFILE="$RUNDIR/$NAME.pid"
 SCRIPTNAME=/etc/init.d/$NAME
+TIMEOUT="300"
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
@@ -53,7 +54,7 @@ else
     RUN_WITH_USER=''
 fi
 
-DAEMON_ARGS="addok.server:app -b $HOST:$PORT -w 4 -p $PIDFILE -D --name $NAME --error-logfile $ADDOK_LOG_DIR/server-error.log --log-file=$ADDOK_LOG_DIR/server.log $RUN_WITH_USER"
+DAEMON_ARGS="addok.server:app -b $HOST:$PORT -w 4 -p $PIDFILE -t $TIMEOUT -D --name $NAME --error-logfile $ADDOK_LOG_DIR/server-error.log --log-file=$ADDOK_LOG_DIR/server.log $RUN_WITH_USER"
 
 #
 # Function that starts the daemon/service
