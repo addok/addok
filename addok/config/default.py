@@ -20,7 +20,7 @@ INTERSECT_LIMIT = 100000
 # Min score considered matching the query.
 MATCH_THRESHOLD = 0.9
 
-GEOHASH_PRECISION = 8
+GEOHASH_PRECISION = 7
 
 RESOURCES_ROOT = Path(__file__).parent.parent.joinpath('resources')
 SYNONYMS_PATH = RESOURCES_ROOT.joinpath('synonyms').joinpath('fr.txt')
