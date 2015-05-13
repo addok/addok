@@ -34,6 +34,23 @@ def score_autocomplete(key):
         return card
 
 
+def compute_geohash_key(geoh, with_neighbors=True):
+    if with_neighbors:
+        neighbors = geohash.expand(geoh)
+        neighbors = [geohash_key(n) for n in neighbors]
+    else:
+        neighbors = [geoh]
+    key = 'gx|{}'.format(geoh)
+    total = DB.sunionstore(key, neighbors)
+    if not total:
+        # No need to keep it.
+        DB.delete(key)
+        key = False
+    else:
+        DB.expire(key, 10)
+    return key
+
+
 class Result(object):
 
     def __init__(self, _id):
@@ -442,17 +459,11 @@ class Search(BaseHelper):
     def geohash_key(self):
         if self.lat and self.lon and self._geohash_key is None:
             geoh = geohash.encode(self.lat, self.lon, config.GEOHASH_PRECISION)
-            neighbors = geohash.expand(geoh)
-            neighbors = [geohash_key(n) for n in neighbors]
-            self._geohash_key = 'gx|{}'.format(geoh)
-            self.debug('Compute geohash key %s', self._geohash_key)
-            total = DB.sunionstore(self._geohash_key, neighbors)
-            if not total:
-                self.debug('Empty geohash key, deleting %s', self._geohash_key)
-                DB.delete(self._geohash_key)
-                self._geohash_key = False
+            self._geohash_key = compute_geohash_key(geoh)
+            if self._geohash_key:
+                self.debug('Computed geohash key %s', self._geohash_key)
             else:
-                DB.expire(self._geohash_key, 10)
+                self.debug('Empty geohash key, deleting %s', self._geohash_key)
         return self._geohash_key
 
     def render(self):

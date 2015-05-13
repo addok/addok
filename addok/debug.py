@@ -11,7 +11,7 @@ import geohash
 
 from . import config
 from .core import (Search, SearchResult, Token, make_fuzzy, reverse,
-                   token_frequency, preprocess_query)
+                   token_frequency, preprocess_query, compute_geohash_key)
 from .db import DB
 from .index_utils import document_key, pair_key, token_key
 from .textutils.default import compare_ngrams
@@ -127,7 +127,7 @@ class Cli(object):
             option = matchs[0]
             string = string.replace(option, '')
             option = option.replace(key, '')
-        return string, option
+        return string.strip(), option.strip() if option else option
 
     def _search(self, query, verbose=False, bucket=False):
         start = time.time()
@@ -355,6 +355,16 @@ class Cli(object):
             print(red('Invalid lat and lon {}'.format(latlon)))
         else:
             print(white(geohash.encode(lat, lon, config.GEOHASH_PRECISION)))
+
+    def do_geohashmembers(self, geoh):
+        """Return members of a geohash and its neighbors.
+        GEOHASHMEMBERS u09vej04 [NEIGHBORS 0]"""
+        geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
+        key = compute_geohash_key(geoh, with_neighbors != '0')
+        if key:
+            for id_ in DB.smembers(key):
+                r = SearchResult(id_)
+                print(white(r), blue(r.id))
 
     def do_fuzzy(self, word):
         """Compute fuzzy extensions of word.

@@ -64,6 +64,12 @@ Compute a geohash from latitude and longitude.
 
     GEOHASH 48.1234 2.9876
 
+#### GEOHASHMEMBERS
+Return members of a geohash and its neighbors. Use "NEIGHBORS 0"
+to only target geohash.
+
+    GEOHASHMEMBERS u09vej04 [NEIGHBORS 0]
+
 #### GEOHASHTOGEOJSON
 Build GeoJSON corresponding to geohash given as parameter.
 
