@@ -332,16 +332,33 @@ class Cli(object):
 
     def do_geohashtogeojson(self, geoh):
         """Build GeoJSON corresponding to geohash given as parameter.
-        GEOHASHTOGEOJSON u09vej04"""
+        GEOHASHTOGEOJSON u09vej04 [NEIGHBORS 0]"""
+        geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
         bbox = geohash.bbox(geoh)
+        north = bbox['n']
+        south = bbox['s']
+        east = bbox['e']
+        west = bbox['w']
+        if with_neighbors != '0':
+            neighbors = geohash.neighbors(geoh)
+            for neighbor in neighbors:
+                bbox = geohash.bbox(neighbor)
+                if bbox['n'] > north:
+                    north = bbox['n']
+                if bbox['s'] < south:
+                    south = bbox['s']
+                if bbox['e'] > east:
+                    east = bbox['e']
+                if bbox['w'] < west:
+                    west = bbox['w']
         geojson = {
             "type": "Polygon",
             "coordinates": [[
-                [bbox['w'], bbox['n']],
-                [bbox['e'], bbox['n']],
-                [bbox['e'], bbox['s']],
-                [bbox['w'], bbox['s']],
-                [bbox['w'], bbox['n']]
+                [west, north],
+                [east, north],
+                [east, south],
+                [west, south],
+                [west, north]
             ]]
         }
         print(white(json.dumps(geojson)))
