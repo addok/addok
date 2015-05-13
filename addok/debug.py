@@ -346,6 +346,16 @@ class Cli(object):
         }
         print(white(json.dumps(geojson)))
 
+    def do_geohash(self, latlon):
+        """Compute a geohash from latitude and longitude.
+        GEOHASH 48.1234 2.9876"""
+        try:
+            lat, lon = map(float, latlon.split())
+        except ValueError:
+            print(red('Invalid lat and lon {}'.format(latlon)))
+        else:
+            print(white(geohash.encode(lat, lon, config.GEOHASH_PRECISION)))
+
     def do_fuzzy(self, word):
         """Compute fuzzy extensions of word.
         FUZZY lilas"""

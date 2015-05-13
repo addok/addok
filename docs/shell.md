@@ -59,6 +59,11 @@ Compute geodistance from a result to a point.
 
     GEODISTANCE 772210180J 48.1234 2.9876
 
+#### GEOHASH
+Compute a geohash from latitude and longitude.
+
+    GEOHASH 48.1234 2.9876
+
 #### GEOHASHTOGEOJSON
 Build GeoJSON corresponding to geohash given as parameter.
 
