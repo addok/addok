@@ -10,6 +10,8 @@ from .textutils.default import compute_edge_ngrams
 
 
 PROCESSORS = [import_by_path(path) for path in config.PROCESSORS]
+HOUSENUMBER_PROCESSORS = [import_by_path(path) for path in
+                          config.HOUSENUMBER_PROCESSORS + config.PROCESSORS]
 
 
 def preprocess(s):
@@ -17,6 +19,13 @@ def preprocess(s):
         _CACHE[s] = list(iter_pipe(s, PROCESSORS))
     return _CACHE[s]
 _CACHE = {}
+
+
+def preprocess_housenumber(s):
+    if s not in _HOUSENUMBER_CACHE:
+        _HOUSENUMBER_CACHE[s] = list(iter_pipe(s, HOUSENUMBER_PROCESSORS))
+    return _HOUSENUMBER_CACHE[s]
+_HOUSENUMBER_CACHE = {}
 
 
 def token_key(s):
@@ -122,7 +131,7 @@ def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
     to_index = {}
     for number, point in housenumbers.items():
         val = '|'.join([str(number), str(point['lat']), str(point['lon'])])
-        for hn in preprocess(number):
+        for hn in preprocess_housenumber(number):
             doc[housenumber_field_key(hn)] = val
             # Pair every document term to each housenumber, but do not pair
             # housenumbers together.

@@ -37,6 +37,9 @@ QUERY_PROCESSORS = (
     'addok.textutils.fr_FR.clean_query',
     'addok.textutils.fr_FR.glue_ordinal',
 )
+HOUSENUMBER_PROCESSORS = [
+    'addok.textutils.fr_FR.glue_ordinal',
+]
 BATCH_PROCESSORS = (
     'addok.batch.default.to_json',
 )
