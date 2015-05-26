@@ -55,6 +55,7 @@ extract_address = yielder(_extract_address)
 def _glue_ordinal(q):
     """Glue '3' and 'bis'."""
     return glue_ordinal_pattern.sub('\g<1>\g<2>', q)
-glue_ordinal_pattern = re.compile('(\d{1,4}) (bis|ter|quater)',
+ORDINAL_REGEX = 'bis|ter|quater|quinquies|sexies|[a-z]'
+glue_ordinal_pattern = re.compile('(\d{1,4}) (' + ORDINAL_REGEX + ')\\b',
                                   flags=re.IGNORECASE)
 glue_ordinal = yielder(_glue_ordinal)
