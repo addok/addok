@@ -14,6 +14,7 @@ qu, q => quai
 ss => sous
 sq => square
 1er, 1e, ier => premier
+1ere, 1re, iere, ire => premiere
 2e, 2eme, iie, iieme => deuxieme
 3e, 3eme, iiie, iiieme => troisieme
 4e, 4eme, ive, iveme => quatrieme
