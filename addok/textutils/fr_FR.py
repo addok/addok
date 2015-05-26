@@ -59,3 +59,22 @@ ORDINAL_REGEX = 'bis|ter|quater|quinquies|sexies|[a-z]'
 glue_ordinal_pattern = re.compile('(\d{1,4}) (' + ORDINAL_REGEX + ')\\b',
                                   flags=re.IGNORECASE)
 glue_ordinal = yielder(_glue_ordinal)
+
+
+def _fold_ordinal(s):
+    """3bis => 3b."""
+    if s not in _CACHE:
+        rules = (
+            ("(\d{1,4})bis\\b", "\g<1>b"),
+            ("(\d{1,4})ter\\b", "\g<1>t"),
+            ("(\d{1,4})quater\\b", "\g<1>q"),
+            ("(\d{1,4})quinquies\\b", "\g<1>c"),
+            ("(\d{1,4})sexies\\b", "\g<1>s"),
+        )
+        _s = s
+        for pattern, repl in rules:
+            _s = re.sub(pattern, repl, _s, flags=re.IGNORECASE)
+        _CACHE[s] = _s
+    return _CACHE[s]
+_CACHE = {}
+fold_ordinal = yielder(_fold_ordinal)

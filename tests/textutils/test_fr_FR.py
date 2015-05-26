@@ -1,6 +1,7 @@
 import pytest
 
-from addok.textutils.fr_FR import _clean_query, _extract_address, _glue_ordinal
+from addok.textutils.fr_FR import (_clean_query, _extract_address,
+                                   _fold_ordinal, _glue_ordinal)
 
 
 @pytest.mark.parametrize("input,expected", [
@@ -106,3 +107,16 @@ def test_extract_address(input, expected):
 ])
 def test_glue_ordinal(input, expected):
     assert _glue_ordinal(input) == expected
+
+
+@pytest.mark.parametrize("input,expected", [
+    ('60bis', '60b'),
+    ('60BIS', '60b'),
+    ('60ter', '60t'),
+    ('4terre', '4terre'),
+    ('60quater', '60q'),
+    ('60 bis', '60 bis'),
+    ('rue du bis', 'rue du bis'),
+])
+def test_fold_ordinal(input, expected):
+    assert _fold_ordinal(input) == expected
