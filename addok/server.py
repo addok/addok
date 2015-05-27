@@ -245,12 +245,31 @@ class BaseCSV(View):
         response.headers['Content-Type'] = content_type
         return response
 
+    def add_fields(self, row, result):
+        for field in config.FIELDS:
+            if field.get('type') == 'housenumbers':
+                continue
+            key = field['key']
+            row['result_{}'.format(key)] = getattr(result, key, '')
+
 
 class CSVSearch(BaseCSV):
 
     endpoint = 'search.csv'
-    result_headers = ['latitude', 'longitude', 'result_address',
-                      'result_score', 'result_type', 'result_id']
+
+    @property
+    def result_headers(self):
+        if not hasattr(self, '_result_headers'):
+            headers = ['latitude', 'longitude', 'result_address',
+                       'result_score', 'result_type', 'result_id']
+            for field in config.FIELDS:
+                if field.get('type') == 'housenumbers':
+                    continue
+                key = 'result_{}'.format(field['key'])
+                if key not in headers:
+                    headers.append(key)
+            self._result_headers = headers
+        return self._result_headers
 
     def process_row(self, row):
         # We don't want None in a join.
@@ -258,14 +277,16 @@ class CSVSearch(BaseCSV):
         results = search(q, autocomplete=False, limit=1)
         log_query(q, results)
         if results:
+            result = results[0]
             row.update({
-                'latitude': results[0].lat,
-                'longitude': results[0].lon,
-                'result_address': str(results[0]),
-                'result_score': round(results[0].score, 2),
-                'result_type': results[0].type,
-                'result_id': results[0].id,
+                'latitude': result.lat,
+                'longitude': result.lon,
+                'result_address': str(result),
+                'result_score': round(result.score, 2),
+                'result_type': result.type,
+                'result_id': result.id,
             })
+            self.add_fields(row, result)
         else:
             log_notfound(q)
 
@@ -307,8 +328,4 @@ class CSVReverse(BaseCSV):
                 'result_type': result.type,
                 'result_id': result.id,
             })
-            for field in config.FIELDS:
-                if field.get('type') == 'housenumbers':
-                    continue
-                key = field['key']
-                row['result_{}'.format(key)] = getattr(result, key, '')
+            self.add_fields(row, result)
