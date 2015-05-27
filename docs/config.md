@@ -42,9 +42,11 @@ A bunch of settings you may want to change to fit your custom instance.
 
 #### ATTRIBUTION (string or dict)
 The attribution of the data that will be used in the API results. Can be a
-simple string, or a dict `{source: attribution, source2: attribution2}`.
+simple string, or a dict.
 
     ATTRIBUTION = 'OpenStreetMap Contributors'
+    # Or
+    ATTRIBUTION = {source: attribution, source2: attribution2}
 
 #### EXTRA_FIELDS (list of dicts)
 Sometimes you just want to extend default fields.
@@ -79,10 +81,11 @@ filter means bigger index.
     FILTERS = ["type", "postcode"]
 
 #### LICENCE (string or dict)
-The licence of the data returned by the API. Can be a simple string, or a dict
-`{source: licence, source2: licence2}`.
+The licence of the data returned by the API. Can be a simple string, or a dict.
 
     LICENCE = "ODbL"
+    # Or
+    LICENCE = {source: licence, source2: licence2}
 
 #### LOG_QUERIES (boolean)
 Turn this to `True` to log every query received and firt result if any. *Note:
