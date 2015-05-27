@@ -60,6 +60,10 @@ FIELDS = [
     {'key': 'context'},
 ]
 
+
+# Sometimes you only want to add some fields keeping the default ones.
+EXTRA_FIELDS = []
+
 # Weight of a document own importance:
 IMPORTANCE_WEIGHT = 0.1
 

@@ -21,6 +21,7 @@ if localpath:
 
 HOUSENUMBERS_FIELD = None
 NAME_FIELD = None
+FIELDS.extend(EXTRA_FIELDS)
 for field in FIELDS:
     key = field['key']
     if field.get('type') == 'housenumbers' or key == 'housenumbers':
