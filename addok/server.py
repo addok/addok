@@ -252,24 +252,25 @@ class BaseCSV(View):
             key = field['key']
             row['result_{}'.format(key)] = getattr(result, key, '')
 
-
-class CSVSearch(BaseCSV):
-
-    endpoint = 'search.csv'
-
     @property
     def result_headers(self):
         if not hasattr(self, '_result_headers'):
-            headers = ['latitude', 'longitude', 'result_address',
-                       'result_score', 'result_type', 'result_id']
+            headers = []
             for field in config.FIELDS:
                 if field.get('type') == 'housenumbers':
                     continue
                 key = 'result_{}'.format(field['key'])
                 if key not in headers:
                     headers.append(key)
-            self._result_headers = headers
+            self._result_headers = self.base_headers + headers
         return self._result_headers
+
+
+class CSVSearch(BaseCSV):
+
+    endpoint = 'search.csv'
+    base_headers = ['latitude', 'longitude', 'result_address', 'result_score',
+                    'result_type', 'result_id']
 
     def process_row(self, row):
         # We don't want None in a join.
@@ -294,20 +295,8 @@ class CSVSearch(BaseCSV):
 class CSVReverse(BaseCSV):
 
     endpoint = 'reverse.csv'
-
-    @property
-    def result_headers(self):
-        if not hasattr(self, '_result_headers'):
-            headers = ['result_latitude', 'result_longitude', 'result_address',
-                       'result_distance', 'result_type', 'result_id']
-            for field in config.FIELDS:
-                if field.get('type') == 'housenumbers':
-                    continue
-                key = 'result_{}'.format(field['key'])
-                if key not in headers:
-                    headers.append(key)
-            self._result_headers = headers
-        return self._result_headers
+    base_headers = ['result_latitude', 'result_longitude', 'result_address',
+                    'result_distance', 'result_type', 'result_id']
 
     def process_row(self, row):
         lat = row.get('latitude', row.get('lat', None))
