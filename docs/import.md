@@ -20,7 +20,8 @@ The expected keys are the ones declared in the `FIELDS` attribute of your
 - **importance** is expected
 - **id** is expected
 - **lat** and **lon** are expected
-- **housenumbers** has a special format: `{number: {lat: yyy, lon: xxx}}`
+- **housenumbers** has a special format: `{number: {lat: yyy, lon: xxx}}` (optionally you can
+  add an `id` key for each housenumber entry)
 
 #### Example
 

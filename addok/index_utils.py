@@ -130,7 +130,11 @@ def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
     del doc['housenumbers']
     to_index = {}
     for number, point in housenumbers.items():
-        val = '|'.join([str(number), str(point['lat']), str(point['lon'])])
+        vals = [number, point['lat'], point['lon']]
+        _id = point.get('id')
+        if _id:
+            vals.append(_id)
+        val = '|'.join(map(str, vals))
         for hn in preprocess_housenumber(number):
             doc[housenumber_field_key(hn)] = val
             # Pair every document term to each housenumber, but do not pair
@@ -146,7 +150,7 @@ def deindex_housenumbers(key, doc, tokens):
         field = field.decode()
         if not field.startswith('h|'):
             continue
-        number, lat, lon = value.decode().split('|')
+        number, lat, lon, *_id = value.decode().split('|')
         hn = field[2:]
         for token in tokens:
             k = '|'.join(['didx', hn, token])

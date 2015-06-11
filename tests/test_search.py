@@ -238,3 +238,12 @@ def test_housenumber_are_not_computed_if_another_type_is_asked(factory):
     results = search("11 rue de bamako", type="street")
     assert len(results) == 1
     assert results[0].type == "street"
+
+
+def test_housenumber_id_is_used_when_given(factory):
+    factory(name="rue de Paris", type="street", id="123",
+            housenumbers={'1': {'lat': '48.325', 'lon': '2.256', 'id': 'abc'}})
+    results = search("rue de paris")
+    assert results[0].id == '123'
+    results = search("1 rue de paris")
+    assert results[0].id == 'abc'
