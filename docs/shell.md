@@ -4,6 +4,10 @@ Addok comes with a builtin shell, that allows to inspect the
 internals of the index, tests queries and the string processing.
 Consider it as a debug tool.
 
+Enter in the shell with command:
+
+    addok shell
+
 Here are the available commands:
 
 #### AUTOCOMPLETE
