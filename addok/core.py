@@ -326,9 +326,11 @@ class Search(BaseHelper):
             else:
                 self.not_found.append(token)
         self.common.sort(key=lambda x: x.frequency)
-        self.debug('Taken tokens %s', self.meaningful)
-        self.debug('Common tokens %s', self.common)
-        self.debug('Not found tokens %s', self.not_found)
+        self.debug('Taken tokens: %s', self.meaningful)
+        self.debug('Common tokens: %s', self.common)
+        self.debug('Not found tokens: %s', self.not_found)
+        self.debug('Filters: %s', ['{}={}'.format(k, v)
+                                   for k, v in filters.items()])
         steps = [
             self.step_only_commons,
             self.step_no_meaningful_but_common_try_autocomplete,
