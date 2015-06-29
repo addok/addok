@@ -108,9 +108,14 @@ Do a reverse search. Args: lat lon.
     REVERSE 48.1234 2.9876
 
 #### SEARCH
-Issue a search (default command, can be omitted):
+Issue a search (default command, can be omitted; arguments between `[]` are
+optionnal):
 
     SEARCH rue des Lilas [CENTER lat lon] [LIMIT 10] [AUTOCOMPLETE 0]
+
+Also, every registered filter is available, for example:
+
+    rue des lilas CITY hautmont
 
 #### TOKENIZE
 Inspect how a string is tokenized before being indexed.
