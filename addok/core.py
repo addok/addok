@@ -66,6 +66,8 @@ class Result(object):
 
     def load(self, _id):
         doc = DB.hgetall(_id)
+        if not doc:
+            raise ValueError('id "{}" not found'.format(_id[2:]))
         for key, value in doc.items():
             self.load_db_field(key.decode(), value.decode())
 

@@ -119,6 +119,9 @@ class Cli(object):
                 else:
                     state -= 1
 
+    def error(self, message):
+        print(red(message))
+
     @staticmethod
     def _match_option(key, string):
         matchs = re.findall('{} [^A-Z]*'.format(key), string)
@@ -205,6 +208,8 @@ class Cli(object):
         """Get document from index with its id.
         GET 772210180J"""
         doc = doc_by_id(_id)
+        if not doc:
+            return self.error('id "{}" not found'.format(_id))
         housenumbers = {}
         for key, value in doc.items():
             key = key.decode()
@@ -248,8 +253,7 @@ class Cli(object):
         INDEX 772210180J"""
         doc = doc_by_id(_id)
         if not doc:
-            print(red('Not found.'))
-            return
+            return self.error('id "{}" not found'.format(_id))
         for field in config.FIELDS:
             key = field['key'].encode()
             if key in doc:
@@ -322,9 +326,11 @@ class Cli(object):
         try:
             _id, lat, lon = s.split()
         except:
-            print('Malformed query. Use: ID lat lon')
-            return
-        result = SearchResult(document_key(_id))
+            return self.error('Malformed query. Use: ID lat lon')
+        try:
+            result = SearchResult(document_key(_id))
+        except ValueError as e:
+            return self.error(e)
         center = (float(lat), float(lon))
         km = haversine_distance((float(result.lat), float(result.lon)), center)
         score = km_to_score(km)
