@@ -5,7 +5,7 @@ for example:
 
     gunicorn addok.server:app
 
-For debug, you can run the simple Werzeug server:
+For debug, you can run the simple Werkzeug server:
 
     addok serve
 
