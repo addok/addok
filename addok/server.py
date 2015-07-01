@@ -88,7 +88,7 @@ class View(object, metaclass=WithEndPoint):
     def match_filters(self):
         filters = {}
         for name in config.FILTERS:
-            value = self.request.args.get(name)
+            value = self.request.args.get(name, self.request.form.get(name))
             if value:
                 filters[name] = value
         return filters
@@ -230,6 +230,7 @@ class BaseCSV(View):
             output.write(codecs.BOM_UTF8.decode('utf-8'))
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
         writer.writeheader()
+        self.filters = self.match_filters()
         for row in rows:
             self.process_row(row)
             writer.writerow(row)
@@ -265,6 +266,9 @@ class BaseCSV(View):
             self._result_headers = self.base_headers + headers
         return self._result_headers
 
+    def match_row_filters(self, row):
+        return {k: row.get(v) for k, v in self.filters.items()}
+
 
 class CSVSearch(BaseCSV):
 
@@ -275,7 +279,8 @@ class CSVSearch(BaseCSV):
     def process_row(self, row):
         # We don't want None in a join.
         q = ' '.join([row[k] or '' for k in self.columns])
-        results = search(q, autocomplete=False, limit=1)
+        filters = self.match_row_filters(row)
+        results = search(q, autocomplete=False, limit=1, **filters)
         log_query(q, results)
         if results:
             result = results[0]
@@ -306,7 +311,8 @@ class CSVReverse(BaseCSV):
             lon = float(lon)
         except (ValueError, TypeError):
             return
-        results = reverse(lat=lat, lon=lon, limit=1)
+        filters = self.match_row_filters(row)
+        results = reverse(lat=lat, lon=lon, limit=1, **filters)
         if results:
             result = results[0]
             row.update({

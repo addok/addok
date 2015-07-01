@@ -105,10 +105,16 @@ Batch geocode a csv file.
 - **encoding** (optional): encoding of the file (you can also specify a `charset` in the
   file mimetype), such as 'utf-8' or 'iso-8859-1'
 - **delimiter** (optional): CSV delimiter
+- every filter that has been declared in the [config](config.md) is available as
+  parameter, and you must give the column name to use as value; for example, if you want
+  to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
+  you will pass `postcode=code postal` and every row will be filtered according to the value of 'code postal'
+  column
 
-#### Example
+#### Examples
 
     http -f POST http://locahost:7878/search/csv/ columns='voie' columns='ville' data@path/to/file.csv
+    http -f POST http://locahost:7878/search/csv/ columns='rue' postcode='code postal' data@path/to/file.csv
 
 ### /reverse/csv/
 
@@ -121,3 +127,8 @@ Batch reverse geocode a csv file.
 - **encoding** (optional): encoding of the file (you can also specify a `charset` in the
   file mimetype), such as 'utf-8' or 'iso-8859-1'
 - **delimiter** (optional): CSV delimiter
+- every filter that has been declared in the [config](config.md) is available as
+  parameter, and you must give the column name to use as value; for example, if you want
+  to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
+  you will pass `postcode=code postal` and every row will be filtered according to the value of 'code postal'
+  column

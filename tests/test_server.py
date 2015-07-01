@@ -60,7 +60,7 @@ def test_csv_endpoint(client, factory):
                'Boulangerie Brûlé,rue des avions,31310,Montbrun-Bocage')
     resp = client.post(
         '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
-                       'columns': ['street', 'postcode', 'postcode', 'city']})
+                       'columns': ['street', 'postcode', 'city']})
     data = resp.data.decode()
     assert 'file.geocoded.csv' in resp.headers['Content-Disposition']
     assert 'latitude' in data
@@ -168,3 +168,50 @@ def test_csv_reverse_endpoint(client, factory):
     assert 'result_distance' in data
     assert 'Montbrun-Bocage' in data
     assert 'rue des brûlés' in data
+
+
+def test_csv_endpoint_can_be_filtered(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
+    factory(name='rue des avions', postcode='09350', city='Fornex')
+    content = ('rue,code postal,ville\n'
+               'rue des avions,31310,Montbrun-Bocage')
+    # We are asking to filter by 'postcode' using the column 'code postal'.
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['rue'], 'postcode': 'code postal'})
+    data = resp.data.decode()
+    print(data)
+    assert data.count('31310') == 3
+    assert data.count('09350') == 0
+    content = ('rue,code postal,ville\n'
+               'rue des avions,09350,Fornex')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['rue'], 'postcode': 'code postal'})
+    data = resp.data.decode()
+    assert data.count('09350') == 3
+    assert data.count('31310') == 0
+
+
+def test_csv_reverse_endpoint_can_be_filtered(client, factory):
+    factory(name='rue des brûlés', postcode='31310', city='Montbrun-Bocage',
+            lat=10.22334401, lon=12.33445501,
+            housenumbers={'118': {'lat': 10.22334401, 'lon': 12.33445501}})
+    # First we ask for a street.
+    content = ('latitude,longitude,object\n'
+               '10.223344,12.334455,street\n')
+    resp = client.post(
+        '/reverse/csv/',
+        data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+              'type': 'object'})
+    data = resp.data.decode()
+    assert data.count('118') == 0
+    # Now we ask for a housenumber.
+    content = ('latitude,longitude,object\n'
+               '10.223344,12.334455,housenumber\n')
+    resp = client.post(
+        '/reverse/csv/',
+        data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+              'type': 'object'})
+    data = resp.data.decode()
+    assert data.count('118') == 1
