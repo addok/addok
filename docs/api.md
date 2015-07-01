@@ -101,11 +101,14 @@ Batch geocode a csv file.
 
 - **data**: csv file to be processed
 - **columns**: define the columns of the csv to be concatenated to create the
-  search string (one column by `column` parameter)
+  search string (one column by `columns` parameter)
 - **encoding** (optional): encoding of the file (you can also specify a `charset` in the
   file mimetype), such as 'utf-8' or 'iso-8859-1'
 - **delimiter** (optional): CSV delimiter
 
+#### Example
+
+    http -f POST http://locahost:7878/search/csv/ columns='voie' columns='ville' data@path/to/file.csv
 
 ### /reverse/csv/
 
