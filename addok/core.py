@@ -575,9 +575,9 @@ class Search(BaseHelper):
         if not limit > 0:
             limit = config.BUCKET_LIMIT
         ids = []
-        if self.filters:
-            keys.extend(self.filters)
         if keys:
+            if self.filters:
+                keys.extend(self.filters)
             if len(keys) == 1:
                 ids = DB.zrevrange(keys[0], 0, limit - 1)
             else:
