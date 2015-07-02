@@ -516,7 +516,7 @@ class Search(BaseHelper):
                 self.add_to_bucket(keys + extra_keys)
 
     def fuzzy(self, tokens, include_common=True):
-        if not self.bucket_dry:
+        if not self.bucket_dry or not tokens:
             return
         self.debug('Fuzzy on. Trying with %s.', tokens)
         tokens.sort(key=lambda t: len(t), reverse=True)
@@ -536,17 +536,26 @@ class Search(BaseHelper):
                 continue
             self.debug('Going fuzzy with %s', try_one)
             try_one.make_fuzzy(fuzzy=self.fuzzy)
-            # Only retains tokens that have been seen in the index at least
-            # once with the other tokens.
-            DB.sadd(self.query, *try_one.neighbors)
-            interkeys = [pair_key(k[2:]) for k in keys]
-            interkeys.append(self.query)
-            fuzzy_words = DB.sinter(interkeys)
-            DB.delete(self.query)
-            # Keep the priority we gave in building fuzzy terms (inversion
-            # first, then substitution, etc.).
-            fuzzy_words = [w.decode() for w in fuzzy_words]
-            fuzzy_words.sort(key=lambda x: try_one.neighbors.index(x))
+            if len(keys):
+                # Only retains tokens that have been seen in the index at least
+                # once with the other tokens.
+                DB.sadd(self.query, *try_one.neighbors)
+                interkeys = [pair_key(k[2:]) for k in keys]
+                interkeys.append(self.query)
+                fuzzy_words = DB.sinter(interkeys)
+                DB.delete(self.query)
+                # Keep the priority we gave in building fuzzy terms (inversion
+                # first, then substitution, etc.).
+                fuzzy_words = [w.decode() for w in fuzzy_words]
+                fuzzy_words.sort(key=lambda x: try_one.neighbors.index(x))
+            else:
+                # The token we are considering is alone.
+                fuzzy_words = []
+                for neighbor in try_one.neighbors:
+                    key = token_key(neighbor)
+                    count = DB.zcard(key)
+                    if count:
+                        fuzzy_words.append(neighbor)
             self.debug('Found fuzzy candidates %s', fuzzy_words)
             fuzzy_keys = [token_key(w) for w in fuzzy_words]
             for key in fuzzy_keys:
