@@ -60,7 +60,9 @@ The document fields you want to index. It's a list of dict, each one defining
 an indexed field. Available keys:
 
 - **key** (*mandatory*): the key of the field in the document
-- **boost**: optional boost of the field (default: 1)
+- **boost**: optional boost of the field, define how important is the field
+  in the index, for example one usually define a greater boost for *name* field
+  than for *city* field (default: 1)
 - **null**: define if the field can be null (default: True)
 
 ```
