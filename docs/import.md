@@ -76,6 +76,16 @@ database up and running, just run:
 
 Check out the available [settings for PSQL](config.md#postgresql-settings).
 
+## Read from stdin
+
+`import` command can read from stdin, for example:
+
+    $ addok batch < ~/Data/geo/ban/communes-context.json
+
+Or:
+
+    $ less ~/Data/geo/ban/communes-context.json | addok batch
+
 ## More options
 
 Run `addok --help` to see the available options.
