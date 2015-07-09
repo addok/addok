@@ -139,6 +139,9 @@ class Result(object):
         if housenumber:
             properties['name'] = '{} {}'.format(housenumber,
                                                 properties.get('name'))
+        distance = getattr(self, 'distance', None)
+        if distance is not None:
+            properties['distance'] = round(distance, 3)
         return {
             "type": "Feature",
             "geometry": {
@@ -183,7 +186,7 @@ class Result(object):
 
     def score_by_geo_distance(self, center):
         km = haversine_distance((float(self.lat), float(self.lon)), center)
-        self.distance = km / 1000
+        self.distance = km * 1000
         self.add_score('geo_distance', km_to_score(km), ceiling=0.1)
 
     def score_by_contain(self, query):
