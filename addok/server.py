@@ -339,7 +339,7 @@ class CSVReverse(BaseCSV):
                 'result_latitude': result.lat,
                 'result_longitude': result.lon,
                 'result_address': str(result),
-                'result_distance': round(result.distance, 3),
+                'result_distance': int(result.distance),
                 'result_type': result.type,
                 'result_id': result.id,
             })

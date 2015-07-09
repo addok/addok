@@ -141,7 +141,7 @@ class Result(object):
                                                 properties.get('name'))
         distance = getattr(self, 'distance', None)
         if distance is not None:
-            properties['distance'] = round(distance, 3)
+            properties['distance'] = int(distance)
         return {
             "type": "Feature",
             "geometry": {
