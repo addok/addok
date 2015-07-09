@@ -135,3 +135,11 @@ Batch reverse geocode a csv file.
   to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
   you will pass `postcode=code postal` and every row will be filtered according to the value of 'code postal'
   column
+
+### /get/&lt;doc_id&gt;/
+
+Get a document from its id.
+
+#### Parameters
+
+- **doc_id**: the id of the document

@@ -5,8 +5,8 @@ import geohash
 
 from . import config
 from .db import DB
-from .index_utils import (PROCESSORS, edge_ngram_key, filter_key, geohash_key,
-                          pair_key, token_key)
+from .index_utils import (PROCESSORS, document_key, edge_ngram_key, filter_key,
+                          geohash_key, pair_key, token_key)
 from .textutils.default import (ascii, compare_ngrams, contains, equals,
                                 make_fuzzy, startswith)
 from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
@@ -52,6 +52,8 @@ def compute_geohash_key(geoh, with_neighbors=True):
 
 
 class Result(object):
+
+    MAX_IMPORTANCE = 0.0
 
     def __init__(self, _id):
         self.housenumbers = {}
@@ -126,8 +128,9 @@ class Result(object):
     def to_geojson(self):
         properties = {
             "label": str(self),
-            "score": self.score,
         }
+        if self._scores:
+            properties["score"] = self.score
         for key in self.keys:
             val = getattr(self, key, None)
             if val:
@@ -189,6 +192,11 @@ class Result(object):
             score = 0.1
         self.add_score('contains_boost', score, ceiling=0.1)
 
+    @classmethod
+    def from_id(self, _id):
+        """Return a result from it's document id."""
+        return Result(document_key(_id))
+
 
 class SearchResult(Result):
 
@@ -196,8 +204,6 @@ class SearchResult(Result):
 
 
 class ReverseResult(Result):
-
-    MAX_IMPORTANCE = 0.0
 
     def load(self, *args, **kwargs):
         self.housenumbers = []

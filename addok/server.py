@@ -8,14 +8,15 @@ import os
 
 from pathlib import Path
 
-from werkzeug.exceptions import BadRequest, HTTPException
+from werkzeug.exceptions import BadRequest, HTTPException, NotFound
 from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Request, Response
 
-from .core import reverse, search
+from .core import reverse, search, Result
 from . import config
 
 url_map = Map([
+    Rule('/get/<doc_id>/', endpoint='get'),
     Rule('/search/', endpoint='search'),
     Rule('/reverse/', endpoint='reverse'),
     Rule('/search/csv/', endpoint='search.csv'),
@@ -60,9 +61,9 @@ def log_query(query, results):
 def app(environ, start_response):
     urls = url_map.bind_to_environ(environ)
     try:
-        endpoint, args = urls.match()
+        endpoint, kwargs = urls.match()
         request = Request(environ)
-        response = View.serve(endpoint, request)
+        response = View.serve(endpoint, request, **kwargs)
     except HTTPException as e:
         return e(environ, start_response)
     else:
@@ -94,17 +95,17 @@ class View(object, metaclass=WithEndPoint):
         return filters
 
     @classmethod
-    def serve(cls, endpoint, request):
+    def serve(cls, endpoint, request, **kwargs):
         Class = WithEndPoint.endpoints.get(endpoint)
         if not Class:
             raise BadRequest()
         view = Class(request)
         if request.method == 'POST' and hasattr(view, 'post'):
-            response = view.post()
+            response = view.post(**kwargs)
         elif view.request.method == 'GET' and hasattr(view, 'get'):
-            response = view.get()
+            response = view.get(**kwargs)
         elif view.request.method == 'OPTIONS':
-            response = view.options()
+            response = view.options(**kwargs)
         else:
             raise BadRequest()
         return cls.cors(response)
@@ -119,7 +120,10 @@ class View(object, metaclass=WithEndPoint):
         }
         if query:
             results['query'] = query
-        response = Response(json.dumps(results), mimetype='text/plain')
+        return self.json(results)
+
+    def json(self, content):
+        response = Response(json.dumps(content), mimetype='text/plain')
         response.headers['Content-Type'] = 'application/json; charset=utf-8'
         return response
 
@@ -131,6 +135,20 @@ class View(object, metaclass=WithEndPoint):
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
         return response
+
+
+class Get(View):
+
+    endpoint = 'get'
+
+    def get(self, doc_id):
+        print(doc_id)
+        try:
+            result = Result.from_id(doc_id)
+        except ValueError:
+            raise NotFound()
+        else:
+            return self.json(result.to_geojson())
 
 
 class Search(View):

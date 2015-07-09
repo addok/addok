@@ -222,3 +222,15 @@ def test_csv_reverse_endpoint_can_be_filtered(client, factory):
               'type': 'object'})
     data = resp.data.decode()
     assert data.count('118') == 1
+
+
+def test_get_endpoint(client, factory):
+    factory(name='sentier de la côte', id='123')
+    resp = client.get('/get/123')
+    data = json.loads(resp.data.decode())
+    assert data['properties']['id'] == '123'
+
+
+def test_get_endpoint_with_invalid_id(client):
+    resp = client.get('/get/123')
+    assert resp.status_code == 404

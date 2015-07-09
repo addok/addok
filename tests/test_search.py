@@ -1,4 +1,4 @@
-from addok.core import search
+from addok.core import search, Result
 
 
 def test_should_match_name(street):
@@ -247,3 +247,9 @@ def test_housenumber_id_is_used_when_given(factory):
     assert results[0].id == '123'
     results = search("1 rue de paris")
     assert results[0].id == 'abc'
+
+
+def test_from_id(factory):
+    factory(name="avenue de Paris", type="street", id="123")
+    doc = Result.from_id("123")
+    assert doc.id == "123"
