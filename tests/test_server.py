@@ -132,6 +132,13 @@ def test_reverse_should_return_geojson(client, factory):
     assert 'licence' in data
 
 
+def test_reverse_should_also_accept_lng(client, factory):
+    factory(name='rue des avions', lat=44, lon=4)
+    resp = client.get('/reverse/', query_string={'lat': '44', 'lng': '4'})
+    data = json.loads(resp.data.decode())
+    assert len(data['features']) == 1
+
+
 def test_reverse_without_trailing_slash_should_not_be_redirected(client):
     resp = client.get('/reverse', query_string={'lat': '44', 'lon': '4'})
     assert resp.status_code == 200

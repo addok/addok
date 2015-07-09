@@ -20,8 +20,10 @@ Issue a full text search.
 - **q** *(required)*: string to be searched
 - **limit**: limit the number of results (default: 5)
 - **autocomplete**: activate or deactivate the autocompletion (default: 1)
-- **lat**/**lon**: define a center for giving priority to results close to this center
-- every filter that has been declared in the [config](config.md) is available as parameters
+- **lat**/**lon**: define a center for giving priority to results close to this
+  center (**lng** is also accepted instead of **lon**)
+- every filter that has been declared in the [config](config.md) is available as
+  parameters
 
 #### Response format
 
@@ -86,7 +88,8 @@ Issue a reverse geocoding.
 
 Parameters:
 
-- **lat**/**lon** *(required)*: center to reverse geocode
+- **lat**/**lon** *(required)*: center to reverse geocode (**lng** is also
+  accepted instead of **lon**)
 - every filter that has been declared in the [config](config.md) is available as
   parameters
 

@@ -151,7 +151,8 @@ class Search(View):
             autocomplete = True
         try:
             lat = float(self.request.args.get('lat'))
-            lon = float(self.request.args.get('lon'))
+            lon = float(self.request.args.get('lon',
+                        self.request.args.get('lng')))
         except (ValueError, TypeError):
             lat = None
             lon = None
@@ -171,7 +172,8 @@ class Reverse(View):
     def get(self):
         try:
             lat = float(self.request.args.get('lat'))
-            lon = float(self.request.args.get('lon'))
+            lon = float(self.request.args.get('lon',
+                        self.request.args.get('lng')))
         except (ValueError, TypeError):
             raise BadRequest()
         try:
