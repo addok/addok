@@ -49,14 +49,14 @@ simple string, or a dict.
     ATTRIBUTION = {source: attribution, source2: attribution2}
 
 #### EXTRA_FIELDS (list of dicts)
-Sometimes you just want to extend default fields.
+Sometimes you just want to extend [default fields](#fields-list-of-dicts).
 
     EXTRA_FIELDS = [
         {'key': 'myfield'},
     ]
 
 #### FIELDS (list of dicts)
-The document fields you want to index. It's a list of dict, each one defining
+The document fields *you want to index*. It's a list of dict, each one defining
 an indexed field. Available keys:
 
 - **key** (*mandatory*): the key of the field in the document
