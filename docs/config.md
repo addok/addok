@@ -183,7 +183,8 @@ Addok can query any PostgreSQL database. By default, it's configured to
 query a Nominatim db.
 
 #### PSQL (dict)
-Credential for connecting to PostgreSQL database. Used for import data from Nominatim.
+Credential for connecting to PostgreSQL database. Used for import data from 
+Nominatim for example.
 
     PSQL = {
         'dbname': 'nominatim'
