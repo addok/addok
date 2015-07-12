@@ -117,6 +117,18 @@ def test_csv_endpoint_with_tab_as_delimiter(client, factory):
     assert 'Boulangerie\true des avions Montbrun' in data
 
 
+def test_csv_endpoint_with_one_column(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
+    factory(name='rue des bateaux', postcode='31310', city='Montbrun-Bocage')
+    content = ('adresse\n'
+               'rue des avions Montbrun\nrue des bateaux Montbrun')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['adresse']})
+    data = resp.data.decode()
+    assert 'rue des avions Montbrun' in data
+
+
 def test_reverse_should_return_geojson(client, factory):
     factory(name='rue des avions', lat=44, lon=4)
     resp = client.get('/reverse/', query_string={'lat': '44', 'lon': '4'})

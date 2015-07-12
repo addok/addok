@@ -220,18 +220,35 @@ class BaseCSV(View):
         except (LookupError, UnicodeDecodeError):
             raise BadRequest('Unknown encoding {}'.format(input_encoding))
         dialect = csv.Sniffer().sniff(extract)
-        # Escape double quotes with double quotes if needed.
-        # See 2.7 in http://tools.ietf.org/html/rfc4180
-        dialect.doublequote = True
-        delimiter = self.request.form.get('delimiter')
-        if delimiter:
-            dialect.delimiter = delimiter
+
         f.seek(0)
         # Replace bad carriage returns, as per
         # http://tools.ietf.org/html/rfc4180
         # We may want not to load whole file in memory at some point.
         content = f.read().decode(input_encoding)
         content = content.replace('\r', '').replace('\n', '\r\n')
+
+        # Escape double quotes with double quotes if needed.
+        # See 2.7 in http://tools.ietf.org/html/rfc4180
+        dialect.doublequote = True
+        delimiter = self.request.form.get('delimiter')
+        if delimiter:
+            dialect.delimiter = delimiter
+
+        # See https://github.com/etalab/addok/issues/90#event-353675239
+        # and http://bugs.python.org/issue2078:
+        # one column files will end up with non-sense delimiters.
+        if dialect.delimiter.isalnum():
+            # We quess we are in one column file, let's try to use a character
+            # that will not be in the file content.
+            for char in '|~^°':
+                if char not in content:
+                    dialect.delimiter = char
+                    break
+            else:
+                raise BadRequest('Unable to sniff delimiter,'
+                                 'please add one with "delimiter" parameter.')
+
         # Keep ends, not to glue lines when a field is multilined.
         rows = csv.DictReader(content.splitlines(keepends=True),
                               dialect=dialect)
