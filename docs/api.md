@@ -104,7 +104,7 @@ Batch geocode a csv file.
 
 - **data**: csv file to be processed
 - **columns**: define the columns of the csv to be concatenated to create the
-  search string (one column by `columns` parameter)
+  search string (one column by `columns` parameter; default: all file columns are used)
 - **encoding** (optional): encoding of the file (you can also specify a `charset` in the
   file mimetype), such as 'utf-8' or 'iso-8859-1'
 - **delimiter** (optional): CSV delimiter
