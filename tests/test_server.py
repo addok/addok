@@ -144,10 +144,25 @@ def test_csv_endpoint_with_one_column(client, factory):
 
 
 def test_csv_endpoint_with_not_enough_content(client, factory):
-    factory(name='boulevard de la Plage', city='Arcachon')
-    content = ('q\n''a')
-    resp = client.post('/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv')})  # noqa
-    assert resp.status_code == 400
+    factory(name='rue', postcode='80688', type='city')
+    content = ('q\n'
+               'rue')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'delimiter': ','})
+    data = resp.data.decode()
+    assert '80688' in data
+
+
+def test_csv_endpoint_with_not_enough_content_but_delimiter(client, factory):
+    factory(name='rue', postcode='80688', type='city')
+    content = ('q\n'
+               'rue')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'delimiter': ','})
+    data = resp.data.decode()
+    assert '80688' in data
 
 
 def test_reverse_should_return_geojson(client, factory):

@@ -218,6 +218,7 @@ class BaseCSV(View):
         # to reencode.
         if not file_encoding:
             input_encoding = self.request.form.get('encoding', input_encoding)
+
         try:
             extract = f.read(4096).decode(input_encoding)
         except (LookupError, UnicodeDecodeError):
@@ -225,9 +226,9 @@ class BaseCSV(View):
         try:
             dialect = csv.Sniffer().sniff(extract)
         except csv.Error:
-            raise BadRequest(self.MISSING_DELIMITER_MSG)
-
+            dialect = csv.unix_dialect()
         f.seek(0)
+
         # Replace bad carriage returns, as per
         # http://tools.ietf.org/html/rfc4180
         # We may want not to load whole file in memory at some point.
