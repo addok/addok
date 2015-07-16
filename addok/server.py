@@ -310,7 +310,7 @@ class BaseCSV(View):
 class CSVSearch(BaseCSV):
 
     endpoint = 'search.csv'
-    base_headers = ['latitude', 'longitude', 'result_address', 'result_score',
+    base_headers = ['latitude', 'longitude', 'result_label', 'result_score',
                     'result_type', 'result_id', 'result_housenumber']
 
     def process_row(self, row):
@@ -324,7 +324,7 @@ class CSVSearch(BaseCSV):
             row.update({
                 'latitude': result.lat,
                 'longitude': result.lon,
-                'result_address': str(result),
+                'result_label': str(result),
                 'result_score': round(result.score, 2),
                 'result_type': result.type,
                 'result_id': result.id,
@@ -338,7 +338,7 @@ class CSVSearch(BaseCSV):
 class CSVReverse(BaseCSV):
 
     endpoint = 'reverse.csv'
-    base_headers = ['result_latitude', 'result_longitude', 'result_address',
+    base_headers = ['result_latitude', 'result_longitude', 'result_label',
                     'result_distance', 'result_type', 'result_id',
                     'result_housenumber']
 
@@ -357,7 +357,7 @@ class CSVReverse(BaseCSV):
             row.update({
                 'result_latitude': result.lat,
                 'result_longitude': result.lon,
-                'result_address': str(result),
+                'result_label': str(result),
                 'result_distance': int(result.distance),
                 'result_type': result.type,
                 'result_id': result.id,

@@ -65,7 +65,7 @@ def test_csv_endpoint(client, factory):
     assert 'file.geocoded.csv' in resp.headers['Content-Disposition']
     assert 'latitude' in data
     assert 'longitude' in data
-    assert 'result_address' in data
+    assert 'result_label' in data
     assert 'result_score' in data
     assert data.count('Montbrun-Bocage') == 3
     assert data.count('Boulangerie Brûlé') == 1  # Make sure accents are ok.
@@ -114,7 +114,7 @@ def test_csv_endpoint_with_multilines_fields(client, factory):
     data = resp.data.decode()
     assert 'latitude' in data
     assert 'longitude' in data
-    assert 'result_address' in data
+    assert 'result_label' in data
     assert 'result_score' in data
     # \n as been replaced by \r\n
     assert 'rue des avions\r\n31310\r\nMontbrun-Bocage' in data
@@ -197,7 +197,7 @@ def test_csv_reverse_endpoint(client, factory):
     assert '10.22334401' in data
     assert 'result_longitude' in data
     assert '12.33445501' in data
-    assert 'result_address' in data
+    assert 'result_label' in data
     assert 'result_distance' in data
     assert 'Montbrun-Bocage' in data
     assert 'rue des brûlés' in data
