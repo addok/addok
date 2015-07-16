@@ -71,6 +71,20 @@ def test_csv_endpoint(client, factory):
     assert data.count('Boulangerie Brûlé') == 1  # Make sure accents are ok.
 
 
+def test_csv_endpoint_with_housenumber(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage',
+            housenumbers={'118': {'lat': 10.22334401, 'lon': 12.33445501}})
+    content = ('name,housenumber,street,postcode,city\n'
+               'Boulangerie Brûlé,118,rue des avions,31310,Montbrun-Bocage')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['housenumber', 'street', 'postcode',
+                                   'city']})
+    data = resp.data.decode()
+    assert 'result_housenumber' in data
+    assert data.count('118') == 3
+
+
 def test_csv_endpoint_with_empty_file(client, factory):
     factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
     content = ('name,street,postcode,city\n'
@@ -233,7 +247,7 @@ def test_csv_reverse_endpoint_can_be_filtered(client, factory):
         data={'data': (io.BytesIO(content.encode()), 'file.csv'),
               'type': 'object'})
     data = resp.data.decode()
-    assert data.count('118') == 1
+    assert data.count('118') == 2
 
 
 def test_get_endpoint(client, factory):

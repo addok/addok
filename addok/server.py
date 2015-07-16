@@ -311,7 +311,7 @@ class CSVSearch(BaseCSV):
 
     endpoint = 'search.csv'
     base_headers = ['latitude', 'longitude', 'result_address', 'result_score',
-                    'result_type', 'result_id']
+                    'result_type', 'result_id', 'result_housenumber']
 
     def process_row(self, row):
         # We don't want None in a join.
@@ -328,6 +328,7 @@ class CSVSearch(BaseCSV):
                 'result_score': round(result.score, 2),
                 'result_type': result.type,
                 'result_id': result.id,
+                'result_housenumber': result.housenumber,
             })
             self.add_fields(row, result)
         else:
@@ -338,7 +339,8 @@ class CSVReverse(BaseCSV):
 
     endpoint = 'reverse.csv'
     base_headers = ['result_latitude', 'result_longitude', 'result_address',
-                    'result_distance', 'result_type', 'result_id']
+                    'result_distance', 'result_type', 'result_id',
+                    'result_housenumber']
 
     def process_row(self, row):
         lat = row.get('latitude', row.get('lat', None))
@@ -359,5 +361,6 @@ class CSVReverse(BaseCSV):
                 'result_distance': int(result.distance),
                 'result_type': result.type,
                 'result_id': result.id,
+                'result_housenumber': result.housenumber,
             })
             self.add_fields(row, result)
