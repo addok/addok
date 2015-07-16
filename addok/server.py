@@ -205,6 +205,9 @@ class Reverse(View):
 
 class BaseCSV(View):
 
+    MISSING_DELIMITER_MSG = ('Unable to sniff delimiter, please add one with '
+                             '"delimiter" parameter.')
+
     def post(self):
         f = self.request.files['data']
         input_encoding = 'utf-8'
@@ -219,7 +222,10 @@ class BaseCSV(View):
             extract = f.read(4096).decode(input_encoding)
         except (LookupError, UnicodeDecodeError):
             raise BadRequest('Unknown encoding {}'.format(input_encoding))
-        dialect = csv.Sniffer().sniff(extract)
+        try:
+            dialect = csv.Sniffer().sniff(extract)
+        except csv.Error:
+            raise BadRequest(self.MISSING_DELIMITER_MSG)
 
         f.seek(0)
         # Replace bad carriage returns, as per
@@ -246,8 +252,7 @@ class BaseCSV(View):
                     dialect.delimiter = char
                     break
             else:
-                raise BadRequest('Unable to sniff delimiter,'
-                                 'please add one with "delimiter" parameter.')
+                raise BadRequest(self.MISSING_DELIMITER_MSG)
 
         # Keep ends, not to glue lines when a field is multilined.
         rows = csv.DictReader(content.splitlines(keepends=True),

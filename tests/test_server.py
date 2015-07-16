@@ -143,6 +143,13 @@ def test_csv_endpoint_with_one_column(client, factory):
     assert 'rue des avions Montbrun' in data
 
 
+def test_csv_endpoint_with_not_enough_content(client, factory):
+    factory(name='boulevard de la Plage', city='Arcachon')
+    content = ('q\n''a')
+    resp = client.post('/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv')})  # noqa
+    assert resp.status_code == 400
+
+
 def test_reverse_should_return_geojson(client, factory):
     factory(name='rue des avions', lat=44, lon=4)
     resp = client.get('/reverse/', query_string={'lat': '44', 'lon': '4'})
