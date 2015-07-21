@@ -268,7 +268,7 @@ class BaseCSV(View):
             if key not in fieldnames:
                 fieldnames.append(key)
         output = io.StringIO()
-        if output_encoding == 'utf-8':
+        if output_encoding == 'utf-8' and self.request.form.get('with_bom'):
             # Make Excel happy with UTF-8
             output.write(codecs.BOM_UTF8.decode('utf-8'))
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
