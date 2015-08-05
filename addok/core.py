@@ -80,9 +80,9 @@ class Result(object):
             setattr(self, key, value)
 
     def __str__(self):
-        return getattr(config, 'LABEL', self._label)()
+        return getattr(config, 'MAKE_LABEL', self._label)(self)
 
-    def _label(self):
+    def _label(self, result):
         label = self.name
         city = getattr(self, 'city', None)
         if city and city != self.name:
