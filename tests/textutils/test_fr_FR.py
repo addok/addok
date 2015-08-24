@@ -104,6 +104,10 @@ def test_extract_address(input, expected):
      '60s, avenue du Centre 78180 Montigny-le-Bretonneux'),
     ('place des Terreaux Lyon',
      'place des Terreaux Lyon'),
+    ('241 r de fayet',
+     '241 r de fayet'),
+    ('241 r rue de fayet',
+     '241r rue de fayet'),
 ])
 def test_glue_ordinal(input, expected):
     assert _glue_ordinal(input) == expected

@@ -1,4 +1,8 @@
-# 0.3.0
+## 0.3.1
+
+- fix single character wrongly glued to housenumber ([#99](https://github.com/etalab/addok/issues/99))
+
+## 0.3.0
 
 - use housenumber id as result id, when given ([#38](https://github.com/etalab/addok/issues/38))
 - shell: warn when requested id does not exist ([#75](https://github.com/etalab/addok/issues/75))
