@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/etalab/addok.svg?branch=master)](https://travis-ci.org/etalab/addok)
 [![Requirements Status](https://requires.io/github/etalab/addok/requirements.svg?branch=master)](https://requires.io/github/etalab/addok/requirements/?branch=master)
-[![PyPi version](https://pypip.in/v/addok/badge.png)](https://crate.io/packages/addok/)
+[![PyPi version](https://img.shields.io/pypi/v/addok.svg)](https://pypi.python.org/pypi/addok/)
 
 # Addok
 
