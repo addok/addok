@@ -5,15 +5,14 @@ import json
 import logging
 import logging.handlers
 import os
-
 from pathlib import Path
 
 from werkzeug.exceptions import BadRequest, HTTPException, NotFound
 from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Request, Response
 
-from .core import reverse, search, Result
 from . import config
+from .core import Result, reverse, search
 
 url_map = Map([
     Rule('/get/<doc_id>/', endpoint='get'),

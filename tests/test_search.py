@@ -253,3 +253,11 @@ def test_from_id(factory):
     factory(name="avenue de Paris", type="street", id="123")
     doc = Result.from_id("123")
     assert doc.id == "123"
+
+
+def test_should_compare_with_multiple_values(city, factory):
+    city.update(name=["Vernou-la-Celle-sur-Seine", "Vernou"])
+    factory(name="Vernou", type="city")
+    results = search("vernou")
+    assert len(results) == 2
+    assert results[0].score == results[1].score

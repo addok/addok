@@ -167,6 +167,37 @@ def test_index_housenumber_uses_housenumber_preprocessors():
     assert index[b'h|1b'] == b'1 bis|48.325451|2.25651'
 
 
+def test_allow_list_values():
+    doc = {
+        'id': 'xxxx',
+        'type': 'street',
+        'name': ['Vernou-la-Celle-sur-Seine', 'Vernou'],
+        'city': 'Paris',
+        'lat': '49.32545',
+        'lon': '4.2565'
+    }
+    index_document(doc)
+    assert DB.zscore('w|vernou', 'd|xxxx') == 4
+    assert DB.zscore('w|sel', 'd|xxxx') == 4 / 5
+
+
+def test_deindex_document_should_deindex_list_values():
+    doc = {
+        'id': 'xxxx',
+        'type': 'street',
+        'name': ['Vernou-la-Celle-sur-Seine', 'Vernou'],
+        'city': 'Paris',
+        'lat': '49.32545',
+        'lon': '4.2565'
+    }
+    index_document(doc)
+    deindex_document(doc['id'])
+    assert not DB.exists('d|xxxx')
+    assert not DB.exists('w|vernou')
+    assert not DB.exists('w|sel')
+    assert len(DB.keys()) == 0
+
+
 def test_deindex_document_should_not_fail_if_id_do_not_exist():
     deindex_document('xxxxx')
 

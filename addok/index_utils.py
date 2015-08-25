@@ -4,10 +4,11 @@ from multiprocessing import Pool
 import geohash
 
 from . import config
-from .utils import import_by_path, iter_pipe
 from .db import DB
 from .textutils.default import compute_edge_ngrams
+from .utils import import_by_path, iter_pipe
 
+VALUE_SEPARATOR = '|~|'
 
 PROCESSORS = [import_by_path(path) for path in config.PROCESSORS]
 HOUSENUMBER_PROCESSORS = [import_by_path(path) for path in
@@ -196,20 +197,26 @@ def index_document(doc, update_ngrams=True):
     tokens = {}
     for field in config.FIELDS:
         name = field['key']
-        value = doc.get(name)
-        if not value:
+        values = doc.get(name)
+        if not values:
             if not field.get('null', True):
                 # A mandatory field is null.
                 return
             continue
         if name == config.HOUSENUMBERS_FIELD:
-            housenumbers = value
+            housenumbers = values
         else:
             boost = field.get('boost', config.DEFAULT_BOOST)
             if callable(boost):
                 boost = boost(doc)
             boost = boost + importance
-            extract_tokens(tokens, value, boost=boost)
+            if isinstance(values, (list, tuple)):
+                # We can't save a list as redis hash value.
+                doc[name] = VALUE_SEPARATOR.join(values)
+            else:
+                values = [values]
+            for value in values:
+                extract_tokens(tokens, value, boost=boost)
     index_tokens(pipe, tokens, key, update_ngrams)
     index_pairs(pipe, tokens.keys())
     index_filters(pipe, key, doc)
@@ -228,9 +235,12 @@ def deindex_document(id_):
     tokens = []
     for field in config.FIELDS:
         name = field['key']
-        value = doc.get(name.encode())
-        if value:
-            tokens.extend(deindex_field(key, value))
+        values = doc.get(name.encode())
+        if values:
+            if not isinstance(values, (list, tuple)):
+                values = [values]
+            for value in values:
+                tokens.extend(deindex_field(key, value))
     deindex_pairs(tokens)
     deindex_filters(key, doc)
     deindex_housenumbers(key, doc, tokens)

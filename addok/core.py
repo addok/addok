@@ -5,8 +5,9 @@ import geohash
 
 from . import config
 from .db import DB
-from .index_utils import (PROCESSORS, document_key, edge_ngram_key, filter_key,
-                          geohash_key, pair_key, token_key)
+from .index_utils import (PROCESSORS, VALUE_SEPARATOR, document_key,
+                          edge_ngram_key, filter_key, geohash_key, pair_key,
+                          token_key)
 from .textutils.default import (ascii, compare_ngrams, contains, equals,
                                 make_fuzzy, startswith)
 from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
@@ -56,44 +57,70 @@ class Result(object):
     MAX_IMPORTANCE = 0.0
 
     def __init__(self, _id):
-        self.housenumbers = {}
         self.housenumber = None
-        self.importance = 0.0  # Default value, can be overriden by db values.
         self._scores = {}
         self.load(_id)
         if self.MAX_IMPORTANCE:
+            importance = getattr(self, 'importance', 0.0)
             self.add_score('importance',
-                           float(self.importance) * config.IMPORTANCE_WEIGHT,
+                           float(importance) * config.IMPORTANCE_WEIGHT,
                            self.MAX_IMPORTANCE)
 
     def load(self, _id):
+        self._cache = {}
         doc = DB.hgetall(_id)
         if not doc:
             raise ValueError('id "{}" not found'.format(_id[2:]))
-        for key, value in doc.items():
-            self.load_db_field(key.decode(), value.decode())
+        self._doc = {k.decode(): v.decode() for k, v in doc.items()}
+        self.load_housenumbers()
 
-    def load_db_field(self, key, value):
-        if key.startswith('h|'):
-            self.housenumbers[key[2:]] = value
-        else:
-            setattr(self, key, value)
+    def load_housenumbers(self):
+        self.housenumbers = {}
+        for key, value in self._doc.items():
+            if key.startswith('h|'):
+                self.housenumbers[key[2:]] = value
+
+    def __getattr__(self, key):
+        if key not in self._cache:
+            # By convention, in case of multiple values, first value is default
+            # value, others are aliases.
+            value = self._rawattr(key)[0]
+            self._cache[key] = value
+        return self._cache[key]
 
     def __str__(self):
-        return getattr(config, 'MAKE_LABEL', self._label)(self)
+        return self.labels[0]
 
-    def _label(self, result):
-        label = self.name
-        city = getattr(self, 'city', None)
-        if city and city != self.name:
-            postcode = getattr(self, 'postcode', None)
-            if postcode:
-                label = '{} {}'.format(label, postcode)
-            label = '{} {}'.format(label, city)
-        housenumber = getattr(self, 'housenumber', None)
-        if housenumber:
-            label = '{} {}'.format(housenumber, label)
-        return label
+    def _rawattr(self, key):
+        return self._doc.get(key, '').split(VALUE_SEPARATOR)
+
+    @property
+    def labels(self):
+        if hasattr(config, 'MAKE_LABELS'):
+            self._labels = config.MAKE_LABELS(self)
+        if not self._labels:
+            self._labels = []
+            city = self.city
+            postcode = self.postcode
+            names = self._rawattr('name')
+            if not isinstance(names, (list, tuple)):
+                names = [names]
+            for name in names:
+                labels = []
+                label = name
+                labels.append(label)
+                if city and city != label:
+                    if postcode:
+                        label = '{} {}'.format(label, postcode)
+                        labels.insert(0, label)
+                    label = '{} {}'.format(label, city)
+                    labels.insert(0, label)
+                housenumber = getattr(self, 'housenumber', None)
+                if housenumber:
+                    label = '{} {}'.format(housenumber, label)
+                    labels.insert(0, label)
+                self._labels.extend(labels)
+        return self._labels
 
     def __repr__(self):
         return '<{} - {} ({})>'.format(str(self), self.id, self.score)
@@ -120,7 +147,9 @@ class Result(object):
     @property
     def keys(self):
         to_filter = ['importance', 'housenumbers', 'lat', 'lon']
-        for key in self.__dict__.keys():
+        keys = ['housenumber']
+        keys.extend(self._doc.keys())
+        for key in keys:
             if key.startswith('_') or key in to_filter:
                 continue
             yield key
@@ -139,9 +168,10 @@ class Result(object):
         if housenumber:
             properties['name'] = '{} {}'.format(housenumber,
                                                 properties.get('name'))
-        distance = getattr(self, 'distance', None)
-        if distance is not None:
-            properties['distance'] = int(distance)
+        try:
+            properties['distance'] = int(self.distance)
+        except ValueError:
+            pass
         return {
             "type": "Feature",
             "geometry": {
@@ -152,7 +182,8 @@ class Result(object):
         }
 
     def add_score(self, name, score, ceiling):
-        self._scores[name] = (score, ceiling)
+        if score >= self._scores.get(name, (0, 0))[0]:
+            self._scores[name] = (score, ceiling)
 
     @property
     def score(self):
@@ -166,23 +197,31 @@ class Result(object):
     def score_by_autocomplete_distance(self, query):
         score = 0
         query = ascii(query)
-        name = ascii(self.name)
-        label = str(self)
-        if equals(query, name) or equals(query, label):
-            score = 1.0
-        elif startswith(query, label):
-            score = 0.9
-        elif contains(query, name):
-            score = 0.7
-        if score:
-            self.add_score('str_distance', score, ceiling=1.0)
-        else:
-            self.score_by_ngram_distance(query, label)
+        labels = []
+        for label in self.labels:
+            label = ascii(label)
+            labels.append(label)  # Cache ascii folding.
+            if equals(query, label):
+                score = 1.0
+            elif startswith(query, label):
+                score = 0.9
+            elif contains(query, label):
+                score = 0.7
+            if score:
+                self.add_score('str_distance', score, ceiling=1.0)
+                if score >= config.MATCH_THRESHOLD:
+                    break
+        if not score:
+            self.score_by_ngram_distance(query, labels=labels)
 
-    def score_by_ngram_distance(self, query, label=None):
-        # Label can be given, so we cache all the preprocessing on the string.
-        score = compare_ngrams(label or str(self), query)
-        self.add_score('str_distance', score, ceiling=1.0)
+    def score_by_ngram_distance(self, query, labels=None):
+        query = ascii(query)
+        for label in labels or self.labels:
+            label = ascii(label)
+            score = compare_ngrams(label, query)
+            self.add_score('str_distance', score, ceiling=1.0)
+            if score >= config.MATCH_THRESHOLD:
+                break
 
     def score_by_geo_distance(self, center):
         km = haversine_distance((float(self.lat), float(self.lon)), center)
@@ -208,22 +247,13 @@ class SearchResult(Result):
 
 class ReverseResult(Result):
 
-    def load(self, *args, **kwargs):
-        self.housenumbers = []
-        super().load(*args, **kwargs)
-
-    def load_db_field(self, key, value):
-        if key.startswith('h|'):
-            self.housenumbers.append(value.split('|'))
-        else:
-            setattr(self, key, value)
-
     def load_closer(self, lat, lon):
 
         def sort(h):
             return haversine_distance((float(h[1]), float(h[2])), (lat, lon))
 
-        candidates = self.housenumbers + [(None, self.lat, self.lon)]
+        candidates = [v.split('|') for v in self.housenumbers.values()]
+        candidates.append((None, self.lat, self.lon))
         candidates.sort(key=sort)
         closer = candidates[0]
         if closer[0]:  # Means a housenumber is closer than street centerpoint.

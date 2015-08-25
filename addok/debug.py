@@ -10,10 +10,10 @@ from pathlib import Path
 import geohash
 
 from . import config
-from .core import (Search, SearchResult, Token, make_fuzzy, reverse,
-                   token_frequency, preprocess_query, compute_geohash_key)
+from .core import (Search, SearchResult, Token, compute_geohash_key,
+                   make_fuzzy, preprocess_query, reverse, token_frequency)
 from .db import DB
-from .index_utils import document_key, pair_key, token_key
+from .index_utils import VALUE_SEPARATOR, document_key, pair_key, token_key
 from .textutils.default import compare_ngrams
 from .utils import haversine_distance, km_to_score
 
@@ -217,7 +217,8 @@ class Cli(object):
             if key.startswith('h|'):
                 housenumbers[key] = value
             else:
-                print(white(key), magenta(value))
+                print(white(key),
+                      magenta(', '.join(value.split(VALUE_SEPARATOR))))
         if housenumbers:
             def sorter(item):
                 k, v = item
