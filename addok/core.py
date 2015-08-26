@@ -150,7 +150,7 @@ class Result(object):
         keys = ['housenumber']
         keys.extend(self._doc.keys())
         for key in keys:
-            if key.startswith('_') or key in to_filter:
+            if key.startswith(('_', 'h|')) or key in to_filter:
                 continue
             yield key
 
