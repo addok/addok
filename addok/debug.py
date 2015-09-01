@@ -27,7 +27,11 @@ def indexed_string(s):
 
 
 def word_frequency(word):
-    token = list(preprocess_query(word))[0]
+    try:
+        token = list(preprocess_query(word))[0]
+    except IndexError:
+        # Word has been filtered out.
+        return
     return token_frequency(token)
 
 
