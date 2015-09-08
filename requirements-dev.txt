@@ -1,1 +1,2 @@
 pytest
+pytest-cov==2.1.0
