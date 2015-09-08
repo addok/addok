@@ -19,3 +19,4 @@ notfound.log*
 queries.log*
 build/
 dist/
+.coverage
