@@ -20,18 +20,6 @@ TYPES_REGEX = '|'.join(
 )
 
 
-def split_address(q):
-    m = re.search(
-        "^(?P<type>" + TYPES_REGEX + ")"
-        "[a-z ']+(?P<name>[\wçàèéuâêôîûöüïäë '\-]+)", q)
-    return m.groupdict() if m else {}
-
-
-def split_housenumber(q):
-    m = re.search("^(?P<number>[\d]+)/?(?P<ordinal>([^\d]+|[\d]{1}))?", q)
-    return m.groupdict() if m else {}
-
-
 def _clean_query(q):
     q = re.sub('c(e|é)dex ?[\d]*', '', q, flags=re.IGNORECASE)
     q = re.sub('bp ?[\d]*', '', q, flags=re.IGNORECASE)
