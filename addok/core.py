@@ -27,7 +27,7 @@ def token_frequency(token):
     return token_key_frequency(token_key(token))
 
 
-def score_autocomplete(key):
+def score_autocomplete_candidates(key):
     card = DB.zcard(key)
     if card > config.COMMON_THRESHOLD:
         return 0
@@ -271,7 +271,6 @@ class Token(object):
         self.is_last = is_last
         self.key = token_key(original)
         self.db_key = None
-        self.fuzzy_keys = []
 
     def __len__(self):
         return len(self.original)
@@ -293,7 +292,8 @@ class Token(object):
         key = edge_ngram_key(self.original)
         self.autocomplete_keys = [token_key(k.decode())
                                   for k in DB.smembers(key)]
-        self.autocomplete_keys.sort(key=score_autocomplete, reverse=True)
+        self.autocomplete_keys.sort(key=score_autocomplete_candidates,
+                                    reverse=True)
 
     @property
     def is_common(self):
@@ -304,10 +304,6 @@ class Token(object):
         if not hasattr(self, '_frequency'):
             self._frequency = token_frequency(self.original)
         return self._frequency
-
-    @property
-    def is_fuzzy(self):
-        return not self.db_key and self.fuzzy_keys
 
     def isdigit(self):
         return self.original.isdigit()
