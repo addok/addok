@@ -32,13 +32,6 @@ def yielder(func):
     return wrapper
 
 
-def dumb_geo_distance(point1, point2):
-    lat1, lon1 = point1
-    lat2, lon2 = point2
-    d = abs((lat2 - lat1) + (lon2 - lon1))
-    return d
-
-
 def haversine_distance(point1, point2):
     """
     Calculate the great circle distance between two points
