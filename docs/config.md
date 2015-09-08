@@ -177,6 +177,13 @@ Minimum length of computed edge ngrams.
 
     MIN_EDGE_NGRAMS = 3
 
+#### MAKE_LABELS (func)
+Function to override labels built for string comparison with query
+at scoring time. Takes a `result` object as argument and must return a
+list of strings.
+
+    MAKE_LABELS = lambda r: return [r.name + 'my custom thing']
+
 #### MATCH_THRESHOLD (float between 0 and 1)
 Min score used to consider a result may *match* the query.
 

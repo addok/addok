@@ -261,3 +261,19 @@ def test_should_compare_with_multiple_values(city, factory):
     results = search("vernou")
     assert len(results) == 2
     assert results[0].score == results[1].score
+
+
+def test_config_make_labels_is_used_if_defined(config, factory):
+
+    def make_labels(result):
+        if result.name == "porte des lilas":
+            return ['areallybadlabel']
+        return [result.name]
+
+    config.MAKE_LABELS = make_labels
+    factory(name="porte des lilas", type="street", id="456", importance=1)
+    factory(name="porte des Lilas", type="street", id="123")
+    results = search("porte des lilas")
+    assert results[0].id == "123"
+    assert results[0].score > 0.9
+    assert results[1].score > 0.1
