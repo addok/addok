@@ -172,6 +172,11 @@ Above this treshold, we avoid intersecting sets.
 
     INTERSECT_LIMIT = 100000
 
+#### MIN_EDGE_NGRAMS (int)
+Minimum length of computed edge ngrams.
+
+    MIN_EDGE_NGRAMS = 3
+
 #### MATCH_THRESHOLD (float between 0 and 1)
 Min score used to consider a result may *match* the query.
 

@@ -1,6 +1,6 @@
 from addok.db import DB
 from addok.index_utils import (index_edge_ngrams, index_document,
-                               deindex_document)
+                               deindex_document, create_edge_ngrams)
 
 
 def count_keys():
@@ -274,6 +274,18 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
     assert not DB.exists('d|xxxx')
 
 
+def test_null_value_should_not_be_index(config):
+    doc = {
+        'id': 'xxxx',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'name': 'Port-Cergy',
+        'city': ''
+    }
+    index_document(doc)
+    assert 'city' not in DB.hgetall('d|xxxx')
+
+
 def test_field_with_only_non_alphanumeric_chars_is_not_indexed():
     doc = {
         'id': 'xxxx',
@@ -284,3 +296,26 @@ def test_field_with_only_non_alphanumeric_chars_is_not_indexed():
     }
     index_document(doc)
     assert 'city' not in DB.hgetall('d|xxxx')
+
+
+def test_create_edge_ngrams(config):
+    config.MIN_EDGE_NGRAMS = 2
+    doc = {
+        'id': 'xxxx',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'name': '28 Lilas',  # 28 should not appear in ngrams
+        'city': 'Paris'
+    }
+    index_document(doc, update_ngrams=False)
+    assert not DB.exists('n|li')
+    assert not DB.exists('n|lil')
+    assert not DB.exists('n|pa')
+    assert not DB.exists('n|par')
+    create_edge_ngrams()
+    assert DB.exists('n|li')
+    assert DB.exists('n|lil')
+    assert DB.exists('n|pa')
+    assert DB.exists('n|par')
+    assert not DB.exists('n|28')
+    assert len(DB.keys()) == 12
