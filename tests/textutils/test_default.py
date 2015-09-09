@@ -96,6 +96,16 @@ def test_compute_edge_ngrams():
     ]
 
 
+def test_compute_edge_ngrams_honor_min_edge_ngrams_setting(config):
+    config.MIN_EDGE_NGRAMS = 1
+    assert compute_edge_ngrams('abcd') == ['a', 'ab', 'abc']
+
+
+def test_compute_edge_ngrams_honor_max_edge_ngrams_setting(config):
+    config.MAX_EDGE_NGRAMS = 5
+    assert compute_edge_ngrams('abcdefghijklmn') == ['abc', 'abcd', 'abcde']
+
+
 @pytest.mark.parametrize('candidate,target', [
     ['22 rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
     ['rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],

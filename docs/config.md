@@ -172,6 +172,11 @@ Above this treshold, we avoid intersecting sets.
 
     INTERSECT_LIMIT = 100000
 
+#### MAX_EDGE_NGRAMS (int)
+Maximum length of computed edge ngrams.
+
+    MAX_EDGE_NGRAMS = 20
+
 #### MIN_EDGE_NGRAMS (int)
 Minimum length of computed edge ngrams.
 

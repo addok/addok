@@ -123,4 +123,5 @@ def compute_edge_ngrams(token, min=None):
     """Compute edge ngram of token from min. Does not includes token itself."""
     if min is None:
         min = config.MIN_EDGE_NGRAMS
+    token = token[:config.MAX_EDGE_NGRAMS + 1]
     return [token[:i] for i in range(min, len(token))]
