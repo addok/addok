@@ -17,7 +17,7 @@ The expected keys are the ones declared in the `FIELDS` attribute of your
 [configuration](config.md), plus some special cases:
 
 - **type** is expected even if not declared as index field
-- **importance** is expected
+- **importance** is expected; must be a `float` between 0 and 1
 - **id** is expected
 - **lat** and **lon** are expected
 - **housenumbers** has a special format: `{number: {lat: yyy, lon: xxx}}` (optionally you can
