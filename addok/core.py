@@ -409,7 +409,8 @@ class Search(BaseHelper):
                     ids = DB.zrevrange(first.db_key, 0, 500)
                     for id_ in ids:
                         count += 1
-                        if all(DB.zrank(k, id_) for k in others):
+                        if all(DB.sismember(f, id_) for f in self.filters) \
+                           and all(DB.zrank(k, id_) for k in others):
                             self.bucket.add(id_)
                         if self.bucket_full:
                             break
