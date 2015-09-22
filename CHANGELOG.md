@@ -1,3 +1,12 @@
+## dev
+- fix filters not taken into account in manual scan ([#105](https://github.com/etalab/addok/issues/105))
+- added experimental list support for document values
+- Added MIN_EDGE_NGRAMS and MAX_EDGE_NGRAMS settings ([#102](https://github.com/etalab/addok/issues/102))
+- documented MAKE_LABELS setting
+- Allow to pass functions as PROCESSORS, instead of path
+- remove raw housenumbers returned in result properties
+
+
 ## 0.3.1
 
 - fix single character wrongly glued to housenumber ([#99](https://github.com/etalab/addok/issues/99))
