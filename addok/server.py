@@ -141,7 +141,6 @@ class Get(View):
     endpoint = 'get'
 
     def get(self, doc_id):
-        print(doc_id)
         try:
             result = Result.from_id(doc_id)
         except ValueError:
