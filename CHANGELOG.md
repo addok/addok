@@ -5,6 +5,8 @@
 - documented MAKE_LABELS setting
 - Allow to pass functions as PROCESSORS, instead of path
 - remove raw housenumbers returned in result properties
+- do not consider filter if column is empty, in csv ([#109](https://github.com/etalab/addok/issues/109))
+- allow to pass lat and lon to define columns to be used for geo preference, in csv ([#110](https://github.com/etalab/addok/issues/110))
 
 
 ## 0.3.1
