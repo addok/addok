@@ -346,7 +346,7 @@ class Search(BaseHelper):
         self.common = []
         self.keys = []
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
-        self.filters = [filter_key(k, v) for k, v in filters.items()]
+        self.filters = [filter_key(k, v) for k, v in filters.items() if v]
         self.query = query.strip()
         self.preprocess()
         if not self.tokens:

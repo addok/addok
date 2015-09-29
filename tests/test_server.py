@@ -235,7 +235,6 @@ def test_csv_endpoint_can_be_filtered(client, factory):
         '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
                        'columns': ['rue'], 'postcode': 'code postal'})
     data = resp.data.decode()
-    print(data)
     assert data.count('31310') == 3
     assert data.count('09350') == 0
     content = ('rue,code postal,ville\n'
@@ -246,6 +245,18 @@ def test_csv_endpoint_can_be_filtered(client, factory):
     data = resp.data.decode()
     assert data.count('09350') == 3
     assert data.count('31310') == 0
+
+
+def test_csv_endpoint_skip_empty_filter_value(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage')
+    content = ('rue,code postal,ville\n'
+               'rue des avions,,Montbrun-Bocage')
+    # We are asking to filter by 'postcode' using the column 'code postal'.
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['rue'], 'postcode': 'code postal'})
+    data = resp.data.decode()
+    assert data.count('31310') == 2
 
 
 def test_csv_reverse_endpoint_can_be_filtered(client, factory):
