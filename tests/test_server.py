@@ -259,6 +259,32 @@ def test_csv_endpoint_skip_empty_filter_value(client, factory):
     assert data.count('31310') == 2
 
 
+def test_csv_endpoint_can_use_geoboost(client, factory):
+    factory(name='rue des avions', postcode='31310', city='Montbrun-Bocage',
+            lat=10.22334401, lon=12.33445501)
+    factory(name='rue des avions', postcode='59118', city='Wambrechies',
+            lat=50.6845, lon=3.0480)
+    content = ('rue,latitude,longitude\n'
+               'rue des avions,10.22334401,12.33445501')
+    # We are asking to center with 'lat' & 'lon'.
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['rue'], 'lat': 'latitude',
+                       'lon': 'longitude'})
+    data = resp.data.decode()
+    assert data.count('31310') == 2
+    assert data.count('59118') == 0
+    content = ('rue,latitude,longitude\n'
+               'rue des avions,50.6845,3.0480')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'columns': ['rue'], 'lat': 'latitude',
+                       'lon': 'longitude'})
+    data = resp.data.decode()
+    assert data.count('59118') == 2
+    assert data.count('31310') == 0
+
+
 def test_csv_reverse_endpoint_can_be_filtered(client, factory):
     factory(name='rue des brûlés', postcode='31310', city='Montbrun-Bocage',
             lat=10.22334401, lon=12.33445501,

@@ -321,6 +321,14 @@ class CSVSearch(BaseCSV):
         # We don't want None in a join.
         q = ' '.join([row[k] or '' for k in self.columns])
         filters = self.match_row_filters(row)
+        lat_column = self.request.form.get('lat')
+        lon_column = self.request.form.get('lon')
+        if lon_column and lat_column:
+            lat = row.get(lat_column)
+            lon = row.get(lon_column)
+            if lat and lon:
+                filters['lat'] = float(lat)
+                filters['lon'] = float(lon)
         results = search(q, autocomplete=False, limit=1, **filters)
         log_query(q, results)
         if results:

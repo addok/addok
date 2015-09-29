@@ -113,6 +113,8 @@ Batch geocode a csv file.
   to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
   you will pass `postcode=code postal` and every row will be filtered according to the value of 'code postal'
   column
+- `lat` and `lon` parameters, like filters, can be used to define columns names that contain latitude and longitude
+  values, for adding a preference center in the geocoding of each row
 
 #### Examples
 
