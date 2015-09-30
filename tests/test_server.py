@@ -2,6 +2,9 @@ import io
 import json
 
 
+from addok.server import View
+
+
 def test_search_without_query_should_return_400(client):
     resp = client.get('/search/')
     assert resp.status_code == 400
@@ -319,3 +322,19 @@ def test_get_endpoint(client, factory):
 def test_get_endpoint_with_invalid_id(client):
     resp = client.get('/get/123')
     assert resp.status_code == 404
+
+
+def test_allow_to_extend_api_endpoints(client, config):
+    config.URL_MAP = None  # Reset map.
+    config.API_ENDPOINTS = config.API_ENDPOINTS + [('/custom/<param>/',
+                                                    'custom')]
+
+    class MyEndPoint(View):
+        endpoint = 'custom'
+
+        def get(self, param):
+            return param
+
+    resp = client.get('/custom/xxxxx/')
+    assert resp.status_code == 200
+    assert resp.data == b'xxxxx'

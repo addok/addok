@@ -14,14 +14,6 @@ from werkzeug.wrappers import Request, Response
 from . import config
 from .core import Result, reverse, search
 
-url_map = Map([
-    Rule('/get/<doc_id>/', endpoint='get'),
-    Rule('/search/', endpoint='search'),
-    Rule('/reverse/', endpoint='reverse'),
-    Rule('/search/csv/', endpoint='search.csv'),
-    Rule('/reverse/csv/', endpoint='reverse.csv'),
-    Rule('/csv/', endpoint='search.csv'),  # Retrocompat.
-], strict_slashes=False)
 
 if config.LOG_NOT_FOUND:
     notfound_logger = logging.getLogger('notfound')
@@ -58,7 +50,10 @@ def log_query(query, results):
 
 
 def app(environ, start_response):
-    urls = url_map.bind_to_environ(environ)
+    if not config.URL_MAP:
+        rules = [Rule(path, endpoint=endpoint) for path, endpoint in config.API_ENDPOINTS]  # noqa
+        config.URL_MAP = Map(rules, strict_slashes=False)
+    urls = config.URL_MAP.bind_to_environ(environ)
     try:
         endpoint, kwargs = urls.match()
         request = Request(environ)
@@ -107,6 +102,10 @@ class View(object, metaclass=WithEndPoint):
             response = view.options(**kwargs)
         else:
             raise BadRequest()
+        if isinstance(response, tuple):
+            response = Response(*response)
+        elif isinstance(response, str):
+            response = Response(response)
         return cls.cors(response)
 
     def to_geojson(self, results, query=None):

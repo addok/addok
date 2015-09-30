@@ -48,7 +48,15 @@ HOUSENUMBER_PROCESSORS = [
 BATCH_PROCESSORS = (
     'addok.batch.default.to_json',
 )
-
+API_ENDPOINTS = [
+    ('/get/<doc_id>/', 'get'),
+    ('/search/', 'search'),
+    ('/reverse/', 'reverse'),
+    ('/search/csv/', 'search.csv'),
+    ('/reverse/csv/', 'reverse.csv'),
+    ('/csv/', 'search.csv'),  # Retrocompat.
+]
+URL_MAP = None
 
 # Fields to be indexed
 # If you want a housenumbers field but need to name it differently, just add
