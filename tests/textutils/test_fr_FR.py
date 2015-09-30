@@ -33,6 +33,8 @@ from addok.textutils.fr_FR import (_clean_query, _extract_address,
      "Rue Louis des Etages"),
     ("route express",
      "route express"),
+    ("air s/ l'adour",
+     "air sur l'adour"),
 ])
 def test_clean_query(input, expected):
     assert _clean_query(input) == expected
