@@ -118,8 +118,8 @@ Batch geocode a csv file.
 
 #### Examples
 
-    http -f POST http://locahost:7878/search/csv/ columns='voie' columns='ville' data@path/to/file.csv
-    http -f POST http://locahost:7878/search/csv/ columns='rue' postcode='code postal' data@path/to/file.csv
+    http -f POST http://localhost:7878/search/csv/ columns='voie' columns='ville' data@path/to/file.csv
+    http -f POST http://localhost:7878/search/csv/ columns='rue' postcode='code postal' data@path/to/file.csv
 
 ### /reverse/csv/
 
