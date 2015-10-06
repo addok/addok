@@ -55,13 +55,15 @@ def compute_geohash_key(geoh, with_neighbors=True):
 class Result(object):
 
     MAX_IMPORTANCE = 0.0
+    DEFAULT_IMPORTANCE = 0.0
 
     def __init__(self, _id):
         self.housenumber = None
         self._scores = {}
         self.load(_id)
         if self.MAX_IMPORTANCE:
-            importance = getattr(self, 'importance', 0.0)
+            importance = getattr(self, 'importance', None)
+            importance = importance or self.DEFAULT_IMPORTANCE
             self.add_score('importance',
                            float(importance) * config.IMPORTANCE_WEIGHT,
                            self.MAX_IMPORTANCE)
