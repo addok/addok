@@ -252,10 +252,10 @@ class BaseCSV(View):
                 raise BadRequest(self.MISSING_DELIMITER_MSG)
 
         # Keep ends, not to glue lines when a field is multilined.
-        rows = csv.DictReader(content.splitlines(keepends=True),
-                              dialect=dialect)
-        fieldnames = rows.fieldnames[:]
-        self.columns = self.request.form.getlist('columns') or rows.fieldnames
+        self.rows = csv.DictReader(content.splitlines(keepends=True),
+                                   dialect=dialect)
+        fieldnames = self.rows.fieldnames[:]
+        self.columns = self.request.form.getlist('columns') or self.rows.fieldnames  # noqa
         for column in self.columns:
             if column not in fieldnames:
                 raise BadRequest("Cannot found column '{}' in columns "
@@ -270,7 +270,7 @@ class BaseCSV(View):
         writer = csv.DictWriter(output, fieldnames, dialect=dialect)
         writer.writeheader()
         self.filters = self.match_filters()
-        for row in rows:
+        for row in self.rows:
             self.process_row(row)
             writer.writerow(row)
         output.seek(0)
