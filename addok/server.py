@@ -14,7 +14,6 @@ from werkzeug.wrappers import Request, Response
 from . import config
 from .core import Result, reverse, search
 
-
 if config.LOG_NOT_FOUND:
     notfound_logger = logging.getLogger('notfound')
     notfound_logger.setLevel(logging.DEBUG)

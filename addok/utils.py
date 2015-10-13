@@ -58,3 +58,48 @@ def km_to_score(km):
     # Score between 0 and 0.1 (close to 0 km will be close to 0.1, and 100 and
     # above will be 0).
     return 0.0 if km > 100 else .1 * exp(-(km / 50.0) ** 2)
+
+
+COLORS = {
+    'red': '31',
+    'green': '32',
+    'yellow': '33',
+    'blue': '34',
+    'magenta': '35',
+    'cyan': '36',
+    'white': '37',
+    'reset': '39'
+}
+
+
+def colorText(s, color):
+    # color should be a string from COLORS
+    return '\033[%sm%s\033[%sm' % (COLORS[color], s, COLORS['reset'])
+
+
+def red(s):
+    return colorText(s, 'red')
+
+
+def green(s):
+    return colorText(s, 'green')
+
+
+def yellow(s):
+    return colorText(s, 'yellow')
+
+
+def blue(s):
+    return colorText(s, 'blue')
+
+
+def magenta(s):
+    return colorText(s, 'magenta')
+
+
+def cyan(s):
+    return colorText(s, 'cyan')
+
+
+def white(s):
+    return colorText(s, 'white')

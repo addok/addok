@@ -1,5 +1,6 @@
 import imp
 import os
+import sys
 
 from .default import *  # noqa
 
@@ -12,7 +13,10 @@ if localpath:
         with open(localpath) as config_file:
             exec(compile(config_file.read(), localpath, 'exec'), d.__dict__)
     except IOError as e:
-        print('Unable to import', localpath, 'from', 'ADDOK_CONFIG_MODULE')
+        from addok.utils import red
+        print(red('Unable to import {} from '
+                  'ADDOK_CONFIG_MODULE'.format(localpath)))
+        sys.exit(1)
     else:
         print('Loaded local config from', localpath)
         for key in dir(d):
