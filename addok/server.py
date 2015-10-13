@@ -76,6 +76,8 @@ class WithEndPoint(type):
 
 class View(object, metaclass=WithEndPoint):
 
+    config = config
+
     def __init__(self, request):
         self.request = request
 

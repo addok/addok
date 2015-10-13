@@ -338,3 +338,8 @@ def test_allow_to_extend_api_endpoints(client, config):
     resp = client.get('/custom/xxxxx/')
     assert resp.status_code == 200
     assert resp.data == b'xxxxx'
+
+
+def test_view_should_expose_config(config):
+    config.NEW_PROPERTY = "ok"
+    assert View.config.NEW_PROPERTY == "ok"
