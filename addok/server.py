@@ -109,7 +109,8 @@ class View(object, metaclass=WithEndPoint):
             response = Response(response)
         return cls.cors(response)
 
-    def to_geojson(self, results, query=None):
+    def to_geojson(self, results, query=None, filters=None, center=None,
+                   limit=None):
         results = {
             "type": "FeatureCollection",
             "version": "draft",
@@ -119,6 +120,12 @@ class View(object, metaclass=WithEndPoint):
         }
         if query:
             results['query'] = query
+        if filters:
+            results['filters'] = filters
+        if center:
+            results['center'] = center
+        if limit:
+            results['limit'] = limit
         return self.json(results)
 
     def json(self, content):
@@ -169,16 +176,19 @@ class Search(View):
             lat = float(self.request.args.get('lat'))
             lon = float(self.request.args.get('lon',
                         self.request.args.get('lng')))
+            center = [lat, lon]
         except (ValueError, TypeError):
             lat = None
             lon = None
+            center = None
         filters = self.match_filters()
         results = search(query, limit=limit, autocomplete=autocomplete,
                          lat=lat, lon=lon, **filters)
         if not results:
             log_notfound(query)
         log_query(query, results)
-        return self.to_geojson(results, query=query)
+        return self.to_geojson(results, query=query, filters=filters,
+                               center=center, limit=limit)
 
 
 class Reverse(View):
@@ -198,7 +208,7 @@ class Reverse(View):
             limit = 1
         filters = self.match_filters()
         results = reverse(lat=lat, lon=lon, limit=limit, **filters)
-        return self.to_geojson(results)
+        return self.to_geojson(results, filters=filters, limit=limit)
 
 
 class BaseCSV(View):
