@@ -1,4 +1,4 @@
-## dev
+## 0.4.0
 - fix filters not taken into account in manual scan ([#105](https://github.com/etalab/addok/issues/105))
 - added experimental list support for document values
 - Added MIN_EDGE_NGRAMS and MAX_EDGE_NGRAMS settings ([#102](https://github.com/etalab/addok/issues/102))
@@ -8,6 +8,10 @@
 - do not consider filter if column is empty, in csv ([#109](https://github.com/etalab/addok/issues/109))
 - allow to pass lat and lon to define columns to be used for geo preference, in csv ([#110](https://github.com/etalab/addok/issues/110))
 - replace "s/" by "sur" in French preprocessing ([#107](https://github.com/etalab/addok/issues/107))
+- fix server failing when document was missing `importance` value
+- refuse to load if `ADDOK_CONFIG_MODULE` is given but not found
+- allow to set ADDOK_CONFIG_MODULE with command line parameter `--config`
+- mention request parameters in geojson ([#113](https://github.com/etalab/addok/issues/113))
 
 
 ## 0.3.1

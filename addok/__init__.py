@@ -1,5 +1,5 @@
 "Search engine for address. Only address."
-VERSION = (0, 3, 1)
+VERSION = (0, 4, 0)
 
 __author__ = 'Yohan Boniface'
 __contact__ = "yohan.boniface@data.gouv.fr"
