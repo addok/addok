@@ -192,6 +192,10 @@ class Result(object):
         score, _max = zip(*self._scores.values())
         return sum(score) / sum(_max)
 
+    @score.setter
+    def score(self, value):
+        self._score = value
+
     @property
     def str_distance(self):
         return self._scores.get('str_distance', [0.0])[0]
