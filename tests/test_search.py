@@ -277,3 +277,14 @@ def test_config_make_labels_is_used_if_defined(config, factory):
     assert results[0].id == "123"
     assert results[0].score > 0.9
     assert results[1].score > 0.1
+
+
+def test_allow_to_set_result_values(factory):
+    factory(name="porte des lilas", type="street", id="456")
+    results = search("porte des lilas")
+    result = results[0]
+    result.name = "blah"
+    result.score = 22
+    # Plugins may need that.
+    assert result.name == "blah"
+    assert result.score == 22

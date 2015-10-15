@@ -189,6 +189,8 @@ class Result(object):
 
     @property
     def score(self):
+        if self._score != '':
+            return int(self._score)
         score, _max = zip(*self._scores.values())
         return sum(score) / sum(_max)
 
