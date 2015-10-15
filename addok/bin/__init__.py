@@ -47,8 +47,8 @@ def main():
     from addok.index_utils import create_edge_ngrams
 
     # Hook for plugins to register themselves.
-    if hasattr(config, 'on_load'):
-        config.on_load()
+    if hasattr(config, 'ON_LOAD'):
+        config.ON_LOAD()
 
     if args['serve']:
         from werkzeug.serving import run_simple
