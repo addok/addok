@@ -46,6 +46,10 @@ def main():
     from addok import batch
     from addok.index_utils import create_edge_ngrams
 
+    # Hook for plugins to register themselves.
+    if hasattr(config, 'on_load'):
+        config.on_load()
+
     if args['serve']:
         from werkzeug.serving import run_simple
         run_simple(args['--host'], int(args['--port']), app,
