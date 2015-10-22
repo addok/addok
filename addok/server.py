@@ -216,32 +216,36 @@ class BaseCSV(View):
     MISSING_DELIMITER_MSG = ('Unable to sniff delimiter, please add one with '
                              '"delimiter" parameter.')
 
-    def post(self):
-        f = self.request.files['data']
-        input_encoding = 'utf-8'
-        output_encoding = 'utf-8'
-        file_encoding = f.mimetype_params.get('charset')
+    def compute_encodings(self):
+        self.input_encoding = 'utf-8'
+        self.output_encoding = 'utf-8'
+        file_encoding = self.f.mimetype_params.get('charset')
         # When file_encoding is passed as charset in the file mimetype,
         # Werkzeug will reencode the content to utf-8 for us, so don't try
         # to reencode.
         if not file_encoding:
-            input_encoding = self.request.form.get('encoding', input_encoding)
+            self.input_encoding = self.request.form.get('encoding',
+                                                        self.input_encoding)
 
-        try:
-            extract = f.read(4096).decode(input_encoding)
-        except (LookupError, UnicodeDecodeError):
-            raise BadRequest('Unknown encoding {}'.format(input_encoding))
-        try:
-            dialect = csv.Sniffer().sniff(extract)
-        except csv.Error:
-            dialect = csv.unix_dialect()
-        f.seek(0)
+    def compute_content(self):
 
         # Replace bad carriage returns, as per
         # http://tools.ietf.org/html/rfc4180
         # We may want not to load whole file in memory at some point.
-        content = f.read().decode(input_encoding)
-        content = content.replace('\r', '').replace('\n', '\r\n')
+        self.content = self.f.read().decode(self.input_encoding)
+        self.content = self.content.replace('\r', '').replace('\n', '\r\n')
+        self.f.seek(0)
+
+    def compute_dialect(self):
+        try:
+            extract = self.f.read(4096).decode(self.input_encoding)
+        except (LookupError, UnicodeDecodeError):
+            raise BadRequest('Unknown encoding {}'.format(self.input_encoding))
+        try:
+            dialect = csv.Sniffer().sniff(extract)
+        except csv.Error:
+            dialect = csv.unix_dialect()
+        self.f.seek(0)
 
         # Escape double quotes with double quotes if needed.
         # See 2.7 in http://tools.ietf.org/html/rfc4180
@@ -254,48 +258,78 @@ class BaseCSV(View):
         # and http://bugs.python.org/issue2078:
         # one column files will end up with non-sense delimiters.
         if dialect.delimiter.isalnum():
-            # We quess we are in one column file, let's try to use a character
+            # We guess we are in one column file, let's try to use a character
             # that will not be in the file content.
             for char in '|~^°':
-                if char not in content:
+                if char not in self.content:
                     dialect.delimiter = char
                     break
             else:
                 raise BadRequest(self.MISSING_DELIMITER_MSG)
 
+        self.dialect = dialect
+
+    def compute_rows(self):
         # Keep ends, not to glue lines when a field is multilined.
-        self.rows = csv.DictReader(content.splitlines(keepends=True),
-                                   dialect=dialect)
-        fieldnames = self.rows.fieldnames[:]
+        self.rows = csv.DictReader(self.content.splitlines(keepends=True),
+                                   dialect=self.dialect)
+
+    def compute_fieldnames(self):
+        self.fieldnames = self.rows.fieldnames[:]
         self.columns = self.request.form.getlist('columns') or self.rows.fieldnames  # noqa
         for column in self.columns:
-            if column not in fieldnames:
+            if column not in self.fieldnames:
                 raise BadRequest("Cannot found column '{}' in columns "
-                                 "{}".format(column, fieldnames))
+                                 "{}".format(column, self.fieldnames))
         for key in self.result_headers:
-            if key not in fieldnames:
-                fieldnames.append(key)
-        output = io.StringIO()
-        if output_encoding == 'utf-8' and self.request.form.get('with_bom'):
+            if key not in self.fieldnames:
+                self.fieldnames.append(key)
+
+    def compute_output(self):
+        self.output = io.StringIO()
+
+    def compute_writer(self):
+        if (self.output_encoding == 'utf-8'
+                and self.request.form.get('with_bom')):
             # Make Excel happy with UTF-8
-            output.write(codecs.BOM_UTF8.decode('utf-8'))
-        writer = csv.DictWriter(output, fieldnames, dialect=dialect)
-        writer.writeheader()
+            self.output.write(codecs.BOM_UTF8.decode('utf-8'))
+        self.writer = csv.DictWriter(self.output, self.fieldnames,
+                                     dialect=self.dialect)
+        self.writer.writeheader()
+
+    def compute_filters(self):
         self.filters = self.match_filters()
+
+    def process_rows(self):
         for row in self.rows:
             self.process_row(row)
-            writer.writerow(row)
-        output.seek(0)
-        response = Response(output.read().encode(output_encoding))
-        output.seek(0)
-        filename, ext = os.path.splitext(f.filename)
+            self.writer.writerow(row)
+        self.output.seek(0)
+
+    def compute_response(self):
+        self.response = Response(
+                            self.output.read().encode(self.output_encoding))
+        filename, ext = os.path.splitext(self.f.filename)
         attachment = 'attachment; filename="{name}.geocoded.csv"'.format(
                                                                  name=filename)
-        response.headers['Content-Disposition'] = attachment
+        self.response.headers['Content-Disposition'] = attachment
         content_type = 'text/csv; charset={encoding}'.format(
-            encoding=output_encoding)
-        response.headers['Content-Type'] = content_type
-        return response
+            encoding=self.output_encoding)
+        self.response.headers['Content-Type'] = content_type
+
+    def post(self):
+        self.f = self.request.files['data']
+        self.compute_encodings()
+        self.compute_content()
+        self.compute_dialect()
+        self.compute_rows()
+        self.compute_fieldnames()
+        self.compute_output()
+        self.compute_writer()
+        self.compute_filters()
+        self.process_rows()
+        self.compute_response()
+        return self.response
 
     def add_fields(self, row, result):
         for field in config.FIELDS:
