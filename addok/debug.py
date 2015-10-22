@@ -299,33 +299,41 @@ class Cli(object):
 
     def do_geohashtogeojson(self, geoh):
         """Build GeoJSON corresponding to geohash given as parameter.
-        GEOHASHTOGEOJSON u09vej04 [NEIGHBORS 0]"""
+        GEOHASHTOGEOJSON u09vej04 [NEIGHBORS 0|1|2]"""
         geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
         bbox = geohash.bbox(geoh)
-        north = bbox['n']
-        south = bbox['s']
-        east = bbox['e']
-        west = bbox['w']
-        if with_neighbors != '0':
+        try:
+            with_neighbors = int(with_neighbors)
+        except TypeError:
+            with_neighbors = 0
+
+        def expand(bbox, geoh, depth):
             neighbors = geohash.neighbors(geoh)
             for neighbor in neighbors:
-                bbox = geohash.bbox(neighbor)
-                if bbox['n'] > north:
-                    north = bbox['n']
-                if bbox['s'] < south:
-                    south = bbox['s']
-                if bbox['e'] > east:
-                    east = bbox['e']
-                if bbox['w'] < west:
-                    west = bbox['w']
+                other = geohash.bbox(neighbor)
+                if with_neighbors > depth:
+                    expand(bbox, neighbor, depth + 1)
+                else:
+                    if other['n'] > bbox['n']:
+                        bbox['n'] = other['n']
+                    if other['s'] < bbox['s']:
+                        bbox['s'] = other['s']
+                    if other['e'] > bbox['e']:
+                        bbox['e'] = other['e']
+                    if other['w'] < bbox['w']:
+                        bbox['w'] = other['w']
+
+        if with_neighbors > 0:
+            expand(bbox, geoh, 0)
+
         geojson = {
             "type": "Polygon",
             "coordinates": [[
-                [west, north],
-                [east, north],
-                [east, south],
-                [west, south],
-                [west, north]
+                [bbox['w'], bbox['n']],
+                [bbox['e'], bbox['n']],
+                [bbox['e'], bbox['s']],
+                [bbox['w'], bbox['s']],
+                [bbox['w'], bbox['n']]
             ]]
         }
         print(white(json.dumps(geojson)))
