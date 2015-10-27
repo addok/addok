@@ -101,6 +101,14 @@ class Result(object):
         if hasattr(config, 'MAKE_LABELS'):
             self._labels = config.MAKE_LABELS(self)
         if not self._labels:
+            housenumber = getattr(self, 'housenumber', None)
+
+            def add(labels, label):
+                labels.insert(0, label)
+                if housenumber:
+                    label = '{} {}'.format(housenumber, label)
+                    labels.insert(0, label)
+
             self._labels = []
             city = self.city
             postcode = self.postcode
@@ -110,17 +118,13 @@ class Result(object):
             for name in names:
                 labels = []
                 label = name
-                labels.append(label)
+                add(labels, label)
                 if city and city != label:
                     if postcode:
                         label = '{} {}'.format(label, postcode)
-                        labels.insert(0, label)
+                        add(labels, label)
                     label = '{} {}'.format(label, city)
-                    labels.insert(0, label)
-                housenumber = getattr(self, 'housenumber', None)
-                if housenumber:
-                    label = '{} {}'.format(housenumber, label)
-                    labels.insert(0, label)
+                    add(labels, label)
                 self._labels.extend(labels)
         return self._labels
 
