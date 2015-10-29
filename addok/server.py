@@ -49,6 +49,10 @@ def log_query(query, results):
 
 
 def app(environ, start_response):
+    # Hook for plugins to register themselves.
+    if hasattr(config, 'ON_LOAD'):
+        config.ON_LOAD()
+
     if not config.URL_MAP:
         rules = [Rule(path, endpoint=endpoint) for path, endpoint in config.API_ENDPOINTS]  # noqa
         config.URL_MAP = Map(rules, strict_slashes=False)
