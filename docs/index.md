@@ -22,4 +22,4 @@ The code is published via [Github](https://github.com/etalab/addok/).
 
 ## Licence
 
-Addok is release under the WTFPL Licence.
+Addok is released under the WTFPL Licence.
