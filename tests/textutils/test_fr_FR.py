@@ -37,6 +37,8 @@ from addok.textutils.fr_FR import (_clean_query, _extract_address,
      "air sur l'adour"),
     ("air-s/-l'adour",
      "air sur l'adour"),
+    ("Saint Didier s/s Ecouves",
+     "Saint Didier sous Ecouves"),
 ])
 def test_clean_query(input, expected):
     assert _clean_query(input) == expected
