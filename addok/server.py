@@ -173,7 +173,7 @@ class Search(View):
         except (ValueError, TypeError):
             limit = 5
         try:
-            autocomplete = int(self.request.args.get('autocomplete')) == '1'
+            autocomplete = int(self.request.args.get('autocomplete')) == 1
         except (ValueError, TypeError):
             autocomplete = True
         try:
