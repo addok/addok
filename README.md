@@ -1,62 +1,22 @@
+[![Build Status](https://travis-ci.org/etalab/addok.svg?branch=master)](https://travis-ci.org/etalab/addok)
+[![Requirements Status](https://requires.io/github/etalab/addok/requirements.svg?branch=master)](https://requires.io/github/etalab/addok/requirements/?branch=master)
+[![PyPi version](https://img.shields.io/pypi/v/addok.svg)](https://pypi.python.org/pypi/addok/)
+[![Coverage Status](https://coveralls.io/repos/etalab/addok/badge.svg?branch=master&service=github)](https://coveralls.io/github/etalab/addok?branch=master)
+
 # Addok
 
 Search engine for address. Only address.
 
 
-# Dependencies
+### Dependencies
 
 - Redis
 - Python 3.4
 
+### Documentation
 
-# Install
+http://addok.readthedocs.org/en/latest/
 
-1. Install dependencies
-    
-    sudo apt-get install redis-server python3.4 python-pip python-virtualenv
+### Demo
 
-1. create a virtualenv
-
-    mkvirtualenv addok --python=/usr/bin/python3.4
-
-1. install python packages
-
-    pip install -r requirements.txt
-
-
-# Import data
-
-1. Download [BANO data](http://bano.openstreetmap.fr/data/bano-full.csv.gz)
-
-2. Run import command
-
-    python run.py import path/to/bano-full.csv
-
-3. Index edge ngrams
-
-    python run.py ngrams
-
-If you only want a subset of the data, you can extract it from full file with
-a command like:
-
-    sed -n 's/|Île-de-France|/&/p' ~/Data/geo/bano/bano-full.csv > idf.csv
-
-
-# Shell
-
-Addok comes with a built-in shell that allows you to inspect the internals of 
-addok:
-
-    python run.py shell
-
-
-# Serve
-
-Addok exposes an experimental WSGI interface, you can run it with gunicorn
-for example:
-
-    gunicorn addok.server:app
-
-For debug, you can run the simple Werzeug server:
-
-    python run.py serve
+http://adresse.data.gouv.fr/map/ (France database)

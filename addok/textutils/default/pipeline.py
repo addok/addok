@@ -1,8 +1,8 @@
 from addok.utils import yielder
 
-from . import tokenize as _tokenize
 from . import normalize as _normalize
 from . import synonymize as _synonymize
+from . import tokenize as _tokenize
 
 
 def tokenize(pipe):

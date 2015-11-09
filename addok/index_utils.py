@@ -1,10 +1,60 @@
+import time
+from multiprocessing import Pool
+
 import geohash
 
 from . import config
-from .core import (DB, token_key, document_key, housenumber_field_key,
-                   edge_ngram_key, geohash_key, pair_key)
-from .pipeline import preprocess
+from .db import DB
 from .textutils.default import compute_edge_ngrams
+from .utils import import_by_path, iter_pipe
+
+VALUE_SEPARATOR = '|~|'
+
+PROCESSORS = [import_by_path(path) for path in config.PROCESSORS]
+HOUSENUMBER_PROCESSORS = [import_by_path(path) for path in
+                          config.HOUSENUMBER_PROCESSORS + config.PROCESSORS]
+
+
+def preprocess(s):
+    if s not in _CACHE:
+        _CACHE[s] = list(iter_pipe(s, PROCESSORS))
+    return _CACHE[s]
+_CACHE = {}
+
+
+def preprocess_housenumber(s):
+    if s not in _HOUSENUMBER_CACHE:
+        _HOUSENUMBER_CACHE[s] = list(iter_pipe(s, HOUSENUMBER_PROCESSORS))
+    return _HOUSENUMBER_CACHE[s]
+_HOUSENUMBER_CACHE = {}
+
+
+def token_key(s):
+    return 'w|{}'.format(s)
+
+
+def document_key(s):
+    return 'd|{}'.format(s)
+
+
+def housenumber_field_key(s):
+    return 'h|{}'.format(s)
+
+
+def edge_ngram_key(s):
+    return 'n|{}'.format(s)
+
+
+def geohash_key(s):
+    return 'g|{}'.format(s)
+
+
+def pair_key(s):
+    return 'p|{}'.format(s)
+
+
+def filter_key(k, v):
+    return 'f|{}|{}'.format(k, v)
 
 
 def index_edge_ngrams(pipe, token):
@@ -12,13 +62,40 @@ def index_edge_ngrams(pipe, token):
         pipe.sadd(edge_ngram_key(ngram), token)
 
 
-def index_field(pipe, key, string, boost=1.0, update_ngrams=True):
+def deindex_edge_ngrams(token):
+    for ngram in compute_edge_ngrams(token):
+        DB.srem(edge_ngram_key(ngram), token)
+
+
+def extract_tokens(tokens, string, boost):
     els = list(preprocess(string))
-    for s in els:
-        pipe.zadd(token_key(s), 1.0 / len(els) * boost, key)
+    if not els:
+        return
+    boost = config.DEFAULT_BOOST / len(els) * boost
+    for token in els:
+        if tokens.get(token, 0) < boost:
+            tokens[token] = boost
+
+
+def index_tokens(pipe, tokens, key, update_ngrams=True):
+    for token, boost in tokens.items():
+        pipe.zadd(token_key(token), boost, key)
         if update_ngrams:
-            index_edge_ngrams(pipe, s)
+            index_edge_ngrams(pipe, token)
+
+
+def deindex_field(key, string):
+    els = list(preprocess(string.decode()))
+    for s in els:
+        deindex_token(key, s)
     return els
+
+
+def deindex_token(key, token):
+    tkey = token_key(token)
+    DB.zrem(tkey, key)
+    if not DB.exists(tkey):
+        deindex_edge_ngrams(token)
 
 
 def index_pairs(pipe, els):
@@ -32,44 +109,141 @@ def index_pairs(pipe, els):
             pipe.sadd(pair_key(el), *values)
 
 
+def deindex_pairs(els):
+    els = list(set(els))  # Unique values.
+    loop = 0
+    for el in els:
+        for el2 in els[loop:]:
+            if el != el2:
+                key = '|'.join(['didx', el, el2])
+                # Do we have other documents that share el and el2?
+                commons = DB.zinterstore(key, [token_key(el), token_key(el2)])
+                DB.delete(key)
+                if not commons:
+                    DB.srem(pair_key(el), el2)
+                    DB.srem(pair_key(el2), el)
+        loop += 1
+
+
+def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
+    if not housenumbers:
+        return
+    del doc['housenumbers']
+    to_index = {}
+    for number, point in housenumbers.items():
+        vals = [number, point['lat'], point['lon']]
+        _id = point.get('id')
+        if _id:
+            vals.append(_id)
+        val = '|'.join(map(str, vals))
+        for hn in preprocess_housenumber(number):
+            doc[housenumber_field_key(hn)] = val
+            # Pair every document term to each housenumber, but do not pair
+            # housenumbers together.
+            pipe.sadd(pair_key(hn), *tokens.keys())
+            to_index[hn] = config.DEFAULT_BOOST
+        index_geohash(pipe, key, point['lat'], point['lon'])
+    index_tokens(pipe, to_index, key, update_ngrams)
+
+
+def deindex_housenumbers(key, doc, tokens):
+    for field, value in doc.items():
+        field = field.decode()
+        if not field.startswith('h|'):
+            continue
+        number, lat, lon, *_id = value.decode().split('|')
+        hn = field[2:]
+        for token in tokens:
+            k = '|'.join(['didx', hn, token])
+            commons = DB.zinterstore(k, [token_key(hn), token_key(token)])
+            DB.delete(k)
+            if not commons:
+                DB.srem(pair_key(hn), token)
+                DB.srem(pair_key(token), hn)
+        deindex_geohash(key, lat, lon)
+        deindex_token(key, hn)
+
+
+def index_filters(pipe, key, doc):
+    for name in config.FILTERS:
+        value = doc.get(name)
+        if value:
+            # We need a SortedSet because it will be used in intersect with
+            # tokens SortedSets.
+            pipe.sadd(filter_key(name, value), key)
+    # Special case for housenumber type, because it's not a real type
+    if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
+       and doc.get(config.HOUSENUMBERS_FIELD):
+        pipe.sadd(filter_key("type", "housenumber"), key)
+
+
+def deindex_filters(key, doc):
+    for name in config.FILTERS:
+        # Doc is raw from DB, so it has byte keys.
+        value = doc.get(name.encode())
+        if value:
+            # Doc is raw from DB, so it has byte values.
+            DB.srem(filter_key(name, value.decode()), key)
+    if "type" in config.FILTERS:
+        DB.srem(filter_key("type", "housenumber"), key)
+
+
 def index_document(doc, update_ngrams=True):
     key = document_key(doc['id'])
     pipe = DB.pipeline()
+    housenumbers = None
     index_geohash(pipe, key, doc['lat'], doc['lon'])
-    name = doc['name']
-    importance = doc.get('importance', 0.0)
-    pair_els = []
-    city = doc.get('city')
-    if city and city != name:
-        pair_els.extend(index_field(pipe, key, city,
-                                    update_ngrams=update_ngrams))
-    postcode = doc.get('postcode')
-    if postcode:
-        boost = 1.2 if doc['type'] == 'commune' else 1
-        els = index_field(pipe, key, postcode, boost=boost,
-                          update_ngrams=update_ngrams)
-        pair_els.extend(els)
-    context = doc.get('context')
-    if context:
-        els = index_field(pipe, key, context, update_ngrams=update_ngrams)
-        pair_els.extend(els)
-    housenumbers = doc.get('housenumbers')
-    if housenumbers:
-        del doc['housenumbers']
-        for number, point in housenumbers.items():
-            val = '|'.join([str(number), str(point['lat']), str(point['lon'])])
-            for hn in preprocess(number):
-                doc[housenumber_field_key(hn)] = val
-            index_field(pipe, key, str(number), update_ngrams=update_ngrams)
-            index_geohash(pipe, key, point['lat'], point['lon'])
-    # Process name last, to give priority to higher score, in case same token
-    # is in two fields (for example: "rue de xxx, ile de france" contains
-    # twice "de")
-    pair_els.extend(index_field(pipe, key, name, boost=4.0 + importance,
-                                update_ngrams=update_ngrams))
-    index_pairs(pipe, pair_els)
+    importance = float(doc.get('importance', 0.0)) * config.IMPORTANCE_WEIGHT
+    tokens = {}
+    for field in config.FIELDS:
+        name = field['key']
+        values = doc.get(name)
+        if not values:
+            if not field.get('null', True):
+                # A mandatory field is null.
+                return
+            continue
+        if name == config.HOUSENUMBERS_FIELD:
+            housenumbers = values
+        else:
+            boost = field.get('boost', config.DEFAULT_BOOST)
+            if callable(boost):
+                boost = boost(doc)
+            boost = boost + importance
+            if isinstance(values, (list, tuple)):
+                # We can't save a list as redis hash value.
+                doc[name] = VALUE_SEPARATOR.join(values)
+            else:
+                values = [values]
+            for value in values:
+                extract_tokens(tokens, value, boost=boost)
+    index_tokens(pipe, tokens, key, update_ngrams)
+    index_pairs(pipe, tokens.keys())
+    index_filters(pipe, key, doc)
+    index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams)
     pipe.hmset(key, doc)
     pipe.execute()
+
+
+def deindex_document(id_):
+    key = document_key(id_)
+    doc = DB.hgetall(key)
+    if not doc:
+        return
+    DB.delete(key)
+    deindex_geohash(key, doc[b'lat'], doc[b'lon'])
+    tokens = []
+    for field in config.FIELDS:
+        name = field['key']
+        values = doc.get(name.encode())
+        if values:
+            if not isinstance(values, (list, tuple)):
+                values = [values]
+            for value in values:
+                tokens.extend(deindex_field(key, value))
+    deindex_pairs(tokens)
+    deindex_filters(key, doc)
+    deindex_housenumbers(key, doc, tokens)
 
 
 def index_geohash(pipe, key, lat, lon):
@@ -78,3 +252,38 @@ def index_geohash(pipe, key, lat, lon):
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
     geok = geohash_key(geoh)
     pipe.sadd(geok, key)
+
+
+def deindex_geohash(key, lat, lon):
+    lat = float(lat)
+    lon = float(lon)
+    geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
+    geok = geohash_key(geoh)
+    DB.srem(geok, key)
+
+
+def index_ngram_key(key):
+    key = key.decode()
+    _, token = key.split('|')
+    if token.isdigit():
+        return
+    index_edge_ngrams(DB, token)
+
+
+def create_edge_ngrams():
+    start = time.time()
+    pool = Pool()
+    count = 0
+    chunk = []
+    for key in DB.scan_iter(match='w|*'):
+        count += 1
+        chunk.append(key)
+        if count % 10000 == 0:
+            pool.map(index_ngram_key, chunk)
+            print("Done", count, time.time() - start)
+            chunk = []
+    if chunk:
+        pool.map(index_ngram_key, chunk)
+    pool.close()
+    pool.join()
+    print('Done', count, 'in', time.time() - start)

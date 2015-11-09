@@ -1,43 +1,45 @@
+"""French dedicated text utils."""
+
 import re
 
 from addok.utils import yielder
 
-
 _CACHE = {}
 
 
-def _stemmize(s):
-    """Very lite French stemming. Try to remove every letter that is not
+def _phonemicize(s):
+    """Very lite French phonemicization. Try to remove every letter that is not
     significant."""
-    if not s in _CACHE:
+    if s not in _CACHE:
         rules = (
-            ("(?<=[^g])g(?=[eyi])", "j"),
+            ("((?<=[^g])g|^g)(?=[eyi])", "j"),
             ("(?<=g)u(?=[aeio])", ""),
             ("c(?=[^hieyw])", "k"),
-            ("((?<=[^s])ch|c)$", "k"),  # final "c", "ch", but not "sch".
+            ("((?<=[^s])ch|(?<=[^0-9])c)$", "k"),  # final "c", "ch",
+                                                   # but not "sch" and not 10c.
             ("(?<=[aeiouy])s(?=[aeiouy])", "z"),
-            ("qu?", "k"),
+            ("((?<=[^0-9])q|^q)u?", "k"),
             ("cc(?=[ie])", "s"),  # Others will hit the c => k and deduplicate
             ("ck", "k"),
             ("ph", "f"),
             ("th$", "te"),  # This t sounds.
-            ("(?<=[^sc])h", ""),
-            ("^h", ""),
+            ("(?<=[^sc0-9])h", ""),
+            ("^h(?=.)+", ""),
             ("sc", "s"),
             ("sh", "ch"),
-            ("w", "v"),
+            ("((?<=[^0-9])w|^w)", "v"),
             ("c(?=[eiy])", "s"),
-            ("y", "i"),
+            ("(?<=[^0-9])y", "i"),
             ("esn", "en"),
             ("oe(?=\\w)", "e"),
-            ("s$", ""),
+            ("(?<=[^0-9])s$", ""),
             ("(?<=u)l?x$", ""),  # eaux, eux, aux, aulx
             ("(?<=u)lt$", "t"),
-            ("(?<=\\w)[dg]$", ""),
-            ("(?<=[^es])t$", ""),
+            ("(?<=[a-z])[dg]$", ""),
+            ("(?<=[^es0-9])t$", ""),
             ("(?<=[aeiou])(m)(?=[pbgf])", "n"),
-            ("(?<=\\w\\w)(e$)", ""),  # Remove "e" at last position only if it
-                                      # follows two letters?
+            ("(?<=[a-z]{2})(e$)", ""),  # Remove "e" at last position only if
+                                        # it follows two letters?
             ("(\\D)(?=\\1)", ""),  # Remove duplicate letters.
         )
         _s = s
@@ -46,59 +48,4 @@ def _stemmize(s):
         _CACHE[s] = _s
     return _CACHE[s]
 
-stemmize = yielder(_stemmize)
-
-
-TYPES = [
-    'avenue', 'rue', 'boulevard', 'all[ée]es?', 'impasse', 'place',
-    'chemin', 'rocade', 'route', 'l[ôo]tissement', 'mont[ée]e', 'c[ôo]te',
-    'clos', 'champ', 'bois', 'taillis', 'boucle', 'passage', 'domaine',
-    'étang', 'etang', 'quai', 'desserte', 'pré', 'porte', 'square', 'mont',
-    'r[ée]sidence', 'parc', 'cours?', 'promenade', 'hameau', 'faubourg',
-    'ilot', 'berges?', 'via', 'cit[ée]', 'sent(e|ier)', 'rond[- ][Pp]oint',
-    'pas(se)?', 'carrefour', 'traverse', 'giratoire', 'esplanade', 'voie',
-    'chauss[ée]e',
-]
-TYPES_REGEX = '|'.join(
-    map(lambda x: '[{}{}]{}'.format(x[0], x[0].upper(), x[1:]), TYPES)
-)
-
-
-def split_address(q):
-    m = re.search(
-        "^(?P<type>" + TYPES_REGEX + ")"
-        "[a-z ']+(?P<name>[\wçàèéuâêôîûöüïäë '\-]+)", q)
-    return m.groupdict() if m else {}
-
-
-def split_housenumber(q):
-    m = re.search("^(?P<number>[\d]+)/?(?P<ordinal>([^\d]+|[\d]{1}))?", q)
-    return m.groupdict() if m else {}
-
-
-def _clean_query(q):
-    q = re.sub('c(e|é)dex ?[\d]*', '', q, flags=re.IGNORECASE)
-    q = re.sub('bp ?[\d]*', '', q, flags=re.IGNORECASE)
-    q = re.sub('cs ?[\d]*', '', q, flags=re.IGNORECASE)
-    q = re.sub('\d{,2}(e|(e|è)me) (e|étage)', '', q, flags=re.IGNORECASE)
-    q = re.sub(' {2,}', ' ', q, flags=re.IGNORECASE)
-    q = q.strip()
-    return q
-clean_query = yielder(_clean_query)
-
-
-def _extract_address(q):
-    m = extract_address_pattern.search(q)
-    return m.group() if m else q
-extract_address_pattern = re.compile(
-    '(\d+( ?(bis|ter))?(,? )?(' + TYPES_REGEX + ') .*(\d{5})?).*',
-    flags=re.IGNORECASE)
-extract_address = yielder(_extract_address)
-
-
-def _glue_ordinal(q):
-    """Glue '3' and 'bis'."""
-    return glue_ordinal_pattern.sub('\g<1>\g<2>', q)
-glue_ordinal_pattern = re.compile('(\d{,4}) (bis|ter|quater)',
-                                  flags=re.IGNORECASE)
-glue_ordinal = yielder(_glue_ordinal)
+phonemicize = yielder(_phonemicize)

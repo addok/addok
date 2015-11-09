@@ -2,16 +2,21 @@ import atexit
 import inspect
 import json
 import logging
+import re
 import readline
 import time
+from pathlib import Path
 
 import geohash
 
-from .core import (DB, search, document_key, token_frequency, make_fuzzy,
-                   token_key, SearchResult, Token, reverse, pair_key)
-from .pipeline import preprocess_query
+from . import config
+from .core import (Search, SearchResult, Token, compute_geohash_key,
+                   make_fuzzy, preprocess_query, reverse, token_frequency)
+from .db import DB
+from .index_utils import VALUE_SEPARATOR, document_key, pair_key, token_key
 from .textutils.default import compare_ngrams
-from .utils import haversine_distance, km_to_score
+from .utils import (blue, cyan, green, haversine_distance, km_to_score,
+                    magenta, red, white, yellow)
 
 
 def doc_by_id(_id):
@@ -23,57 +28,16 @@ def indexed_string(s):
 
 
 def word_frequency(word):
-    token = list(preprocess_query(word))[0]
+    try:
+        token = list(preprocess_query(word))[0]
+    except IndexError:
+        # Word has been filtered out.
+        return
     return token_frequency(token)
 
 
 def set_debug():
     logging.basicConfig(level=logging.DEBUG)
-
-
-COLORS = {
-    'red': '31',
-    'green': '32',
-    'yellow': '33',
-    'blue': '34',
-    'magenta': '35',
-    'cyan': '36',
-    'white': '37',
-    'reset': '39'
-}
-
-
-def colorText(s, color):
-    # color should be a string from COLORS
-    return '\033[%sm%s\033[%sm' % (COLORS[color], s, COLORS['reset'])
-
-
-def red(s):
-    return colorText(s, 'red')
-
-
-def green(s):
-    return colorText(s, 'green')
-
-
-def yellow(s):
-    return colorText(s, 'yellow')
-
-
-def blue(s):
-    return colorText(s, 'blue')
-
-
-def magenta(s):
-    return colorText(s, 'magenta')
-
-
-def cyan(s):
-    return colorText(s, 'cyan')
-
-
-def white(s):
-    return colorText(s, 'white')
 
 
 class Cli(object):
@@ -95,13 +59,17 @@ class Cli(object):
     def _init_history_file(self):
         if hasattr(readline, "read_history_file"):
             try:
-                readline.read_history_file(self.HISTORY_FILE)
+                readline.read_history_file(self.history_file)
             except FileNotFoundError:
                 pass
             atexit.register(self.save_history)
 
     def save_history(self):
-        readline.write_history_file(self.HISTORY_FILE)
+        readline.write_history_file(self.history_file)
+
+    @property
+    def history_file(self):
+        return str(Path(config.LOG_DIR).joinpath(self.HISTORY_FILE))
 
     def completer(self, text, state):
         for cmd in self.COMMANDS.keys():
@@ -111,30 +79,79 @@ class Cli(object):
                 else:
                     state -= 1
 
-    def _search(self, query, verbose=False):
+    def error(self, message):
+        print(red(message))
+
+    @staticmethod
+    def _match_option(key, string):
+        matchs = re.findall('{} [^A-Z]*'.format(key), string)
+        option = None
+        if matchs:
+            option = matchs[0]
+            string = string.replace(option, '')
+            option = option.replace(key, '')
+        return string.strip(), option.strip() if option else option
+
+    def _search(self, query, verbose=False, bucket=False):
         start = time.time()
+        limit = 10
+        autocomplete = True
+        lat = None
+        lon = None
+        filters = {}
+        if 'AUTOCOMPLETE' in query:
+            query, autocomplete = self._match_option('AUTOCOMPLETE', query)
+            autocomplete = bool(int(autocomplete))
+        if 'LIMIT' in query:
+            query, limit = self._match_option('LIMIT', query)
+            limit = int(limit)
         if 'CENTER' in query:
-            query, center = query.split('CENTER')
+            query, center = self._match_option('CENTER', query)
             lat, lon = center.split()
             lat = float(lat)
             lon = float(lon)
-        else:
-            lat = None
-            lon = None
-        for result in search(query, verbose=verbose, lat=lat, lon=lon):
-            print('{} ({} | {})'.format(white(result), blue(result.score),
-                                        blue(result.id)))
-        print(magenta("({} seconds)".format(time.time() - start)))
+        for name in config.FILTERS:
+            name = name.upper()
+            if name in query:
+                query, value = self._match_option(name, query)
+                filters[name.lower()] = value.strip()
+        helper = Search(limit=limit, verbose=verbose,
+                        autocomplete=autocomplete)
+        results = helper(query, lat=lat, lon=lon, **filters)
+        if bucket:  # Means we want all the bucket
+            results = helper._sorted_bucket
+
+        def format_scores(result):
+            if verbose or bucket:
+                return (', '.join('{}: {}/{}'.format(k, round(v[0], 4), v[1])
+                        for k, v in result._scores.items()))
+            else:
+                return result.score
+
+        for result in results:
+            print('{} ({} | {})'.format(white(result),
+                                        blue(result.id),
+                                        blue(format_scores(result))))
+        duration = round((time.time() - start) * 1000, 1)
+        formatter = red if duration > 50 else green
+        print(formatter("{} ms".format(duration)), '/',
+              cyan('{} results'.format(len(results))))
 
     def do_search(self, query):
         """Issue a search (default command, can be omitted):
-        SEARCH rue des Lilas"""
+        SEARCH rue des Lilas [CENTER lat lon] [LIMIT 10]"""
         self._search(query)
 
     def do_explain(self, query):
         """Issue a search with debug info:
         EXPLAIN rue des Lilas"""
         self._search(query, verbose=True)
+
+    def do_bucket(self, query):
+        """Issue a search and return all the collected bucket, not only up to
+        limit elements:
+        BUCKET rue des Lilas"""
+        self._search(query, bucket=True)
 
     def do_tokenize(self, string):
         """Inspect how a string is tokenized before being indexed.
@@ -143,7 +160,7 @@ class Cli(object):
 
     def do_help(self, *args):
         """Display this help message."""
-        for name, doc in self.COMMANDS.items():
+        for name, doc in sorted(self.COMMANDS.items(), key=lambda x: x[0]):
             print(yellow(name),
                   cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
 
@@ -151,6 +168,8 @@ class Cli(object):
         """Get document from index with its id.
         GET 772210180J"""
         doc = doc_by_id(_id)
+        if not doc:
+            return self.error('id "{}" not found'.format(_id))
         housenumbers = {}
         for key, value in doc.items():
             key = key.decode()
@@ -158,9 +177,15 @@ class Cli(object):
             if key.startswith('h|'):
                 housenumbers[key] = value
             else:
-                print(white(key), magenta(value))
+                print(white(key),
+                      magenta(', '.join(value.split(VALUE_SEPARATOR))))
         if housenumbers:
-            print(white('housenumbers'), magenta(housenumbers))
+            def sorter(item):
+                k, v = item
+                return int(re.match(r'\d+', v.split('|')[0]).group())
+            housenumbers = sorted(housenumbers.items(), key=sorter)
+            housenumbers = ['{}: {}'.format(k[2:], v) for k, v in housenumbers]
+            print(white('housenumbers'), magenta(', '.join(housenumbers)))
 
     def do_frequency(self, word):
         """Return word frequency in index.
@@ -189,12 +214,11 @@ class Cli(object):
         INDEX 772210180J"""
         doc = doc_by_id(_id)
         if not doc:
-            print(red('Not found.'))
-            return
-        self._print_field_index_details(doc[b'name'].decode(), _id)
-        self._print_field_index_details(doc[b'postcode'].decode(), _id)
-        self._print_field_index_details(doc[b'city'].decode(), _id)
-        self._print_field_index_details(doc[b'context'].decode(), _id)
+            return self.error('id "{}" not found'.format(_id))
+        for field in config.FIELDS:
+            key = field['key'].encode()
+            if key in doc:
+                self._print_field_index_details(doc[key].decode(), _id)
 
     def do_bestscore(self, word):
         """Return document linked to word with higher score.
@@ -241,7 +265,8 @@ class Cli(object):
             'connected_clients']
         for key in keys:
             print('{}: {}'.format(white(key), blue(info[key])))
-        print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
+        if 'db0' in info:
+            print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
 
     def do_dbkey(self, key):
         """Print raw content of a DB key.
@@ -262,9 +287,11 @@ class Cli(object):
         try:
             _id, lat, lon = s.split()
         except:
-            print('Malformed query. Use: ID lat lon')
-            return
-        result = SearchResult(document_key(_id))
+            return self.error('Malformed query. Use: ID lat lon')
+        try:
+            result = SearchResult(document_key(_id))
+        except ValueError as e:
+            return self.error(e)
         center = (float(lat), float(lon))
         km = haversine_distance((float(result.lat), float(result.lon)), center)
         score = km_to_score(km)
@@ -272,8 +299,33 @@ class Cli(object):
 
     def do_geohashtogeojson(self, geoh):
         """Build GeoJSON corresponding to geohash given as parameter.
-        GEOHASHTOGEOJSON u09vej04"""
+        GEOHASHTOGEOJSON u09vej04 [NEIGHBORS 0|1|2]"""
+        geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
         bbox = geohash.bbox(geoh)
+        try:
+            with_neighbors = int(with_neighbors)
+        except TypeError:
+            with_neighbors = 0
+
+        def expand(bbox, geoh, depth):
+            neighbors = geohash.neighbors(geoh)
+            for neighbor in neighbors:
+                other = geohash.bbox(neighbor)
+                if with_neighbors > depth:
+                    expand(bbox, neighbor, depth + 1)
+                else:
+                    if other['n'] > bbox['n']:
+                        bbox['n'] = other['n']
+                    if other['s'] < bbox['s']:
+                        bbox['s'] = other['s']
+                    if other['e'] > bbox['e']:
+                        bbox['e'] = other['e']
+                    if other['w'] < bbox['w']:
+                        bbox['w'] = other['w']
+
+        if with_neighbors > 0:
+            expand(bbox, geoh, 0)
+
         geojson = {
             "type": "Polygon",
             "coordinates": [[
@@ -285,6 +337,26 @@ class Cli(object):
             ]]
         }
         print(white(json.dumps(geojson)))
+
+    def do_geohash(self, latlon):
+        """Compute a geohash from latitude and longitude.
+        GEOHASH 48.1234 2.9876"""
+        try:
+            lat, lon = map(float, latlon.split())
+        except ValueError:
+            print(red('Invalid lat and lon {}'.format(latlon)))
+        else:
+            print(white(geohash.encode(lat, lon, config.GEOHASH_PRECISION)))
+
+    def do_geohashmembers(self, geoh):
+        """Return members of a geohash and its neighbors.
+        GEOHASHMEMBERS u09vej04 [NEIGHBORS 0]"""
+        geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
+        key = compute_geohash_key(geoh, with_neighbors != '0')
+        if key:
+            for id_ in DB.smembers(key):
+                r = SearchResult(id_)
+                print(white(r), blue(r.id))
 
     def do_fuzzy(self, word):
         """Compute fuzzy extensions of word.
@@ -298,8 +370,30 @@ class Cli(object):
         word = list(preprocess_query(word))[0]
         token = Token(word)
         token.make_fuzzy()
-        keys = [k.split('|')[1] for k in token.fuzzy_keys]
-        print(white(keys))
+        neighbors = [(n, DB.zcard(token_key(n))) for n in token.neighbors]
+        neighbors.sort(key=lambda n: n[1], reverse=True)
+        for token, freq in neighbors:
+            if freq == 0:
+                break
+            print(white(token), blue(freq))
+
+    def do_intersect(self, words):
+        """Do a raw intersect between tokens (default limit 100).
+        INTERSECT rue des lilas [LIMIT 100]"""
+        start = time.time()
+        limit = 100
+        if 'LIMIT' in words:
+            words, limit = words.split('LIMIT')
+            limit = int(limit)
+        tokens = [token_key(w) for w in preprocess_query(words)]
+        DB.zinterstore(words, tokens)
+        results = DB.zrevrange(words, 0, limit, withscores=True)
+        DB.delete(words)
+        for id_, score in results:
+            r = SearchResult(id_)
+            print(white(r), blue(r.id), cyan(score))
+        duration = round((time.time() - start) * 1000, 1)
+        print(magenta("({} in {} ms)".format(len(results), duration)))
 
     def prompt(self):
         command = input("> ")

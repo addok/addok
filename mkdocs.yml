@@ -1,0 +1,11 @@
+site_name: Addok
+pages:
+- [index.md, Home]
+- [install.md, Installation]
+- [config.md, Configuration]
+- [import.md, Import]
+- [api.md, API]
+- [shell.md, Shell]
+theme: readthedocs
+repo_url: https://github.com/etalab/addok
+site_description: Search engine for address. Only address.

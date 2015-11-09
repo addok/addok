@@ -1,0 +1,4 @@
+include README.md
+include requirements.txt
+include addok/bin/init.d
+recursive-include addok/resources *

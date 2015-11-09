@@ -1,8 +1,9 @@
 import pytest
 
-from addok.textutils.default import (make_fuzzy, compare_ngrams, normalize,
-                                     alphanumerize, synonymize, tokenize,
-                                     compute_edge_ngrams, string_contain)
+from addok.textutils.default import (alphanumerize, ascii, compare_ngrams,
+                                     compute_edge_ngrams, contains, equals,
+                                     make_fuzzy, normalize, startswith,
+                                     synonymize, tokenize)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -49,16 +50,15 @@ def test_make_fuzzy_should_remove_letter_if_world_is_long():
     assert 'trai' in make_fuzzy('train')
 
 
-def test_compare_ngrams_should_return_one_for_same_string():
-    assert compare_ngrams('Lille', 'Lille') == 1
-
-
-def test_compare_ngrams_should_be_case_unsensitive():
-    assert compare_ngrams('Lille', 'lille') == 1
-
-
-def test_compare_ngrams_should_be_accent_unsensitive():
-    assert compare_ngrams('Andrésy', 'andresy') == 1
+@pytest.mark.parametrize('left,right,score', [
+    ['Lille', 'Lille', 1],
+    ['Lille', 'lille', 1],
+    ['Andrésy', 'andresy', 1],
+    ['Y', 'y', 1],
+    ['Ay', 'ay', 1],
+])
+def test_compare_ngrams(left, right, score):
+    assert compare_ngrams(left, right) == score
 
 
 @pytest.mark.parametrize('input,output', [
@@ -84,7 +84,7 @@ def test_alphanumerize(input, output):
     ['13e', 'treizieme'],
 ])
 def test_synonymize(input, output, monkeypatch):
-    # Make sure we control synonyms.
+    # Make sure we control synonyms.
     SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
     monkeypatch.setattr('addok.textutils.default.SYNONYMS', SYNONYMS)
     assert synonymize(input) == output
@@ -96,8 +96,59 @@ def test_compute_edge_ngrams():
     ]
 
 
+def test_compute_edge_ngrams_honor_min_edge_ngrams_setting(config):
+    config.MIN_EDGE_NGRAMS = 1
+    assert compute_edge_ngrams('abcd') == ['a', 'ab', 'abc']
+
+
+def test_compute_edge_ngrams_honor_max_edge_ngrams_setting(config):
+    config.MAX_EDGE_NGRAMS = 5
+    assert compute_edge_ngrams('abcdefghijklmn') == ['abc', 'abcd', 'abcde']
+
+
 @pytest.mark.parametrize('candidate,target', [
     ['22 rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
+    ['rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
 ])
-def test_string_contain(candidate, target):
-    assert string_contain(candidate, target)
+def test_contains(candidate, target):
+    assert contains(candidate, target)
+
+
+@pytest.mark.parametrize('candidate,target', [
+    ['22 rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
+    ['etang des rivieres', "Étang des Rivières 42330 Saint-Galmier"],
+])
+def test_startswith(candidate, target):
+    assert startswith(candidate, target)
+
+
+@pytest.mark.parametrize('candidate,target', [
+    ["22 rue vicq d azir 75010 paris", "22 Rue Vicq d'Azir 75010 Paris"],
+    ['etang des rivieres', "Étang des Rivières"],
+    ['Saint galmier', "Saint-Galmier"],
+])
+def test_equals(candidate, target):
+    assert equals(candidate, target)
+
+
+def test_ascii_should_behave_like_a_string():
+    s = ascii('mystring')
+    assert str(s) == 'mystring'
+
+
+def test_ascii_should_clean_string():
+    s = ascii(u'Aystringé')
+    assert s == 'aystringe'
+
+
+def test_ascii_should_cache_cleaned_string(monkeypatch):
+    s = ascii('mystring')
+    assert s._cache
+
+    def do_not_call_me(x):
+        assert False
+
+    monkeypatch.setattr('addok.textutils.default.alphanumerize',
+                        do_not_call_me)
+
+    ascii(s)  # Should not call alphanumerize.
