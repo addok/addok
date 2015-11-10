@@ -179,7 +179,8 @@ class Search(View):
         try:
             lat = float(self.request.args.get('lat'))
             lon = float(self.request.args.get('lon',
-                        self.request.args.get('lng')))
+                        self.request.args.get('lng',
+                        self.request.args.get('long'))))
             center = [lat, lon]
         except (ValueError, TypeError):
             lat = None
@@ -404,7 +405,7 @@ class CSVReverse(BaseCSV):
 
     def process_row(self, row):
         lat = row.get('latitude', row.get('lat', None))
-        lon = row.get('longitude', row.get('lon', row.get('lng', None)))
+        lon = row.get('longitude', row.get('lon', row.get('lng', row.get('long',None))))
         try:
             lat = float(lat)
             lon = float(lon)
