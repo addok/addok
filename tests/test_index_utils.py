@@ -164,7 +164,7 @@ def test_index_housenumber_uses_housenumber_preprocessors():
     }
     index_document(doc)
     index = DB.hgetall('d|xxxx')
-    assert index[b'h|1b'] == b'1 bis|48.325451|2.25651'
+    assert index[b'h|1b'] == b'1 bis|48.325451|2.25651|'
 
 
 def test_allow_list_values():
