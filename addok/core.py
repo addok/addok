@@ -148,6 +148,14 @@ class Result(object):
                 self.type = 'housenumber'
                 if _id:
                     self.id = _id[0]
+
+                vals = []
+                for field in config.FIELDS:
+                    if field.get('type') == 'housenumbers' and field.get('key') != 'housenumbers':
+                        vals.append(field)
+                        print(_id[len(vals)])
+
+                        self._doc[field.get('key')] = _id[len(vals)]
                 break
 
     @property

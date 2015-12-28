@@ -67,6 +67,8 @@ FIELDS = [
     {'key': 'postcode',
      'boost': lambda doc: 1.2 if doc.get('type') == 'commune' else 1},
     {'key': 'city'},
+    {'key': 'postcode', 'type': 'housenumbers'},
+    {'key': 'cea', 'type': 'housenumbers'},
     {'key': 'housenumbers'},
     {'key': 'context'},
 ]
@@ -83,7 +85,7 @@ DEFAULT_BOOST = 1.0
 
 # Data attribution
 # Can also be an object {source: attribution}
-ATTRIBUTION = "BANO"
+ATTRIBUTION = "BAN"
 
 # Data licence
 # Can also be an object {source: licence}

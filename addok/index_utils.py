@@ -132,9 +132,17 @@ def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
     to_index = {}
     for number, point in housenumbers.items():
         vals = [number, point['lat'], point['lon']]
-        _id = point.get('id')
+        _id = point.get('id', " ")
         if _id:
             vals.append(_id)
+
+        for field in config.FIELDS:
+            if field.get('type') == 'housenumbers' and field.get('key') != 'housenumbers':
+                _field_val = field.get('key')
+                _field = point.get(_field_val, " ")
+                if _field:
+                    vals.append(_field)
+
         val = '|'.join(map(str, vals))
         for hn in preprocess_housenumber(number):
             doc[housenumber_field_key(hn)] = val
