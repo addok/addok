@@ -167,6 +167,30 @@ def test_index_housenumber_uses_housenumber_preprocessors():
     assert index[b'h|1b'] == b'1 bis|48.325451|2.25651'
 
 
+def test_index_should_join_housenumbers_payload_fields(config):
+    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['key', 'one']
+    doc = {
+        'id': 'xxxx',
+        'type': 'street',
+        'name': 'rue des Lilas',
+        'city': 'Paris',
+        'lat': '49.32545',
+        'lon': '4.2565',
+        'housenumbers': {
+            '1 bis': {
+                'lat': '48.325451',
+                'lon': '2.25651',
+                'key': 'myvalue',
+                'thisone': 'no',
+                'one': 'two',
+            }
+        }
+    }
+    index_document(doc)
+    index = DB.hgetall('d|xxxx')
+    assert index[b'h|1b'] == b'1 bis|48.325451|2.25651|myvalue|two'
+
+
 def test_allow_list_values():
     doc = {
         'id': 'xxxx',
