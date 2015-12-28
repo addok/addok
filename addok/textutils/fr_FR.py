@@ -22,8 +22,8 @@ TYPES_REGEX = '|'.join(
 
 def _clean_query(q):
     q = re.sub('c(e|é)dex ?[\d]*', '', q, flags=re.IGNORECASE)
-    q = re.sub('bp ?[\d]*', '', q, flags=re.IGNORECASE)
-    q = re.sub('cs ?[\d]*', '', q, flags=re.IGNORECASE)
+    q = re.sub(r'\bbp ?[\d]*', '', q, flags=re.IGNORECASE)
+    q = re.sub(r'\bcs ?[\d]*', '', q, flags=re.IGNORECASE)
     q = re.sub('\d{,2}(e|[eè]me) ([eé]tage)', '', q, flags=re.IGNORECASE)
     q = re.sub(' {2,}', ' ', q, flags=re.IGNORECASE)
     q = re.sub('[ -]s/[ -]', ' sur ', q, flags=re.IGNORECASE)
