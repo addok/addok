@@ -173,13 +173,14 @@ class Search(View):
         except (ValueError, TypeError):
             limit = 5
         try:
-            autocomplete = int(self.request.args.get('autocomplete')) == '1'
+            autocomplete = int(self.request.args.get('autocomplete')) == 1
         except (ValueError, TypeError):
             autocomplete = True
         try:
             lat = float(self.request.args.get('lat'))
             lon = float(self.request.args.get('lon',
-                        self.request.args.get('lng')))
+                        self.request.args.get('lng',
+                        self.request.args.get('long'))))
             center = [lat, lon]
         except (ValueError, TypeError):
             lat = None
@@ -404,7 +405,7 @@ class CSVReverse(BaseCSV):
 
     def process_row(self, row):
         lat = row.get('latitude', row.get('lat', None))
-        lon = row.get('longitude', row.get('lon', row.get('lng', None)))
+        lon = row.get('longitude', row.get('lon', row.get('lng', row.get('long',None))))
         try:
             lat = float(lat)
             lon = float(lon)
