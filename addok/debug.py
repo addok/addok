@@ -13,7 +13,7 @@ from . import config
 from .core import (Search, SearchResult, Token, compute_geohash_key,
                    make_fuzzy, preprocess_query, reverse, token_frequency)
 from .db import DB
-from .index_utils import VALUE_SEPARATOR, document_key, pair_key, token_key
+from .index_utils import VALUE_SEPARATOR, document_key, pair_key, token_key, compute_trigrams
 from .textutils.default import compare_ngrams
 from .utils import (blue, cyan, green, haversine_distance, km_to_score,
                     magenta, red, white, yellow)
@@ -202,12 +202,13 @@ class Cli(object):
         print(magenta('({} elements)'.format(len(keys))))
 
     def _print_field_index_details(self, field, _id):
-        for token in indexed_string(field):
-            print(
-                white(token),
-                blue(DB.zscore(token_key(token), document_key(_id))),
-                blue(DB.zrevrank(token_key(token), document_key(_id))),
-            )
+        for token in preprocess_query(field):
+            for trigram in compute_trigrams(token):
+                print(
+                    white(trigram),
+                    blue(DB.zscore(token_key(trigram), document_key(_id))),
+                    blue(DB.zrevrank(token_key(trigram), document_key(_id))),
+                )
 
     def do_index(self, _id):
         """Get index details for a document by its id.
@@ -223,7 +224,7 @@ class Cli(object):
     def do_bestscore(self, word):
         """Return document linked to word with higher score.
         BESTSCORE lilas"""
-        key = token_key(indexed_string(word)[0])
+        key = token_key(word)
         for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
             result = SearchResult(_id)
             print(white(result), blue(score), blue(result.id))

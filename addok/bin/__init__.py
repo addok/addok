@@ -5,7 +5,6 @@ Usage:
     addok serve [--port=<number>] [--host=<string>] [options]
     addok shell [options]
     addok batch [<filepath>...] [options]
-    addok ngrams [options]
 
 Examples:
     addok serve --port 5432 --debug
@@ -13,7 +12,6 @@ Examples:
     addok batch path/to/bano-full.csv
     addok batch < cat path/to/bano-full.csv
     addok batch --dbuser myname --dbname mydb
-    addok batch ngrams
 
 Options:
     -h --help           print this message and exit
@@ -44,7 +42,6 @@ def main():
     from addok.debug import Cli
     from addok.server import app
     from addok import batch
-    from addok.index_utils import create_edge_ngrams
 
     # Hook for plugins to register themselves.
     if hasattr(config, 'ON_LOAD'):
@@ -75,8 +72,6 @@ def main():
             if args['--limit']:
                 config.PSQL_LIMIT = args['--limit']
             batch.process_psql()
-    elif args['ngrams']:
-        create_edge_ngrams()
 
 if __name__ == '__main__':
     main()

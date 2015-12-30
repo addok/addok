@@ -55,10 +55,10 @@ def test_should_give_priority_to_best_match3(street, factory):
     assert results[0].id == other['id']
 
 
-def test_should_be_fuzzy_of_1_by_default(city):
+def test_should_be_fuzzy(city):
     city.update(name="Andrésy")
     assert search('antresy')
-    assert not search('antresu')
+    assert search('antresu')
 
 
 def test_fuzzy_should_work_with_inversion(city):
@@ -97,10 +97,10 @@ def test_return_housenumber_if_number_included_in_bigger_one(factory):
     assert results[0].housenumber == '8'
 
 
-def test_should_do_autocomplete_on_last_term(street):
+def test_should_do_autocomplete(street):
     street.update(name='rue de Wambrechies', city="Bondues")
     assert search('avenue wambre', autocomplete=True)
-    assert not search('wambre avenue', autocomplete=True)
+    assert search('wambre avenue', autocomplete=True)
 
 
 def test_synonyms_should_be_replaced(street, monkeypatch):

@@ -8,7 +8,7 @@ def process(doc):
     if doc.get('_action') in ['delete', 'update']:
         deindex_document(doc['id'])
     if doc.get('_action') in ['index', 'update', None]:
-        index_document(doc, update_ngrams=False)
+        index_document(doc)
 
 
 def batch(iterable):

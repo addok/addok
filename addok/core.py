@@ -9,7 +9,7 @@ from .index_utils import (PROCESSORS, VALUE_SEPARATOR, document_key,
                           edge_ngram_key, filter_key, geohash_key, pair_key,
                           token_key)
 from .textutils.default import (ascii, compare_ngrams, contains, equals,
-                                make_fuzzy, startswith)
+                                make_fuzzy, startswith, compute_trigrams)
 from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
 
 QUERY_PROCESSORS = [import_by_path(path) for path in config.QUERY_PROCESSORS]
@@ -131,8 +131,7 @@ class Result(object):
     def __repr__(self):
         return '<{} - {} ({})>'.format(str(self), self.id, self.score)
 
-    def match_housenumber(self, tokens):
-        originals = [t.original for t in tokens]
+    def match_housenumber(self, originals):
         name_tokens = self.name.split()
         for original in originals:
             if original in self.housenumbers:
@@ -230,13 +229,15 @@ class Result(object):
                 if score >= config.MATCH_THRESHOLD:
                     break
         if not score:
-            self.score_by_ngram_distance(query, labels=labels)
+            # change scale to avoid score higher than labels starting with
+            # query.
+            self.score_by_ngram_distance(query, labels=labels, scale=0.9)
 
-    def score_by_ngram_distance(self, query, labels=None):
+    def score_by_ngram_distance(self, query, labels=None, scale=1.0):
         query = ascii(query)
         for label in labels or self.labels:
             label = ascii(label)
-            score = compare_ngrams(label, query)
+            score = compare_ngrams(label, query) * scale
             self.add_score('str_distance', score, ceiling=1.0)
             if score >= config.MATCH_THRESHOLD:
                 break
@@ -327,6 +328,13 @@ class Token(object):
         return self.original.isdigit()
 
 
+class Trigram(Token):
+
+    def __init__(self, original, position=0, parent_position=0):
+        super().__init__(original, position)
+        self.parent_position = parent_position
+
+
 class BaseHelper(object):
 
     def __init__(self, verbose):
@@ -371,14 +379,18 @@ class Search(BaseHelper):
             return []
         self.search_all()
         self.set_should_match_threshold()
-        for token in self.tokens:
+        meaningful = []
+        for token in self.trigrams:
             if token.is_common:
                 self.common.append(token)
             elif token.db_key:
-                self.meaningful.append(token)
+                meaningful.append(token)
             else:
                 self.not_found.append(token)
         self.common.sort(key=lambda x: x.frequency)
+        meaningful.sort(key=lambda x: x.frequency)
+        self.common.extend(meaningful[10:])
+        self.meaningful = meaningful[:10]
         self.debug('Taken tokens: %s', self.meaningful)
         self.debug('Common tokens: %s', self.common)
         self.debug('Not found tokens: %s', self.not_found)
@@ -390,10 +402,8 @@ class Search(BaseHelper):
             self.step_bucket_with_meaningful,
             self.step_reduce_with_other_commons,
             self.step_ensure_geohash_results_are_included_if_center_is_given,
-            self.step_autocomplete,
             self.step_check_bucket_full,
             self.step_check_cream,
-            self.step_fuzzy,
             self.step_extend_results_reducing_tokens,
         ]
         for step in steps:
@@ -403,27 +413,26 @@ class Search(BaseHelper):
         return self.render()
 
     def step_only_commons(self):
-        if len(self.tokens) == len(self.common):
+        if len(self.trigrams) == len(self.common):
             # Only common terms, shortcut to search
-            keys = [t.db_key for t in self.tokens]
+            keys = [t.db_key for t in self.trigrams]
             if self.geohash_key:
                 keys.append(self.geohash_key)
                 self.debug('Adding geohash %s', self.geohash_key)
-                self.autocomplete(self.tokens, use_geohash=True)
             if len(keys) == 1 or self.geohash_key:
                 self.add_to_bucket(keys)
             if self.bucket_dry and len(keys) > 1:
                 count = 0
                 # Scan the less frequent token.
-                self.tokens.sort(key=lambda t: t.frequency)
-                first = self.tokens[0]
+                self.trigrams.sort(key=lambda t: t.frequency)
+                first = self.trigrams[0]
                 if first.frequency < config.INTERSECT_LIMIT:
                     self.debug('Under INTERSECT_LIMIT, brut force.')
-                    keys = [t.db_key for t in self.tokens]
+                    keys = [t.db_key for t in self.trigrams]
                     self.add_to_bucket(keys)
                 else:
                     self.debug('INTERSECT_LIMIT hit, manual scan on %s', first)
-                    others = [t.db_key for t in self.tokens[1:]]
+                    others = [t.db_key for t in self.trigrams[1:]]
                     ids = DB.zrevrange(first.db_key, 0, 500)
                     for id_ in ids:
                         count += 1
@@ -434,7 +443,6 @@ class Search(BaseHelper):
                             break
                     self.debug('%s results after scan (%s loops)',
                                len(self.bucket), count)
-            self.autocomplete(self.tokens, skip_commons=True)
             if not self.bucket_empty:
                 self.debug('Only common terms. Return.')
                 return True
@@ -451,8 +459,10 @@ class Search(BaseHelper):
                 return True
 
     def step_bucket_with_meaningful(self):
-        if len(self.meaningful) == 1 and self.common:
-            # Avoid running with too less tokens while having commons terms.
+        positions = set([t.parent_position for t in self.meaningful])
+        if len(positions) == 1 and self.common:
+            # Avoid running with trigrams from only one term while having
+            # also commons.
             for token in self.common:
                 if token not in self.meaningful:
                     self.meaningful.append(token)
@@ -485,25 +495,6 @@ class Search(BaseHelper):
             self.debug('Bucket overflow and center, force nearby look up')
             self.add_to_bucket(self.keys + [self.geohash_key], self.limit)
 
-    def step_autocomplete(self):
-        if self.bucket_overflow:
-            return
-        if not self._autocomplete:
-            self.debug('Autocomplete not active. Abort.')
-            return
-        if self.geohash_key:
-            self.autocomplete(self.meaningful, use_geohash=True)
-        self.autocomplete(self.meaningful)
-
-    def step_fuzzy(self):
-        if self._fuzzy and not self.has_cream():
-            if self.not_found:
-                self.fuzzy(self.not_found)
-            if self.bucket_dry and not self.has_cream():
-                self.fuzzy(self.meaningful)
-            if self.bucket_dry and not self.has_cream():
-                self.fuzzy(self.meaningful, include_common=False)
-
     def step_extend_results_reducing_tokens(self):
         if self.has_cream():
             return  # No need.
@@ -535,104 +526,62 @@ class Search(BaseHelper):
 
     def preprocess(self):
         self.tokens = []
+        self.trigrams = []
         token = None
-        for position, token in enumerate(preprocess_query(self.query)):
-            token = Token(token, position=position)
+        position = 0
+        uniques = []
+        for parent_position, token in enumerate(preprocess_query(self.query)):
+            token = Token(token, position=parent_position)
             self.tokens.append(token)
+            for trigram in compute_trigrams(token.original):
+                if trigram in uniques:
+                    continue
+                self.trigrams.append(Trigram(trigram, position=position,
+                                             parent_position=parent_position))
+                position += 1
+                uniques.append(trigram)
         if token:
             token.is_last = True
             self.last_token = token
         self.tokens.sort(key=lambda x: len(x), reverse=True)
 
     def search_all(self):
-        for token in self.tokens:
+        for token in self.trigrams:
             token.search()
-
-    def autocomplete(self, tokens, skip_commons=False, use_geohash=False):
-        self.debug('Autocompleting %s', self.last_token)
-        # self.last_token.autocomplete()
-        keys = [t.db_key for t in tokens if not t.is_last]
-        pair_keys = [pair_key(t.original) for t in tokens if not t.is_last]
-        key = edge_ngram_key(self.last_token.original)
-        autocomplete_tokens = DB.sinter(pair_keys + [key])
-        self.debug('Found tokens to autocomplete %s', autocomplete_tokens)
-        for token in autocomplete_tokens:
-            key = token_key(token.decode())
-            if skip_commons\
-               and token_key_frequency(key) > config.COMMON_THRESHOLD:
-                self.debug('Skip common token to autocomplete %s', key)
-                continue
-            if not self.bucket_overflow or self.last_token in self.not_found:
-                self.debug('Trying to extend bucket. Autocomplete %s', key)
-                extra_keys = [key]
-                if use_geohash and self.geohash_key:
-                    extra_keys.append(self.geohash_key)
-                self.add_to_bucket(keys + extra_keys)
-
-    def fuzzy(self, tokens, include_common=True):
-        if not self.bucket_dry or not tokens:
-            return
-        self.debug('Fuzzy on. Trying with %s.', tokens)
-        tokens.sort(key=lambda t: len(t), reverse=True)
-        allkeys = self.keys[:]
-        if include_common:
-            # As we are in fuzzy, try to narrow as much as possible by adding
-            # unused commons tokens.
-            common = [t for t in self.common if t.db_key not in self.keys]
-            allkeys.extend([t.db_key for t in common])
-        for try_one in tokens:
-            if self.bucket_full:
-                break
-            keys = allkeys[:]
-            if try_one.db_key in keys:
-                keys.remove(try_one.db_key)
-            if try_one.isdigit():
-                continue
-            self.debug('Going fuzzy with %s', try_one)
-            try_one.make_fuzzy(fuzzy=self.fuzzy)
-            if len(keys):
-                # Only retains tokens that have been seen in the index at least
-                # once with the other tokens.
-                DB.sadd(self.query, *try_one.neighbors)
-                interkeys = [pair_key(k[2:]) for k in keys]
-                interkeys.append(self.query)
-                fuzzy_words = DB.sinter(interkeys)
-                DB.delete(self.query)
-                # Keep the priority we gave in building fuzzy terms (inversion
-                # first, then substitution, etc.).
-                fuzzy_words = [w.decode() for w in fuzzy_words]
-                fuzzy_words.sort(key=lambda x: try_one.neighbors.index(x))
-            else:
-                # The token we are considering is alone.
-                fuzzy_words = []
-                for neighbor in try_one.neighbors:
-                    key = token_key(neighbor)
-                    count = DB.zcard(key)
-                    if count:
-                        fuzzy_words.append(neighbor)
-            self.debug('Found fuzzy candidates %s', fuzzy_words)
-            fuzzy_keys = [token_key(w) for w in fuzzy_words]
-            for key in fuzzy_keys:
-                if self.bucket_dry:
-                    self.add_to_bucket(keys + [key])
 
     def reduce_tokens(self):
         # Only if bucket is empty or we have margin on should_match_threshold.
         if self.bucket_empty\
            or len(self.meaningful) - 1 > self.should_match_threshold:
-            self.debug('Bucket dry. Trying to remove some tokens.')
+            self.debug('Bucket dry. Trying to remove tokens.')
+            LADLEFUL = 10
 
-            def sorter(t):
-                # First numbers, then by frequency
-                return (2 if t.original.isdigit() else 1, t.frequency)
+            # Remove numbers
+            self.debug('Trying to remove numbers.')
+            keys = [t.db_key for t in self.meaningful if not t.original.isdigit()]
+            self.add_to_bucket(keys, limit=LADLEFUL)
+            if self.bucket_overflow:
+                return
 
-            self.meaningful.sort(key=sorter, reverse=True)
-            for token in self.meaningful:
-                keys = self.keys[:]
-                keys.remove(token.db_key)
-                self.add_to_bucket(keys)
+            # Group by position, so we can remove one word all in a once.
+            positions = set([t.parent_position for t in self.meaningful])
+            if len(positions) > 2:
+                # Do not remove one entire word if we have only two, as doing
+                # search with only one word often is too noisy.
+                for position in positions:
+                    self.debug('Removing position %s', position)
+                    keys = [t.db_key for t in self.meaningful if t.parent_position != position]
+                    self.add_to_bucket(keys, limit=LADLEFUL)
+                    if self.bucket_overflow:
+                        return
+
+            self.meaningful.sort(key=lambda x: x.position)
+            for i in range(len(self.meaningful)):
+                self.debug('Removing trigrams %s.', self.meaningful[i:i+3])
+                keys = [t.db_key for t in (self.meaningful[:i] + self.meaningful[i + 3:])]
+                self.add_to_bucket(keys, limit=LADLEFUL)
                 if self.bucket_overflow:
-                    break
+                    return
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
@@ -644,7 +593,7 @@ class Search(BaseHelper):
             if len(keys) == 1:
                 ids = DB.zrevrange(keys[0], 0, limit - 1)
             else:
-                DB.zinterstore(self.query, keys)
+                DB.zinterstore(self.query, set(keys))
                 ids = DB.zrevrange(self.query, 0, limit - 1)
                 DB.delete(self.query)
         return set(ids)
@@ -669,7 +618,7 @@ class Search(BaseHelper):
                 continue
             result = SearchResult(_id)
             if self.check_housenumber:
-                result.match_housenumber(self.tokens)
+                result.match_housenumber([t.original for t in self.tokens])
             if self._autocomplete:
                 result.score_by_autocomplete_distance(self.query)
             else:
@@ -710,7 +659,7 @@ class Search(BaseHelper):
 
     def set_should_match_threshold(self):
         self.matched_keys = set([])
-        self.should_match_threshold = ceil(2 / 3 * len(self.tokens))
+        self.should_match_threshold = ceil(2 / 3 * len(self.trigrams))
 
     @property
     def pass_should_match_threshold(self):
