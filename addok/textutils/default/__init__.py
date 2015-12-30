@@ -119,9 +119,10 @@ def alphanumerize(text):
     return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
 
 
-def compute_edge_ngrams(token, min=None):
-    """Compute edge ngram of token from min. Does not includes token itself."""
-    if min is None:
-        min = config.MIN_EDGE_NGRAMS
-    token = token[:config.MAX_EDGE_NGRAMS + 1]
-    return [token[:i] for i in range(min, len(token))]
+def compute_trigrams(token):
+    if token.isdigit():
+        return [token]
+    max = len(token)
+    if max < 3:
+        return [token]
+    return [token[i:i+3] for i in range(0, max - 2)]
