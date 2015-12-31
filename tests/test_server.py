@@ -343,3 +343,15 @@ def test_allow_to_extend_api_endpoints(client, config):
 def test_view_should_expose_config(config):
     config.NEW_PROPERTY = "ok"
     assert View.config.NEW_PROPERTY == "ok"
+
+
+def test_geojson_should_return_housenumber_payload(client, factory, config):
+    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['key']
+    factory(name="rue de Paris", type="street", id="123",
+            housenumbers={'1': {'lat': '48.32', 'lon': '2.25', 'key': 'abc'}})
+    resp = client.get('/search/', query_string={'q': 'rue de paris'})
+    data = json.loads(resp.data.decode())
+    assert 'key' not in data['features'][0]['properties']
+    resp = client.get('/search/', query_string={'q': '1 rue de paris'})
+    data = json.loads(resp.data.decode())
+    assert data['features'][0]['properties']['key'] == 'abc'

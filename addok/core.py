@@ -156,6 +156,9 @@ class Result(object):
         to_filter = ['importance', 'housenumbers', 'lat', 'lon']
         keys = ['housenumber']
         keys.extend(self._doc.keys())
+        housenumber = getattr(self, 'housenumber', None)
+        if housenumber:
+            keys.extend(config.HOUSENUMBERS_PAYLOAD_FIELDS)
         for key in keys:
             if key.startswith(('_', 'h|')) or key in to_filter:
                 continue
