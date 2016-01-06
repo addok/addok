@@ -355,3 +355,18 @@ def test_geojson_should_return_housenumber_payload(client, factory, config):
     resp = client.get('/search/', query_string={'q': '1 rue de paris'})
     data = json.loads(resp.data.decode())
     assert data['features'][0]['properties']['key'] == 'abc'
+
+
+def test_geojson_should_keep_housenumber_parent_name(client, factory):
+    factory(name="rue de Paris", type="street", id="123",
+            housenumbers={'1': {'lat': '48.32', 'lon': '2.25'}})
+    factory(name="Le Vieux-Chêne", type="locality", id="124",
+            housenumbers={'2': {'lat': '48.22', 'lon': '2.22'}})
+    resp = client.get('/search/', query_string={'q': '1 rue de paris'})
+    data = json.loads(resp.data.decode())
+    assert data['features'][0]['properties']['name'] == '1 rue de Paris'
+    assert data['features'][0]['properties']['street'] == 'rue de Paris'
+    resp = client.get('/search/', query_string={'q': '2 Le Vieux-Chêne'})
+    data = json.loads(resp.data.decode())
+    assert data['features'][0]['properties']['name'] == '2 Le Vieux-Chêne'
+    assert data['features'][0]['properties']['locality'] == 'Le Vieux-Chêne'

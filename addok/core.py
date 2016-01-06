@@ -176,6 +176,8 @@ class Result(object):
                 properties[key] = val
         housenumber = getattr(self, 'housenumber', None)
         if housenumber:
+            if self._doc.get('type'):
+                properties[self._doc['type']] = properties.get('name')
             properties['name'] = '{} {}'.format(housenumber,
                                                 properties.get('name'))
         try:
