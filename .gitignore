@@ -4,7 +4,6 @@ __pycache__
 *.sjson
 notes.md
 .cli_history
-notfound.log
 addok/config/local.py
 addok.egg-info/
 debian/addok
@@ -15,8 +14,9 @@ debian/addok.substvars
 debian/addok.debhelper.log
 debian/files
 site/
-notfound.log*
-queries.log*
+*.log*
 build/
 dist/
 .coverage
+.cache
+scripts/*
