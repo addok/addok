@@ -1,11 +1,8 @@
-import time
-from multiprocessing import Pool
-
 import geohash
 
 from . import config
 from .db import DB
-from .textutils.default import compute_edge_ngrams
+from .textutils.default import compute_trigrams
 from .utils import import_by_path, iter_pipe
 
 VALUE_SEPARATOR = '|~|'
@@ -30,7 +27,7 @@ _HOUSENUMBER_CACHE = {}
 
 
 def token_key(s):
-    return 'w|{}'.format(s)
+    return 't|{}'.format(s)
 
 
 def document_key(s):
@@ -57,75 +54,41 @@ def filter_key(k, v):
     return 'f|{}|{}'.format(k, v)
 
 
-def index_edge_ngrams(pipe, token):
-    for ngram in compute_edge_ngrams(token):
-        pipe.sadd(edge_ngram_key(ngram), token)
-
-
-def deindex_edge_ngrams(token):
-    for ngram in compute_edge_ngrams(token):
-        DB.srem(edge_ngram_key(ngram), token)
-
-
-def extract_tokens(tokens, string, boost):
-    els = list(preprocess(string))
-    if not els:
+def extract_trigrams(trigrams, string, boost):
+    tokens = list(preprocess(string))
+    if not tokens:
         return
-    boost = config.DEFAULT_BOOST / len(els) * boost
-    for token in els:
-        if tokens.get(token, 0) < boost:
-            tokens[token] = boost
+    boost = config.DEFAULT_BOOST / len(tokens) * boost
+    for token in tokens:
+        els = compute_trigrams(token)
+        if not els:
+            print('No trigrams for', token, 'returning')
+            continue
+        for trigram in els:
+            if trigrams.get(trigram, 0) < boost:
+                trigrams[trigram] = boost
 
 
-def index_tokens(pipe, tokens, key, update_ngrams=True):
-    for token, boost in tokens.items():
+def index_trigrams(pipe, trigrams, key):
+    for token, boost in trigrams.items():
         pipe.zadd(token_key(token), boost, key)
-        if update_ngrams:
-            index_edge_ngrams(pipe, token)
 
 
 def deindex_field(key, string):
-    els = list(preprocess(string.decode()))
-    for s in els:
-        deindex_token(key, s)
-    return els
+    tokens = list(preprocess(string.decode()))
+    for token in tokens:
+        trigrams = compute_trigrams(token)
+        for trigram in trigrams:
+            deindex_trigram(key, trigram)
+    return tokens
 
 
-def deindex_token(key, token):
-    tkey = token_key(token)
+def deindex_trigram(key, trigram):
+    tkey = token_key(trigram)
     DB.zrem(tkey, key)
-    if not DB.exists(tkey):
-        deindex_edge_ngrams(token)
 
 
-def index_pairs(pipe, els):
-    els = set(els)  # Unique values.
-    for el in els:
-        values = set([])
-        for el2 in els:
-            if el != el2:
-                values.add(el2)
-        if values:
-            pipe.sadd(pair_key(el), *values)
-
-
-def deindex_pairs(els):
-    els = list(set(els))  # Unique values.
-    loop = 0
-    for el in els:
-        for el2 in els[loop:]:
-            if el != el2:
-                key = '|'.join(['didx', el, el2])
-                # Do we have other documents that share el and el2?
-                commons = DB.zinterstore(key, [token_key(el), token_key(el2)])
-                DB.delete(key)
-                if not commons:
-                    DB.srem(pair_key(el), el2)
-                    DB.srem(pair_key(el2), el)
-        loop += 1
-
-
-def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
+def index_housenumbers(pipe, housenumbers, doc, key):
     if not housenumbers:
         return
     del doc['housenumbers']
@@ -137,30 +100,23 @@ def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
         val = '|'.join(map(str, vals))
         for hn in preprocess_housenumber(number):
             doc[housenumber_field_key(hn)] = val
-            # Pair every document term to each housenumber, but do not pair
-            # housenumbers together.
-            pipe.sadd(pair_key(hn), *tokens.keys())
-            to_index[hn] = config.DEFAULT_BOOST
+            trigrams = compute_trigrams(hn)
+            for trigram in trigrams:
+                to_index[trigram] = config.DEFAULT_BOOST
         index_geohash(pipe, key, point['lat'], point['lon'])
-    index_tokens(pipe, to_index, key, update_ngrams)
+    index_trigrams(pipe, to_index, key)
 
 
-def deindex_housenumbers(key, doc, tokens):
+def deindex_housenumbers(key, doc):
     for field, value in doc.items():
         field = field.decode()
         if not field.startswith('h|'):
             continue
         number, lat, lon, *extra = value.decode().split('|')
         hn = field[2:]
-        for token in tokens:
-            k = '|'.join(['didx', hn, token])
-            commons = DB.zinterstore(k, [token_key(hn), token_key(token)])
-            DB.delete(k)
-            if not commons:
-                DB.srem(pair_key(hn), token)
-                DB.srem(pair_key(token), hn)
         deindex_geohash(key, lat, lon)
-        deindex_token(key, hn)
+        for trigram in compute_trigrams(hn):
+            deindex_trigram(key, hn)
 
 
 def index_filters(pipe, key, doc):
@@ -187,7 +143,7 @@ def deindex_filters(key, doc):
         DB.srem(filter_key("type", "housenumber"), key)
 
 
-def index_document(doc, update_ngrams=True):
+def index_document(doc):
     key = document_key(doc['id'])
     pipe = DB.pipeline()
     housenumbers = None
@@ -215,11 +171,10 @@ def index_document(doc, update_ngrams=True):
             else:
                 values = [values]
             for value in values:
-                extract_tokens(tokens, value, boost=boost)
-    index_tokens(pipe, tokens, key, update_ngrams)
-    index_pairs(pipe, tokens.keys())
+                extract_trigrams(tokens, value, boost=boost)
+    index_trigrams(pipe, tokens, key)
     index_filters(pipe, key, doc)
-    index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams)
+    index_housenumbers(pipe, housenumbers, doc, key)
     pipe.hmset(key, doc)
     pipe.execute()
 
@@ -231,7 +186,6 @@ def deindex_document(id_):
         return
     DB.delete(key)
     deindex_geohash(key, doc[b'lat'], doc[b'lon'])
-    tokens = []
     for field in config.FIELDS:
         name = field['key']
         values = doc.get(name.encode())
@@ -239,10 +193,9 @@ def deindex_document(id_):
             if not isinstance(values, (list, tuple)):
                 values = [values]
             for value in values:
-                tokens.extend(deindex_field(key, value))
-    deindex_pairs(tokens)
+                deindex_field(key, value)
     deindex_filters(key, doc)
-    deindex_housenumbers(key, doc, tokens)
+    deindex_housenumbers(key, doc)
 
 
 def index_geohash(pipe, key, lat, lon):
@@ -259,30 +212,3 @@ def deindex_geohash(key, lat, lon):
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
     geok = geohash_key(geoh)
     DB.srem(geok, key)
-
-
-def index_ngram_key(key):
-    key = key.decode()
-    _, token = key.split('|')
-    if token.isdigit():
-        return
-    index_edge_ngrams(DB, token)
-
-
-def create_edge_ngrams():
-    start = time.time()
-    pool = Pool()
-    count = 0
-    chunk = []
-    for key in DB.scan_iter(match='w|*'):
-        count += 1
-        chunk.append(key)
-        if count % 10000 == 0:
-            pool.map(index_ngram_key, chunk)
-            print("Done", count, time.time() - start)
-            chunk = []
-    if chunk:
-        pool.map(index_ngram_key, chunk)
-    pool.close()
-    pool.join()
-    print('Done', count, 'in', time.time() - start)

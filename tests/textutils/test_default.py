@@ -1,7 +1,7 @@
 import pytest
 
 from addok.textutils.default import (alphanumerize, ascii, compare_ngrams,
-                                     compute_edge_ngrams, contains, equals,
+                                     compute_trigrams, contains, equals,
                                      make_fuzzy, normalize, startswith,
                                      synonymize, tokenize)
 
@@ -90,22 +90,6 @@ def test_synonymize(input, output, monkeypatch):
     assert synonymize(input) == output
 
 
-def test_compute_edge_ngrams():
-    assert compute_edge_ngrams('vanbrechi') == [
-        'van', 'vanb', 'vanbr', 'vanbre', 'vanbrec', 'vanbrech'
-    ]
-
-
-def test_compute_edge_ngrams_honor_min_edge_ngrams_setting(config):
-    config.MIN_EDGE_NGRAMS = 1
-    assert compute_edge_ngrams('abcd') == ['a', 'ab', 'abc']
-
-
-def test_compute_edge_ngrams_honor_max_edge_ngrams_setting(config):
-    config.MAX_EDGE_NGRAMS = 5
-    assert compute_edge_ngrams('abcdefghijklmn') == ['abc', 'abcd', 'abcde']
-
-
 @pytest.mark.parametrize('candidate,target', [
     ['22 rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
     ['rue vicq', "22 Rue Vicq d'Azir 75010 Paris"],
@@ -152,3 +136,12 @@ def test_ascii_should_cache_cleaned_string(monkeypatch):
                         do_not_call_me)
 
     ascii(s)  # Should not call alphanumerize.
+
+
+@pytest.mark.parametrize('given,expected', [
+    ['lille', ['lil', 'ill', 'lle']],
+    ['y', ['y']],
+    ['31310', ['31310']],
+])
+def test_compute_trigrams(given, expected):
+    assert compute_trigrams(given) == expected
