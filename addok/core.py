@@ -5,29 +5,15 @@ import geohash
 
 from . import config
 from .db import DB
-from .index_utils import (PROCESSORS, VALUE_SEPARATOR, document_key,
+from .index_utils import (VALUE_SEPARATOR, document_key,
                           edge_ngram_key, filter_key, geohash_key, pair_key,
                           token_key)
 from .text_utils import ascii, make_fuzzy
-from .utils import import_by_path, iter_pipe
-
-QUERY_PROCESSORS = []
-COLLECTORS = []
-SEARCH_RESULT_PROCESSORS = []
-REVERSE_RESULT_PROCESSORS = []
-
-
-def on_load():
-    QUERY_PROCESSORS.extend([import_by_path(path) for path in config.QUERY_PROCESSORS])  # noqa
-    COLLECTORS.extend([import_by_path(path) for path in config.RESULTS_COLLECTORS])  # noqa
-    SEARCH_RESULT_PROCESSORS.extend([import_by_path(path) for path in config.SEARCH_RESULT_PROCESSORS])  # noqa
-    REVERSE_RESULT_PROCESSORS.extend([import_by_path(path) for path in config.REVERSE_RESULT_PROCESSORS])  # noqa
-
-config.on_load(on_load)
+from .utils import iter_pipe
 
 
 def preprocess_query(s):
-    return list(iter_pipe(s, QUERY_PROCESSORS + PROCESSORS))
+    return list(iter_pipe(s, config.QUERY_PROCESSORS + config.PROCESSORS))
 
 
 def token_key_frequency(key):
@@ -273,7 +259,7 @@ class Search(BaseHelper):
         self.debug('Not found tokens: %s', self.not_found)
         self.debug('Filters: %s', ['{}={}'.format(k, v)
                                    for k, v in filters.items()])
-        for collector in COLLECTORS:
+        for collector in config.RESULTS_COLLECTORS:
             self.debug('** %s **', collector.__name__.upper())
             if collector(self):
                 return self.render()
@@ -431,7 +417,7 @@ class Search(BaseHelper):
             if _id in self.results:
                 continue
             result = Result(_id)
-            for processor in SEARCH_RESULT_PROCESSORS:
+            for processor in config.SEARCH_RESULT_PROCESSORS:
                 processor(self, result)
             self.results[_id] = result
         self.debug('Done computing results')
@@ -519,7 +505,7 @@ class Reverse(BaseHelper):
     def convert(self):
         for _id in self.keys:
             result = Result(_id)
-            for processor in REVERSE_RESULT_PROCESSORS:
+            for processor in config.REVERSE_RESULT_PROCESSORS:
                 processor(self, result)
             self.results.append(result)
             self.debug(result, result.distance, result.score)

@@ -5,17 +5,7 @@ from multiprocessing import Pool
 
 from addok import config, hooks
 from addok.index_utils import deindex_document, index_document
-from addok.utils import import_by_path, iter_pipe, yielder
-
-BATCH_PROCESSORS = []
-
-
-def on_load():
-    BATCH_PROCESSORS.extend([import_by_path(path)
-                             for path in config.BATCH_PROCESSORS])
-
-
-config.on_load(on_load)
+from addok.utils import iter_pipe, yielder
 
 
 def run(args):
@@ -35,7 +25,7 @@ def addok_register_command(subparsers):
 
 
 def preprocess_batch(d):
-    return list(iter_pipe(d, BATCH_PROCESSORS))[0]
+    return list(iter_pipe(d, config.BATCH_PROCESSORS))[0]
 
 
 def process_file(filepath):

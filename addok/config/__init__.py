@@ -50,7 +50,7 @@ def load_plugins(config, load_external=True):
     names = [name for name, module in pm.list_name_plugin()]
     print('Addok loaded plugins: {}'.format(', '.join(names)))
     pm.hook.addok_configure(config=config)
-    load()
+    resolve_paths()
 
 
 def load_core_plugins():
@@ -63,11 +63,18 @@ def load_external_plugins():
     pm.load_setuptools_entrypoints("addok.ext")
 
 
-def on_load(func):
-    ON_LOAD.append(func)
-ON_LOAD = []
+def resolve_path(name):
+    from addok.utils import import_by_path
+    attr = globals()[name]
+    for idx, path in enumerate(attr):
+        attr[idx] = import_by_path(path)
 
 
-def load():
-    for func in ON_LOAD:
-        func()
+def resolve_paths():
+    names = [
+        'QUERY_PROCESSORS', 'RESULTS_COLLECTORS', 'SEARCH_RESULT_PROCESSORS',
+        'REVERSE_RESULT_PROCESSORS', 'PROCESSORS', 'INDEXERS', 'DEINDEXERS',
+        'BATCH_PROCESSORS'
+    ]
+    for name in names:
+        resolve_path(name)

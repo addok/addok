@@ -6,34 +6,24 @@ import geohash
 from . import config
 from .db import DB
 from .text_utils import compute_edge_ngrams
-from .utils import import_by_path, iter_pipe
+from .utils import iter_pipe
 
 VALUE_SEPARATOR = '|~|'
 
-PROCESSORS = []
 HOUSENUMBER_PROCESSORS = []
-INDEXERS = []
-DEINDEXERS = []
-
-
-def on_load():
-    PROCESSORS.extend([import_by_path(path) for path in config.PROCESSORS])
-    HOUSENUMBER_PROCESSORS.extend([import_by_path(path) for path in config.HOUSENUMBER_PROCESSORS])  # noqa
-    HOUSENUMBER_PROCESSORS.extend(PROCESSORS)
-    INDEXERS.extend([import_by_path(path) for path in config.INDEXERS])
-    DEINDEXERS.extend([import_by_path(path) for path in config.DEINDEXERS])
-
-config.on_load(on_load)
 
 
 def preprocess(s):
     if s not in _CACHE:
-        _CACHE[s] = list(iter_pipe(s, PROCESSORS))
+        _CACHE[s] = list(iter_pipe(s, config.PROCESSORS))
     return _CACHE[s]
 _CACHE = {}
 
 
 def preprocess_housenumber(s):
+    if not HOUSENUMBER_PROCESSORS:
+        HOUSENUMBER_PROCESSORS.extend(config.HOUSENUMBER_PROCESSORS)
+        HOUSENUMBER_PROCESSORS.extend(config.PROCESSORS)
     if s not in _HOUSENUMBER_CACHE:
         _HOUSENUMBER_CACHE[s] = list(iter_pipe(s, HOUSENUMBER_PROCESSORS))
     return _HOUSENUMBER_CACHE[s]
@@ -113,7 +103,7 @@ def index_document(doc, **kwargs):
     key = document_key(doc['id'])
     pipe = DB.pipeline()
     tokens = {}
-    for indexer in INDEXERS:
+    for indexer in config.INDEXERS:
         try:
             indexer(pipe, key, doc, tokens, **kwargs)
         except ValueError as e:
@@ -128,7 +118,7 @@ def deindex_document(id_, **kwargs):
     if not doc:
         return
     tokens = []
-    for indexer in DEINDEXERS:
+    for indexer in config.DEINDEXERS:
         indexer(DB, key, doc, tokens, **kwargs)
 
 
