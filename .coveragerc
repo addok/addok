@@ -1,5 +1,6 @@
 [run]
 omit =
     addok/debug.py
+    addok/pytest_plugin.py
     addok/config/*
     addok/bin/*

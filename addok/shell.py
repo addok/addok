@@ -9,14 +9,25 @@ from pathlib import Path
 
 import geohash
 
-from . import config
+from . import config, hooks
 from .core import (Search, SearchResult, Token, compute_geohash_key,
                    make_fuzzy, preprocess_query, reverse, token_frequency)
 from .db import DB
 from .index_utils import VALUE_SEPARATOR, document_key, pair_key, token_key
-from .textutils.default import compare_ngrams
+from .text_utils import compare_ngrams
 from .utils import (blue, cyan, green, haversine_distance, km_to_score,
                     magenta, red, white, yellow)
+
+
+def run_cli(args):
+    cli = Cli()
+    cli()
+
+
+@hooks.register
+def addok_register_command(subparsers):
+    parser = subparsers.add_parser('shell', help='Run a shell to inspect index')
+    parser.set_defaults(func=run_cli)
 
 
 def doc_by_id(_id):

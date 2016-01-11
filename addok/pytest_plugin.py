@@ -6,10 +6,16 @@ from werkzeug.wrappers import BaseResponse
 
 
 def pytest_configure(config):
-    from addok.config import REDIS
+    from addok.config import REDIS, load_core_plugins
     REDIS['db'] = 15
     import logging
     logging.basicConfig(level=logging.DEBUG)
+    load_core_plugins()
+
+
+def pytest_runtest_setup(item):
+    from addok.db import DB
+    assert DB.connection_pool.connection_kwargs['db'] == 15
 
 
 def pytest_runtest_teardown(item, nextitem):
@@ -85,7 +91,7 @@ def housenumber(factory):
 def client():
     # Do not import before redis config has been
     # patched.
-    from addok.server import app
+    from addok.http import app
     return Client(app, BaseResponse)
 
 

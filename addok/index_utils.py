@@ -5,14 +5,23 @@ import geohash
 
 from . import config
 from .db import DB
-from .textutils.default import compute_edge_ngrams
+from .text_utils import compute_edge_ngrams
 from .utils import import_by_path, iter_pipe
 
 VALUE_SEPARATOR = '|~|'
 
-PROCESSORS = [import_by_path(path) for path in config.PROCESSORS]
-HOUSENUMBER_PROCESSORS = [import_by_path(path) for path in
-                          config.HOUSENUMBER_PROCESSORS + config.PROCESSORS]
+PROCESSORS = []
+HOUSENUMBER_PROCESSORS = []
+
+
+def on_load():
+    config.pm.hook.addok_register_string_processors(processors=config.PROCESSORS)  # noqa
+    PROCESSORS.extend([import_by_path(path) for path in config.PROCESSORS])
+    config.pm.hook.addok_register_housenumber_processors(processors=config.HOUSENUMBER_PROCESSORS)  # noqa
+    HOUSENUMBER_PROCESSORS.extend([import_by_path(path) for path in config.HOUSENUMBER_PROCESSORS])  # noqa
+    HOUSENUMBER_PROCESSORS.extend(PROCESSORS)
+
+config.on_load(on_load)
 
 
 def preprocess(s):

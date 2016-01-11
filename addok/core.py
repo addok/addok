@@ -3,16 +3,36 @@ from math import ceil
 
 import geohash
 
-from . import config
+from . import config, steps
 from .db import DB
 from .index_utils import (PROCESSORS, VALUE_SEPARATOR, document_key,
                           edge_ngram_key, filter_key, geohash_key, pair_key,
                           token_key)
-from .textutils.default import (ascii, compare_ngrams, contains, equals,
-                                make_fuzzy, startswith)
+from .text_utils import (ascii, compare_ngrams, contains, equals, make_fuzzy,
+                         startswith)
 from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
 
-QUERY_PROCESSORS = [import_by_path(path) for path in config.QUERY_PROCESSORS]
+QUERY_PROCESSORS = []
+STEPS = [
+    steps.step_only_commons,
+    steps.step_no_meaningful_but_common_try_autocomplete,
+    steps.step_bucket_with_meaningful,
+    steps.step_reduce_with_other_commons,
+    steps.step_ensure_geohash_results_are_included_if_center_is_given,
+    steps.step_autocomplete,
+    steps.step_check_bucket_full,
+    steps.step_check_cream,
+    steps.step_fuzzy,
+    steps.step_extend_results_reducing_tokens,
+]
+
+
+def on_load():
+    config.pm.hook.addok_register_query_processors(processors=config.QUERY_PROCESSORS)  # noqa
+    QUERY_PROCESSORS.extend([import_by_path(path) for path in config.QUERY_PROCESSORS])  # noqa
+    config.pm.hook.addok_register_search_steps(steps=STEPS)  # noqa
+
+config.on_load(on_load)
 
 
 def preprocess_query(s):
@@ -384,137 +404,11 @@ class Search(BaseHelper):
         self.debug('Not found tokens: %s', self.not_found)
         self.debug('Filters: %s', ['{}={}'.format(k, v)
                                    for k, v in filters.items()])
-        steps = [
-            self.step_only_commons,
-            self.step_no_meaningful_but_common_try_autocomplete,
-            self.step_bucket_with_meaningful,
-            self.step_reduce_with_other_commons,
-            self.step_ensure_geohash_results_are_included_if_center_is_given,
-            self.step_autocomplete,
-            self.step_check_bucket_full,
-            self.step_check_cream,
-            self.step_fuzzy,
-            self.step_extend_results_reducing_tokens,
-        ]
-        for step in steps:
+        for step in STEPS:
             self.debug('** %s **', step.__name__.upper())
-            if step():
+            if step(self):
                 return self.render()
         return self.render()
-
-    def step_only_commons(self):
-        if len(self.tokens) == len(self.common):
-            # Only common terms, shortcut to search
-            keys = [t.db_key for t in self.tokens]
-            if self.geohash_key:
-                keys.append(self.geohash_key)
-                self.debug('Adding geohash %s', self.geohash_key)
-                self.autocomplete(self.tokens, use_geohash=True)
-            if len(keys) == 1 or self.geohash_key:
-                self.add_to_bucket(keys)
-            if self.bucket_dry and len(keys) > 1:
-                count = 0
-                # Scan the less frequent token.
-                self.tokens.sort(key=lambda t: t.frequency)
-                first = self.tokens[0]
-                if first.frequency < config.INTERSECT_LIMIT:
-                    self.debug('Under INTERSECT_LIMIT, brut force.')
-                    keys = [t.db_key for t in self.tokens]
-                    self.add_to_bucket(keys)
-                else:
-                    self.debug('INTERSECT_LIMIT hit, manual scan on %s', first)
-                    others = [t.db_key for t in self.tokens[1:]]
-                    ids = DB.zrevrange(first.db_key, 0, 500)
-                    for id_ in ids:
-                        count += 1
-                        if all(DB.sismember(f, id_) for f in self.filters) \
-                           and all(DB.zrank(k, id_) for k in others):
-                            self.bucket.add(id_)
-                        if self.bucket_full:
-                            break
-                    self.debug('%s results after scan (%s loops)',
-                               len(self.bucket), count)
-            self.autocomplete(self.tokens, skip_commons=True)
-            if not self.bucket_empty:
-                self.debug('Only common terms. Return.')
-                return True
-
-    def step_no_meaningful_but_common_try_autocomplete(self):
-        if not self.meaningful and self.common:
-            # Only commons terms, try to reduce with autocomplete.
-            self.debug('Only commons, trying autocomplete')
-            self.autocomplete(self.common)
-            self.meaningful = self.common[:1]
-            if not self.pass_should_match_threshold:
-                return False
-            if self.bucket_full or self.bucket_overflow or self.has_cream():
-                return True
-
-    def step_bucket_with_meaningful(self):
-        if len(self.meaningful) == 1 and self.common:
-            # Avoid running with too less tokens while having commons terms.
-            for token in self.common:
-                if token not in self.meaningful:
-                    self.meaningful.append(token)
-                    break  # We want only one more.
-        self.keys = [t.db_key for t in self.meaningful]
-        if self.bucket_empty:
-            self.new_bucket(self.keys, self.SMALL_BUCKET_LIMIT)
-            if not self._autocomplete and self.has_cream():
-                # Do not check cream before computing autocomplete when
-                # autocomplete is on.
-                self.debug('Cream found. Returning.')
-                return True
-            if len(self.bucket) == self.SMALL_BUCKET_LIMIT:
-                # Do not rerun if bucket with limit 10 has returned less
-                # than 10 results.
-                self.new_bucket(self.keys)
-        else:
-            self.add_to_bucket(self.keys)
-
-    def step_reduce_with_other_commons(self):
-        for token in self.common:  # Already ordered by frequency asc.
-            if token not in self.meaningful and self.bucket_overflow:
-                self.debug('Now considering also common token %s', token)
-                self.meaningful.append(token)
-                self.keys = [t.db_key for t in self.meaningful]
-                self.new_bucket(self.keys)
-
-    def step_ensure_geohash_results_are_included_if_center_is_given(self):
-        if self.bucket_overflow and self.geohash_key:
-            self.debug('Bucket overflow and center, force nearby look up')
-            self.add_to_bucket(self.keys + [self.geohash_key], self.limit)
-
-    def step_autocomplete(self):
-        if self.bucket_overflow:
-            return
-        if not self._autocomplete:
-            self.debug('Autocomplete not active. Abort.')
-            return
-        if self.geohash_key:
-            self.autocomplete(self.meaningful, use_geohash=True)
-        self.autocomplete(self.meaningful)
-
-    def step_fuzzy(self):
-        if self._fuzzy and not self.has_cream():
-            if self.not_found:
-                self.fuzzy(self.not_found)
-            if self.bucket_dry and not self.has_cream():
-                self.fuzzy(self.meaningful)
-            if self.bucket_dry and not self.has_cream():
-                self.fuzzy(self.meaningful, include_common=False)
-
-    def step_extend_results_reducing_tokens(self):
-        if self.has_cream():
-            return  # No need.
-        if self.bucket_dry:
-            self.reduce_tokens()
-
-    def step_check_bucket_full(self):
-        return self.bucket_full
-
-    def step_check_cream(self):
-        return self.has_cream()
 
     @property
     def geohash_key(self):

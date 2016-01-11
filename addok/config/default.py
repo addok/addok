@@ -30,31 +30,14 @@ SYNONYMS_PATH = RESOURCES_ROOT.joinpath('synonyms').joinpath('fr.txt')
 
 # Pipeline stream to be used.
 PROCESSORS = [
-    'addok.textutils.default.pipeline.tokenize',
-    'addok.textutils.default.pipeline.normalize',
-    'addok.textutils.default.pipeline.synonymize',
-    'addok.textutils.fr.phonemicize',
+    'addok.text_utils.tokenize',
+    'addok.text_utils.normalize',
+    'addok.text_utils.synonymize',
 ]
-QUERY_PROCESSORS = (
-    'addok.textutils.fr_FR.extract_address',
-    'addok.textutils.fr_FR.clean_query',
-    'addok.textutils.fr_FR.glue_ordinal',
-    'addok.textutils.fr_FR.fold_ordinal',
-)
-HOUSENUMBER_PROCESSORS = [
-    'addok.textutils.fr_FR.glue_ordinal',
-    'addok.textutils.fr_FR.fold_ordinal',
-]
-BATCH_PROCESSORS = (
-    'addok.batch.default.to_json',
-)
-API_ENDPOINTS = [
-    ('/get/<doc_id>/', 'get'),
-    ('/search/', 'search'),
-    ('/reverse/', 'reverse'),
-    ('/search/csv/', 'search.csv'),
-    ('/reverse/csv/', 'reverse.csv'),
-    ('/csv/', 'search.csv'),  # Retrocompat.
+QUERY_PROCESSORS = []
+HOUSENUMBER_PROCESSORS = []
+BATCH_PROCESSORS = [
+    'addok.batch.to_json',
 ]
 URL_MAP = None
 
