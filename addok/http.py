@@ -7,8 +7,9 @@ from werkzeug.exceptions import BadRequest, HTTPException, NotFound
 from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Request, Response
 
-from addok.core import Result, reverse, search
 from addok import hooks
+from addok.core import Result, reverse, search
+
 from . import config
 
 if config.LOG_NOT_FOUND:

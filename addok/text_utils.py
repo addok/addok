@@ -1,11 +1,9 @@
 import re
 
+from addok import config
+from addok.utils import yielder
 from ngram import NGram
 from unidecode import unidecode
-
-from addok.utils import yielder
-from addok import config
-
 
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
 

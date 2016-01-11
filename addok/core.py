@@ -8,17 +8,20 @@ from .db import DB
 from .index_utils import (PROCESSORS, VALUE_SEPARATOR, document_key,
                           edge_ngram_key, filter_key, geohash_key, pair_key,
                           token_key)
-from .text_utils import (ascii, compare_ngrams, contains, equals, make_fuzzy,
-                         startswith)
-from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
+from .text_utils import ascii, make_fuzzy
+from .utils import import_by_path, iter_pipe
 
 QUERY_PROCESSORS = []
 COLLECTORS = []
+SEARCH_RESULT_PROCESSORS = []
+REVERSE_RESULT_PROCESSORS = []
 
 
 def on_load():
     QUERY_PROCESSORS.extend([import_by_path(path) for path in config.QUERY_PROCESSORS])  # noqa
     COLLECTORS.extend([import_by_path(path) for path in config.RESULTS_COLLECTORS])  # noqa
+    SEARCH_RESULT_PROCESSORS.extend([import_by_path(path) for path in config.SEARCH_RESULT_PROCESSORS])  # noqa
+    REVERSE_RESULT_PROCESSORS.extend([import_by_path(path) for path in config.REVERSE_RESULT_PROCESSORS])  # noqa
 
 config.on_load(on_load)
 
@@ -62,19 +65,11 @@ def compute_geohash_key(geoh, with_neighbors=True):
 
 class Result(object):
 
-    MAX_IMPORTANCE = 0.0
-    DEFAULT_IMPORTANCE = 0.0
-
     def __init__(self, _id):
         self.housenumber = None
         self._scores = {}
         self.load(_id)
-        if self.MAX_IMPORTANCE:
-            importance = getattr(self, 'importance', None)
-            importance = importance or self.DEFAULT_IMPORTANCE
-            self.add_score('importance',
-                           float(importance) * config.IMPORTANCE_WEIGHT,
-                           self.MAX_IMPORTANCE)
+        self.labels = []
 
     def load(self, _id):
         self._cache = {}
@@ -99,65 +94,14 @@ class Result(object):
         return self._cache[key]
 
     def __str__(self):
-        return self.labels[0]
+        return (self.labels[0] if self.labels
+                else self._rawattr(config.NAME_FIELD)[0])
 
     def _rawattr(self, key):
         return self._doc.get(key, '').split(VALUE_SEPARATOR)
 
-    @property
-    def labels(self):
-        if hasattr(config, 'MAKE_LABELS'):
-            self._labels = config.MAKE_LABELS(self)
-        if not self._labels:
-            housenumber = getattr(self, 'housenumber', None)
-
-            def add(labels, label):
-                labels.insert(0, label)
-                if housenumber:
-                    label = '{} {}'.format(housenumber, label)
-                    labels.insert(0, label)
-
-            self._labels = []
-            city = self.city
-            postcode = self.postcode
-            names = self._rawattr('name')
-            if not isinstance(names, (list, tuple)):
-                names = [names]
-            for name in names:
-                labels = []
-                label = name
-                add(labels, label)
-                if city and city != label:
-                    if postcode:
-                        label = '{} {}'.format(label, postcode)
-                        add(labels, label)
-                    label = '{} {}'.format(label, city)
-                    add(labels, label)
-                self._labels.extend(labels)
-        return self._labels
-
     def __repr__(self):
         return '<{} - {} ({})>'.format(str(self), self.id, self.score)
-
-    def match_housenumber(self, tokens):
-        originals = [t.original for t in tokens]
-        name_tokens = self.name.split()
-        for original in originals:
-            if original in self.housenumbers:
-                raw, lat, lon, *extra = self.housenumbers[original].split('|')
-                if raw in name_tokens and originals.count(original) != 2:
-                    # Consider that user is not requesting a housenumber if
-                    # token is also in name (ex. rue du 8 mai), unless this
-                    # token is twice in the query (8 rue du 8 mai).
-                    continue
-                self.housenumber = raw
-                self.lat = lat
-                self.lon = lon
-                self.type = 'housenumber'
-                if extra:
-                    extra = zip(config.HOUSENUMBERS_PAYLOAD_FIELDS, extra)
-                    self._cache.update(extra)
-                break
 
     @property
     def keys(self):
@@ -220,73 +164,10 @@ class Result(object):
     def str_distance(self):
         return self._scores.get('str_distance', [0.0])[0]
 
-    def score_by_autocomplete_distance(self, query):
-        score = 0
-        query = ascii(query)
-        labels = []
-        for label in self.labels:
-            label = ascii(label)
-            labels.append(label)  # Cache ascii folding.
-            if equals(query, label):
-                score = 1.0
-            elif startswith(query, label):
-                score = 0.9
-            elif contains(query, label):
-                score = 0.7
-            if score:
-                self.add_score('str_distance', score, ceiling=1.0)
-                if score >= config.MATCH_THRESHOLD:
-                    break
-        if not score:
-            self.score_by_ngram_distance(query, labels=labels)
-
-    def score_by_ngram_distance(self, query, labels=None):
-        query = ascii(query)
-        for label in labels or self.labels:
-            label = ascii(label)
-            score = compare_ngrams(label, query)
-            self.add_score('str_distance', score, ceiling=1.0)
-            if score >= config.MATCH_THRESHOLD:
-                break
-
-    def score_by_geo_distance(self, center):
-        km = haversine_distance((float(self.lat), float(self.lon)), center)
-        self.distance = km * 1000
-        self.add_score('geo_distance', km_to_score(km), ceiling=0.1)
-
-    def score_by_contain(self, query):
-        score = 0.0
-        if contains(query, str(self)):
-            score = 0.1
-        self.add_score('contains_boost', score, ceiling=0.1)
-
     @classmethod
     def from_id(self, _id):
         """Return a result from it's document id."""
         return Result(document_key(_id))
-
-
-class SearchResult(Result):
-
-    MAX_IMPORTANCE = config.IMPORTANCE_WEIGHT
-
-
-class ReverseResult(Result):
-
-    def load_closer(self, lat, lon):
-
-        def sort(h):
-            return haversine_distance((float(h[1]), float(h[2])), (lat, lon))
-
-        candidates = [v.split('|') for v in self.housenumbers.values()]
-        candidates.append((None, self.lat, self.lon))
-        candidates.sort(key=sort)
-        closer = candidates[0]
-        if closer[0]:  # Means a housenumber is closer than street centerpoint.
-            self.housenumber = closer[0]
-            self.lat = closer[1]
-            self.lon = closer[2]
-            self.type = "housenumber"
 
 
 class Token(object):
@@ -373,7 +254,7 @@ class Search(BaseHelper):
         self.keys = []
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
         self.filters = [filter_key(k, v) for k, v in filters.items() if v]
-        self.query = query.strip()
+        self.query = ascii(query.strip())
         self.preprocess()
         if not self.tokens:
             return []
@@ -549,15 +430,9 @@ class Search(BaseHelper):
         for _id in self.bucket:
             if _id in self.results:
                 continue
-            result = SearchResult(_id)
-            if self.check_housenumber:
-                result.match_housenumber(self.tokens)
-            if self._autocomplete:
-                result.score_by_autocomplete_distance(self.query)
-            else:
-                result.score_by_ngram_distance(self.query)
-            if self.lat and self.lon:
-                result.score_by_geo_distance((self.lat, self.lon))
+            result = Result(_id)
+            for processor in SEARCH_RESULT_PROCESSORS:
+                processor(self, result)
             self.results[_id] = result
         self.debug('Done computing results')
 
@@ -643,12 +518,11 @@ class Reverse(BaseHelper):
 
     def convert(self):
         for _id in self.keys:
-            r = ReverseResult(_id)
-            if self.check_housenumber:
-                r.load_closer(self.lat, self.lon)
-            r.score_by_geo_distance((self.lat, self.lon))
-            self.results.append(r)
-            self.debug(r, r.distance, r.score)
+            result = Result(_id)
+            for processor in REVERSE_RESULT_PROCESSORS:
+                processor(self, result)
+            self.results.append(result)
+            self.debug(result, result.distance, result.score)
         self.results.sort(key=lambda r: r.score, reverse=True)
         return self.results[:self.limit]
 

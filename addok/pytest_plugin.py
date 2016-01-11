@@ -1,6 +1,6 @@
 import uuid
-import pytest
 
+import pytest
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 

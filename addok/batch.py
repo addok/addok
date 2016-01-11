@@ -4,8 +4,8 @@ import time
 from multiprocessing import Pool
 
 from addok import config, hooks
+from addok.index_utils import deindex_document, index_document
 from addok.utils import import_by_path, iter_pipe, yielder
-from addok.index_utils import index_document, deindex_document
 
 BATCH_PROCESSORS = []
 

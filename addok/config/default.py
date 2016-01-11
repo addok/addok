@@ -51,6 +51,18 @@ RESULTS_COLLECTORS = [
     'addok.collectors.fuzzy',
     'addok.collectors.extend_results_reducing_tokens',
 ]
+SEARCH_RESULT_PROCESSORS = [
+    'addok.result_processors.make_labels',
+    'addok.result_processors.match_housenumber',
+    'addok.result_processors.score_by_importance',
+    'addok.result_processors.score_by_autocomplete_distance',
+    'addok.result_processors.score_by_ngram_distance',
+    'addok.result_processors.score_by_geo_distance',
+]
+REVERSE_RESULT_PROCESSORS = [
+    'addok.result_processors.load_closer',
+    'addok.result_processors.score_by_geo_distance',
+]
 INDEXERS = [
     'addok.index_utils.fields_indexer',
     'addok.index_utils.filters_indexer',
