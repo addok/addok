@@ -43,11 +43,12 @@ pm = pluggy.PluginManager('addok')
 pm.add_hookspecs(hooks)
 
 
-def load_plugins():
+def load_plugins(config):
     load_core_plugins()
     load_external_plugins()
     names = [name for name, module in pm.list_name_plugin()]
     print('Installed plugins: {}'.format(', '.join(names)))
+    pm.hook.addok_configure(config=config)
     for func in ON_LOAD:
         func()
 

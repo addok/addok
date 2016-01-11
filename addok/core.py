@@ -13,7 +13,7 @@ from .text_utils import (ascii, compare_ngrams, contains, equals, make_fuzzy,
 from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
 
 QUERY_PROCESSORS = []
-STEPS = [
+STEPS = [  # collectors
     steps.step_only_commons,
     steps.step_no_meaningful_but_common_try_autocomplete,
     steps.step_bucket_with_meaningful,
@@ -28,7 +28,6 @@ STEPS = [
 
 
 def on_load():
-    config.pm.hook.addok_register_query_processors(processors=config.QUERY_PROCESSORS)  # noqa
     QUERY_PROCESSORS.extend([import_by_path(path) for path in config.QUERY_PROCESSORS])  # noqa
     config.pm.hook.addok_register_search_steps(steps=STEPS)  # noqa
 

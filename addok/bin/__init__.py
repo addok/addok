@@ -12,7 +12,7 @@ def main():
     #     os.environ['ADDOK_CONFIG_MODULE'] = args['--config']
 
     from addok import config
-    config.load_plugins()
+    config.load_plugins(config)
     config.pm.hook.addok_register_command(subparsers=subparsers)
     args = main_parser.parse_args()
     if getattr(args, 'func', None):

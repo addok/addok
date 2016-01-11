@@ -15,9 +15,7 @@ HOUSENUMBER_PROCESSORS = []
 
 
 def on_load():
-    config.pm.hook.addok_register_string_processors(processors=config.PROCESSORS)  # noqa
     PROCESSORS.extend([import_by_path(path) for path in config.PROCESSORS])
-    config.pm.hook.addok_register_housenumber_processors(processors=config.HOUSENUMBER_PROCESSORS)  # noqa
     HOUSENUMBER_PROCESSORS.extend([import_by_path(path) for path in config.HOUSENUMBER_PROCESSORS])  # noqa
     HOUSENUMBER_PROCESSORS.extend(PROCESSORS)
 
