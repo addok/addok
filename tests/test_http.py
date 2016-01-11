@@ -1,7 +1,7 @@
 import json
 
 
-from addok.server import View
+from addok.http import View
 
 
 def test_search_without_query_should_return_400(client):

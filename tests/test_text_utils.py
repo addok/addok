@@ -2,8 +2,8 @@ import pytest
 
 from addok.text_utils import (alphanumerize, ascii, compare_ngrams,
                               compute_edge_ngrams, contains, equals,
-                              make_fuzzy, normalize, startswith, synonymize,
-                              tokenize)
+                              make_fuzzy, _normalize, startswith, _synonymize,
+                              _tokenize)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -12,7 +12,7 @@ from addok.text_utils import (alphanumerize, ascii, compare_ngrams,
     ['22, rue', ['22', 'rue']],
 ])
 def test_tokenize(input, output):
-    assert tokenize(input) == output
+    assert _tokenize(input) == output
 
 
 def test_make_fuzzy_should_extend_term():
@@ -68,7 +68,7 @@ def test_compare_ngrams(left, right, score):
     ['Erispœ', 'erispoe'],
 ])
 def test_normalize(input, output):
-    assert normalize(input) == output
+    assert _normalize(input) == output
 
 
 @pytest.mark.parametrize('input,output', [
@@ -86,8 +86,8 @@ def test_alphanumerize(input, output):
 def test_synonymize(input, output, monkeypatch):
     # Make sure we control synonyms.
     SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
-    monkeypatch.setattr('addok.textutils.default.SYNONYMS', SYNONYMS)
-    assert synonymize(input) == output
+    monkeypatch.setattr('addok.text_utils.SYNONYMS', SYNONYMS)
+    assert _synonymize(input) == output
 
 
 def test_compute_edge_ngrams():
@@ -148,7 +148,7 @@ def test_ascii_should_cache_cleaned_string(monkeypatch):
     def do_not_call_me(x):
         assert False
 
-    monkeypatch.setattr('addok.textutils.default.alphanumerize',
+    monkeypatch.setattr('addok.text_utils.alphanumerize',
                         do_not_call_me)
 
     ascii(s)  # Should not call alphanumerize.

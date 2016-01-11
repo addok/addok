@@ -114,7 +114,11 @@ def index_document(doc, **kwargs):
     pipe = DB.pipeline()
     tokens = {}
     for indexer in INDEXERS:
-        indexer(pipe, key, doc, tokens, **kwargs)
+        try:
+            indexer(pipe, key, doc, tokens, **kwargs)
+        except ValueError as e:
+            print(e)
+            return  # Do not index.
     pipe.execute()
 
 
@@ -124,7 +128,7 @@ def deindex_document(id_, **kwargs):
     if not doc:
         return
     tokens = []
-    for indexer in INDEXERS:
+    for indexer in DEINDEXERS:
         indexer(DB, key, doc, tokens, **kwargs)
 
 
@@ -179,7 +183,7 @@ def fields_indexer(pipe, key, doc, tokens, **kwargs):
         if not values:
             if not field.get('null', True):
                 # A mandatory field is null.
-                return
+                raise ValueError('{} must not be null'.format(name))
             continue
         if name != config.HOUSENUMBERS_FIELD:
             boost = field.get('boost', config.DEFAULT_BOOST)
@@ -228,7 +232,7 @@ def housenumbers_indexer(pipe, key, doc, tokens, **kwargs):
         for field in config.HOUSENUMBERS_PAYLOAD_FIELDS:
             vals.append(point.get(field, ''))
         val = '|'.join(map(str, vals))
-        for hn in preprocess_housenumber(number):
+        for hn in preprocess_housenumber(number.replace(' ', '')):
             doc[housenumber_field_key(hn)] = val
             # Pair every document term to each housenumber, but do not pair
             # housenumbers together.

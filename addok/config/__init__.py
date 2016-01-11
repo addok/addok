@@ -43,21 +43,20 @@ pm = pluggy.PluginManager('addok')
 pm.add_hookspecs(hooks)
 
 
-def load_plugins(config):
+def load_plugins(config, load_external=True):
     load_core_plugins()
-    load_external_plugins()
+    if load_external:
+        load_external_plugins()
     names = [name for name, module in pm.list_name_plugin()]
-    print('Installed plugins: {}'.format(', '.join(names)))
+    print('Addok loaded plugins: {}'.format(', '.join(names)))
     pm.hook.addok_configure(config=config)
-    for func in ON_LOAD:
-        func()
+    load()
 
 
 def load_core_plugins():
-    names = ['shell', 'http', 'batch']
-    for name in names:
-        plugin = importlib.import_module('addok.' + name)
-        pm.register(plugin, name=name)
+    for path in PLUGINS:
+        plugin = importlib.import_module(path)
+        pm.register(plugin)
 
 
 def load_external_plugins():
@@ -67,3 +66,8 @@ def load_external_plugins():
 def on_load(func):
     ON_LOAD.append(func)
 ON_LOAD = []
+
+
+def load():
+    for func in ON_LOAD:
+        func()

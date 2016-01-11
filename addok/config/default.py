@@ -109,6 +109,12 @@ LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)
 LOG_QUERIES = False
 LOG_NOT_FOUND = False
 
+PLUGINS = [
+    'addok.shell',
+    'addok.http',
+    'addok.batch',
+]
+
 PSQL = {
     'dbname': 'nominatim'
 }

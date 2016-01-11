@@ -1,12 +1,12 @@
-from addok.batch.utils import process
+from addok.batch import process
 from addok.core import search
 
 
 def test_process_should_index_by_default(factory):
-    doc = factory(skip_index=True, name=u"Mélicocq")
-    assert not search(u"Mélicoq")
+    doc = factory(skip_index=True, name="Melicocq")
+    assert not search("Mélicocq")
     process(doc)
-    assert search("Mélicoq")
+    assert search("Melicocq")
 
 
 def test_process_should_deindex_if_action_is_given(factory):
