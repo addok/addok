@@ -51,6 +51,20 @@ RESULTS_COLLECTORS = [
     'addok.collectors.fuzzy',
     'addok.collectors.extend_results_reducing_tokens',
 ]
+INDEXERS = [
+    'addok.index_utils.fields_indexer',
+    'addok.index_utils.filters_indexer',
+    'addok.index_utils.pairs_indexer',
+    'addok.index_utils.housenumbers_indexer',
+    'addok.index_utils.document_indexer',
+]
+DEINDEXERS = [
+    'addok.index_utils.fields_deindexer',
+    'addok.index_utils.filters_deindexer',
+    'addok.index_utils.pairs_deindexer',
+    'addok.index_utils.housenumbers_deindexer',
+    'addok.index_utils.document_deindexer',
+]
 URL_MAP = None
 
 # Fields to be indexed
