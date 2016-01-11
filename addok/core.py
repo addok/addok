@@ -3,7 +3,7 @@ from math import ceil
 
 import geohash
 
-from . import config, steps
+from . import config
 from .db import DB
 from .index_utils import (PROCESSORS, VALUE_SEPARATOR, document_key,
                           edge_ngram_key, filter_key, geohash_key, pair_key,
@@ -13,23 +13,12 @@ from .text_utils import (ascii, compare_ngrams, contains, equals, make_fuzzy,
 from .utils import haversine_distance, import_by_path, iter_pipe, km_to_score
 
 QUERY_PROCESSORS = []
-STEPS = [  # collectors
-    steps.step_only_commons,
-    steps.step_no_meaningful_but_common_try_autocomplete,
-    steps.step_bucket_with_meaningful,
-    steps.step_reduce_with_other_commons,
-    steps.step_ensure_geohash_results_are_included_if_center_is_given,
-    steps.step_autocomplete,
-    steps.step_check_bucket_full,
-    steps.step_check_cream,
-    steps.step_fuzzy,
-    steps.step_extend_results_reducing_tokens,
-]
+COLLECTORS = []
 
 
 def on_load():
     QUERY_PROCESSORS.extend([import_by_path(path) for path in config.QUERY_PROCESSORS])  # noqa
-    config.pm.hook.addok_register_search_steps(steps=STEPS)  # noqa
+    COLLECTORS.extend([import_by_path(path) for path in config.RESULTS_COLLECTORS])  # noqa
 
 config.on_load(on_load)
 
@@ -403,9 +392,9 @@ class Search(BaseHelper):
         self.debug('Not found tokens: %s', self.not_found)
         self.debug('Filters: %s', ['{}={}'.format(k, v)
                                    for k, v in filters.items()])
-        for step in STEPS:
-            self.debug('** %s **', step.__name__.upper())
-            if step(self):
+        for collector in COLLECTORS:
+            self.debug('** %s **', collector.__name__.upper())
+            if collector(self):
                 return self.render()
         return self.render()
 

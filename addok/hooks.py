@@ -16,10 +16,5 @@ def addok_configure(config):
 
 
 @spec
-def addok_register_search_steps(helper):
-    """Add search step."""
-
-
-@spec
 def addok_register_command(subparsers):
     """Register command for Addok CLI."""

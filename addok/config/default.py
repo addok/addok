@@ -39,6 +39,18 @@ HOUSENUMBER_PROCESSORS = []
 BATCH_PROCESSORS = [
     'addok.batch.to_json',
 ]
+RESULTS_COLLECTORS = [
+    'addok.collectors.only_commons',
+    'addok.collectors.no_meaningful_but_common_try_autocomplete',
+    'addok.collectors.bucket_with_meaningful',
+    'addok.collectors.reduce_with_other_commons',
+    'addok.collectors.ensure_geohash_results_are_included_if_center_is_given',
+    'addok.collectors.autocomplete',
+    'addok.collectors.check_bucket_full',
+    'addok.collectors.check_cream',
+    'addok.collectors.fuzzy',
+    'addok.collectors.extend_results_reducing_tokens',
+]
 URL_MAP = None
 
 # Fields to be indexed

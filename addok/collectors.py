@@ -2,7 +2,7 @@ from . import config
 from .db import DB
 
 
-def step_only_commons(helper):
+def only_commons(helper):
     if len(helper.tokens) == len(helper.common):
         # Only common terms, shortcut to search
         keys = [t.db_key for t in helper.tokens]
@@ -40,7 +40,7 @@ def step_only_commons(helper):
             return True
 
 
-def step_no_meaningful_but_common_try_autocomplete(helper):
+def no_meaningful_but_common_try_autocomplete(helper):
     if not helper.meaningful and helper.common:
         # Only commons terms, try to reduce with autocomplete.
         helper.debug('Only commons, trying autocomplete')
@@ -52,7 +52,7 @@ def step_no_meaningful_but_common_try_autocomplete(helper):
             return True
 
 
-def step_bucket_with_meaningful(helper):
+def bucket_with_meaningful(helper):
     if len(helper.meaningful) == 1 and helper.common:
         # Avoid running with too less tokens while having commons terms.
         for token in helper.common:
@@ -75,7 +75,7 @@ def step_bucket_with_meaningful(helper):
         helper.add_to_bucket(helper.keys)
 
 
-def step_reduce_with_other_commons(helper):
+def reduce_with_other_commons(helper):
     for token in helper.common:  # Already ordered by frequency asc.
         if token not in helper.meaningful and helper.bucket_overflow:
             helper.debug('Now considering also common token %s', token)
@@ -84,13 +84,13 @@ def step_reduce_with_other_commons(helper):
             helper.new_bucket(helper.keys)
 
 
-def step_ensure_geohash_results_are_included_if_center_is_given(helper):
+def ensure_geohash_results_are_included_if_center_is_given(helper):
     if helper.bucket_overflow and helper.geohash_key:
         helper.debug('Bucket overflow and center, force nearby look up')
         helper.add_to_bucket(helper.keys + [helper.geohash_key], helper.limit)
 
 
-def step_autocomplete(helper):
+def autocomplete(helper):
     if helper.bucket_overflow:
         return
     if not helper._autocomplete:
@@ -101,7 +101,7 @@ def step_autocomplete(helper):
     helper.autocomplete(helper.meaningful)
 
 
-def step_fuzzy(helper):
+def fuzzy(helper):
     if helper._fuzzy and not helper.has_cream():
         if helper.not_found:
             helper.fuzzy(helper.not_found)
@@ -111,16 +111,16 @@ def step_fuzzy(helper):
             helper.fuzzy(helper.meaningful, include_common=False)
 
 
-def step_extend_results_reducing_tokens(helper):
+def extend_results_reducing_tokens(helper):
     if helper.has_cream():
         return  # No need.
     if helper.bucket_dry:
         helper.reduce_tokens()
 
 
-def step_check_bucket_full(helper):
+def check_bucket_full(helper):
     return helper.bucket_full
 
 
-def step_check_cream(helper):
+def check_cream(helper):
     return helper.has_cream()
