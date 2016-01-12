@@ -45,6 +45,6 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': ['addok=addok.bin:main'],
-        'pytest11': ['addok=addok.helpers.pytest'],
+        'pytest11': ['addok=addok.pytest'],
     },
 )
