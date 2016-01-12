@@ -61,6 +61,7 @@ SEARCH_RESULT_PROCESSORS = [
 ]
 REVERSE_RESULT_PROCESSORS = [
     'addok.helpers.results.load_closer',
+    'addok.helpers.results.make_labels',
     'addok.helpers.results.score_by_geo_distance',
 ]
 INDEXERS = [
