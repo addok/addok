@@ -1,4 +1,4 @@
-from addok.core import search, Result
+from addok.core import Result, search
 
 
 def test_should_match_name(street):

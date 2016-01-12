@@ -1,6 +1,6 @@
 from addok.db import DB
-from addok.helpers.index import (index_edge_ngrams, index_document,
-                               deindex_document, create_edge_ngrams)
+from addok.helpers.index import (create_edge_ngrams, deindex_document,
+                                 index_document, index_edge_ngrams)
 
 
 def count_keys():

@@ -1,5 +1,4 @@
-from fabric.api import task, env, roles, cd, hide, sudo, execute, puts
-
+from fabric.api import cd, env, execute, hide, puts, roles, sudo, task
 
 env.project_name = 'addok'
 env.repository = 'https://github.com/etalab/addok.git'

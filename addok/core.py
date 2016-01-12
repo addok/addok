@@ -5,11 +5,10 @@ import geohash
 
 from . import config
 from .db import DB
-from .helpers.index import (VALUE_SEPARATOR, document_key,
-                          edge_ngram_key, filter_key, geohash_key, pair_key,
-                          token_key)
-from .helpers.text import ascii, make_fuzzy
 from .helpers import iter_pipe
+from .helpers.index import (VALUE_SEPARATOR, document_key, edge_ngram_key,
+                            filter_key, geohash_key, pair_key, token_key)
+from .helpers.text import ascii, make_fuzzy
 
 
 def preprocess_query(s):

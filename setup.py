@@ -1,6 +1,7 @@
-from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
+
+from setuptools import find_packages, setup
 
 import addok
 

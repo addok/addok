@@ -1,6 +1,5 @@
 import json
 
-
 from addok.http import View
 
 

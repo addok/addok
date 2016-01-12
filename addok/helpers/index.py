@@ -5,8 +5,8 @@ import geohash
 
 from addok import config
 from addok.db import DB
-from addok.helpers.text import compute_edge_ngrams
 from addok.helpers import iter_pipe
+from addok.helpers.text import compute_edge_ngrams
 
 VALUE_SEPARATOR = '|~|'
 
