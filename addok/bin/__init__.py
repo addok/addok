@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 
 
 def main():
+
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument('--config', help='Local config')
+    args, unknown = config_parser.parse_known_args()
+    if args.config:
+        os.environ['ADDOK_CONFIG_MODULE'] = args.config
+
     main_parser = argparse.ArgumentParser(description='Addok command line.')
+    main_parser.add_argument('--config', help='Local config')
     subparsers = main_parser.add_subparsers(title='Available commands',
                                             metavar='')
-
-    # main_parser.add_argument('--config', help='Local config')
-    # if args['--config']:
-    #     os.environ['ADDOK_CONFIG_MODULE'] = args['--config']
 
     from addok import config
     config.load(config)

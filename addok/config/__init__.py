@@ -10,17 +10,17 @@ from addok import hooks
 
 def extend_from_file(path):
     d = imp.new_module('config')
-    d.__file__ = localpath
+    d.__file__ = path
     try:
-        with open(localpath) as config_file:
-            exec(compile(config_file.read(), localpath, 'exec'), d.__dict__)
+        with open(path) as config_file:
+            exec(compile(config_file.read(), path, 'exec'), d.__dict__)
     except IOError as e:
         from addok.helpers import red
         print(red('Unable to import {} from '
-                  'ADDOK_CONFIG_MODULE'.format(localpath)))
+                  'ADDOK_CONFIG_MODULE'.format(path)))
         sys.exit(e)
     else:
-        print('Loaded local config from', localpath)
+        print('Loaded local config from', path)
         extend_from_object(d)
 
 
