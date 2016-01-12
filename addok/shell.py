@@ -9,14 +9,25 @@ from pathlib import Path
 
 import geohash
 
-from . import config
-from .core import (Search, SearchResult, Token, compute_geohash_key,
-                   make_fuzzy, preprocess_query, reverse, token_frequency)
+from . import config, hooks
+from .core import (Search, Result, Token, compute_geohash_key, make_fuzzy,
+                   preprocess_query, reverse, token_frequency)
 from .db import DB
 from .index_utils import VALUE_SEPARATOR, document_key, pair_key, token_key
-from .textutils.default import compare_ngrams
+from .text_utils import compare_ngrams
 from .utils import (blue, cyan, green, haversine_distance, km_to_score,
                     magenta, red, white, yellow)
+
+
+def run_cli(args):
+    cli = Cli()
+    cli()
+
+
+@hooks.register
+def addok_register_command(subparsers):
+    parser = subparsers.add_parser('shell', help='Run a shell to inspect index')
+    parser.set_defaults(func=run_cli)
 
 
 def doc_by_id(_id):
@@ -225,7 +236,7 @@ class Cli(object):
         BESTSCORE lilas"""
         key = token_key(indexed_string(word)[0])
         for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
-            result = SearchResult(_id)
+            result = Result(_id)
             print(white(result), blue(score), blue(result.id))
 
     def do_reverse(self, latlon):
@@ -289,7 +300,7 @@ class Cli(object):
         except:
             return self.error('Malformed query. Use: ID lat lon')
         try:
-            result = SearchResult(document_key(_id))
+            result = Result(document_key(_id))
         except ValueError as e:
             return self.error(e)
         center = (float(lat), float(lon))
@@ -355,7 +366,7 @@ class Cli(object):
         key = compute_geohash_key(geoh, with_neighbors != '0')
         if key:
             for id_ in DB.smembers(key):
-                r = SearchResult(id_)
+                r = Result(id_)
                 print(white(r), blue(r.id))
 
     def do_fuzzy(self, word):
@@ -390,7 +401,7 @@ class Cli(object):
         results = DB.zrevrange(words, 0, limit, withscores=True)
         DB.delete(words)
         for id_, score in results:
-            r = SearchResult(id_)
+            r = Result(id_)
             print(white(r), blue(r.id), cyan(score))
         duration = round((time.time() - start) * 1000, 1)
         print(magenta("({} in {} ms)".format(len(results), duration)))

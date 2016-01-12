@@ -1,8 +1,11 @@
 import imp
+import importlib
+import pluggy
 import os
 import sys
 
 from .default import *  # noqa
+from addok import hooks
 
 # Try to load local setting from a local path.
 localpath = os.environ.get('ADDOK_CONFIG_MODULE')
@@ -34,3 +37,44 @@ for field in FIELDS:
     elif field.get('type') == 'name' or key == 'name':
         NAME_FIELD = key
         field['type'] = 'name'
+
+
+pm = pluggy.PluginManager('addok')
+pm.add_hookspecs(hooks)
+
+
+def load_plugins(config, load_external=True):
+    load_core_plugins()
+    if load_external:
+        load_external_plugins()
+    names = [name for name, module in pm.list_name_plugin()]
+    print('Addok loaded plugins: {}'.format(', '.join(names)))
+    pm.hook.addok_configure(config=config)
+    resolve_paths()
+
+
+def load_core_plugins():
+    for path in PLUGINS:
+        plugin = importlib.import_module(path)
+        pm.register(plugin)
+
+
+def load_external_plugins():
+    pm.load_setuptools_entrypoints("addok.ext")
+
+
+def resolve_path(name):
+    from addok.utils import import_by_path
+    attr = globals()[name]
+    for idx, path in enumerate(attr):
+        attr[idx] = import_by_path(path)
+
+
+def resolve_paths():
+    names = [
+        'QUERY_PROCESSORS', 'RESULTS_COLLECTORS', 'SEARCH_RESULT_PROCESSORS',
+        'REVERSE_RESULT_PROCESSORS', 'PROCESSORS', 'INDEXERS', 'DEINDEXERS',
+        'BATCH_PROCESSORS'
+    ]
+    for name in names:
+        resolve_path(name)

@@ -30,31 +30,52 @@ SYNONYMS_PATH = RESOURCES_ROOT.joinpath('synonyms').joinpath('fr.txt')
 
 # Pipeline stream to be used.
 PROCESSORS = [
-    'addok.textutils.default.pipeline.tokenize',
-    'addok.textutils.default.pipeline.normalize',
-    'addok.textutils.default.pipeline.synonymize',
-    'addok.textutils.fr.phonemicize',
+    'addok.text_utils.tokenize',
+    'addok.text_utils.normalize',
+    'addok.text_utils.synonymize',
 ]
-QUERY_PROCESSORS = (
-    'addok.textutils.fr_FR.extract_address',
-    'addok.textutils.fr_FR.clean_query',
-    'addok.textutils.fr_FR.glue_ordinal',
-    'addok.textutils.fr_FR.fold_ordinal',
-)
-HOUSENUMBER_PROCESSORS = [
-    'addok.textutils.fr_FR.glue_ordinal',
-    'addok.textutils.fr_FR.fold_ordinal',
+QUERY_PROCESSORS = []
+HOUSENUMBER_PROCESSORS = []
+BATCH_PROCESSORS = [
+    'addok.batch.to_json',
 ]
-BATCH_PROCESSORS = (
-    'addok.batch.default.to_json',
-)
-API_ENDPOINTS = [
-    ('/get/<doc_id>/', 'get'),
-    ('/search/', 'search'),
-    ('/reverse/', 'reverse'),
-    ('/search/csv/', 'search.csv'),
-    ('/reverse/csv/', 'reverse.csv'),
-    ('/csv/', 'search.csv'),  # Retrocompat.
+RESULTS_COLLECTORS = [
+    'addok.collectors.only_commons',
+    'addok.collectors.no_meaningful_but_common_try_autocomplete',
+    'addok.collectors.bucket_with_meaningful',
+    'addok.collectors.reduce_with_other_commons',
+    'addok.collectors.ensure_geohash_results_are_included_if_center_is_given',
+    'addok.collectors.autocomplete',
+    'addok.collectors.check_bucket_full',
+    'addok.collectors.check_cream',
+    'addok.collectors.fuzzy',
+    'addok.collectors.extend_results_reducing_tokens',
+]
+SEARCH_RESULT_PROCESSORS = [
+    'addok.result_processors.make_labels',
+    'addok.result_processors.match_housenumber',
+    'addok.result_processors.score_by_importance',
+    'addok.result_processors.score_by_autocomplete_distance',
+    'addok.result_processors.score_by_ngram_distance',
+    'addok.result_processors.score_by_geo_distance',
+]
+REVERSE_RESULT_PROCESSORS = [
+    'addok.result_processors.load_closer',
+    'addok.result_processors.score_by_geo_distance',
+]
+INDEXERS = [
+    'addok.index_utils.fields_indexer',
+    'addok.index_utils.filters_indexer',
+    'addok.index_utils.pairs_indexer',
+    'addok.index_utils.housenumbers_indexer',
+    'addok.index_utils.document_indexer',
+]
+DEINDEXERS = [
+    'addok.index_utils.fields_deindexer',
+    'addok.index_utils.filters_deindexer',
+    'addok.index_utils.pairs_deindexer',
+    'addok.index_utils.housenumbers_deindexer',
+    'addok.index_utils.document_deindexer',
 ]
 URL_MAP = None
 
@@ -99,6 +120,12 @@ LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)
 
 LOG_QUERIES = False
 LOG_NOT_FOUND = False
+
+PLUGINS = [
+    'addok.shell',
+    'addok.http',
+    'addok.batch',
+]
 
 PSQL = {
     'dbname': 'nominatim'

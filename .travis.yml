@@ -5,6 +5,7 @@ sudo: false
 services:
 - redis-server
 install:
+- python setup.py develop
 - pip install -r requirements.txt
 - pip install -r requirements-dev.txt
 - pip install python-coveralls

@@ -1,15 +1,21 @@
 import uuid
-import pytest
 
+import pytest
 from werkzeug.test import Client
 from werkzeug.wrappers import BaseResponse
 
 
-def pytest_configure(config):
-    from addok.config import REDIS
-    REDIS['db'] = 15
+def pytest_configure():
+    from addok import config
+    config.REDIS['db'] = 15
     import logging
     logging.basicConfig(level=logging.DEBUG)
+    config.load_plugins(config, load_external=False)
+
+
+def pytest_runtest_setup(item):
+    from addok.db import DB
+    assert DB.connection_pool.connection_kwargs['db'] == 15
 
 
 def pytest_runtest_teardown(item, nextitem):
@@ -27,7 +33,7 @@ def pytest_addoption(parser):
 
 def pytest_exception_interact(node, call, report):
     if node.config.getvalue("addokshell"):
-        from addok.debug import Cli
+        from addok.shell import Cli
         cli = Cli()
         cli()
 
@@ -85,7 +91,7 @@ def housenumber(factory):
 def client():
     # Do not import before redis config has been
     # patched.
-    from addok.server import app
+    from addok.http import app
     return Client(app, BaseResponse)
 
 

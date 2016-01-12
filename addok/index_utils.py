@@ -5,24 +5,25 @@ import geohash
 
 from . import config
 from .db import DB
-from .textutils.default import compute_edge_ngrams
-from .utils import import_by_path, iter_pipe
+from .text_utils import compute_edge_ngrams
+from .utils import iter_pipe
 
 VALUE_SEPARATOR = '|~|'
 
-PROCESSORS = [import_by_path(path) for path in config.PROCESSORS]
-HOUSENUMBER_PROCESSORS = [import_by_path(path) for path in
-                          config.HOUSENUMBER_PROCESSORS + config.PROCESSORS]
+HOUSENUMBER_PROCESSORS = []
 
 
 def preprocess(s):
     if s not in _CACHE:
-        _CACHE[s] = list(iter_pipe(s, PROCESSORS))
+        _CACHE[s] = list(iter_pipe(s, config.PROCESSORS))
     return _CACHE[s]
 _CACHE = {}
 
 
 def preprocess_housenumber(s):
+    if not HOUSENUMBER_PROCESSORS:
+        HOUSENUMBER_PROCESSORS.extend(config.HOUSENUMBER_PROCESSORS)
+        HOUSENUMBER_PROCESSORS.extend(config.PROCESSORS)
     if s not in _HOUSENUMBER_CACHE:
         _HOUSENUMBER_CACHE[s] = list(iter_pipe(s, HOUSENUMBER_PROCESSORS))
     return _HOUSENUMBER_CACHE[s]
@@ -98,151 +99,27 @@ def deindex_token(key, token):
         deindex_edge_ngrams(token)
 
 
-def index_pairs(pipe, els):
-    els = set(els)  # Unique values.
-    for el in els:
-        values = set([])
-        for el2 in els:
-            if el != el2:
-                values.add(el2)
-        if values:
-            pipe.sadd(pair_key(el), *values)
-
-
-def deindex_pairs(els):
-    els = list(set(els))  # Unique values.
-    loop = 0
-    for el in els:
-        for el2 in els[loop:]:
-            if el != el2:
-                key = '|'.join(['didx', el, el2])
-                # Do we have other documents that share el and el2?
-                commons = DB.zinterstore(key, [token_key(el), token_key(el2)])
-                DB.delete(key)
-                if not commons:
-                    DB.srem(pair_key(el), el2)
-                    DB.srem(pair_key(el2), el)
-        loop += 1
-
-
-def index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams):
-    if not housenumbers:
-        return
-    del doc['housenumbers']
-    to_index = {}
-    for number, point in housenumbers.items():
-        vals = [number, point['lat'], point['lon']]
-        for field in config.HOUSENUMBERS_PAYLOAD_FIELDS:
-            vals.append(point.get(field, ''))
-        val = '|'.join(map(str, vals))
-        for hn in preprocess_housenumber(number):
-            doc[housenumber_field_key(hn)] = val
-            # Pair every document term to each housenumber, but do not pair
-            # housenumbers together.
-            pipe.sadd(pair_key(hn), *tokens.keys())
-            to_index[hn] = config.DEFAULT_BOOST
-        index_geohash(pipe, key, point['lat'], point['lon'])
-    index_tokens(pipe, to_index, key, update_ngrams)
-
-
-def deindex_housenumbers(key, doc, tokens):
-    for field, value in doc.items():
-        field = field.decode()
-        if not field.startswith('h|'):
-            continue
-        number, lat, lon, *extra = value.decode().split('|')
-        hn = field[2:]
-        for token in tokens:
-            k = '|'.join(['didx', hn, token])
-            commons = DB.zinterstore(k, [token_key(hn), token_key(token)])
-            DB.delete(k)
-            if not commons:
-                DB.srem(pair_key(hn), token)
-                DB.srem(pair_key(token), hn)
-        deindex_geohash(key, lat, lon)
-        deindex_token(key, hn)
-
-
-def index_filters(pipe, key, doc):
-    for name in config.FILTERS:
-        value = doc.get(name)
-        if value:
-            # We need a SortedSet because it will be used in intersect with
-            # tokens SortedSets.
-            pipe.sadd(filter_key(name, value), key)
-    # Special case for housenumber type, because it's not a real type
-    if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
-       and doc.get(config.HOUSENUMBERS_FIELD):
-        pipe.sadd(filter_key("type", "housenumber"), key)
-
-
-def deindex_filters(key, doc):
-    for name in config.FILTERS:
-        # Doc is raw from DB, so it has byte keys.
-        value = doc.get(name.encode())
-        if value:
-            # Doc is raw from DB, so it has byte values.
-            DB.srem(filter_key(name, value.decode()), key)
-    if "type" in config.FILTERS:
-        DB.srem(filter_key("type", "housenumber"), key)
-
-
-def index_document(doc, update_ngrams=True):
+def index_document(doc, **kwargs):
     key = document_key(doc['id'])
     pipe = DB.pipeline()
-    housenumbers = None
-    index_geohash(pipe, key, doc['lat'], doc['lon'])
-    importance = float(doc.get('importance', 0.0)) * config.IMPORTANCE_WEIGHT
     tokens = {}
-    for field in config.FIELDS:
-        name = field['key']
-        values = doc.get(name)
-        if not values:
-            if not field.get('null', True):
-                # A mandatory field is null.
-                return
-            continue
-        if name == config.HOUSENUMBERS_FIELD:
-            housenumbers = values
-        else:
-            boost = field.get('boost', config.DEFAULT_BOOST)
-            if callable(boost):
-                boost = boost(doc)
-            boost = boost + importance
-            if isinstance(values, (list, tuple)):
-                # We can't save a list as redis hash value.
-                doc[name] = VALUE_SEPARATOR.join(values)
-            else:
-                values = [values]
-            for value in values:
-                extract_tokens(tokens, value, boost=boost)
-    index_tokens(pipe, tokens, key, update_ngrams)
-    index_pairs(pipe, tokens.keys())
-    index_filters(pipe, key, doc)
-    index_housenumbers(pipe, housenumbers, doc, key, tokens, update_ngrams)
-    pipe.hmset(key, doc)
+    for indexer in config.INDEXERS:
+        try:
+            indexer(pipe, key, doc, tokens, **kwargs)
+        except ValueError as e:
+            print(e)
+            return  # Do not index.
     pipe.execute()
 
 
-def deindex_document(id_):
+def deindex_document(id_, **kwargs):
     key = document_key(id_)
     doc = DB.hgetall(key)
     if not doc:
         return
-    DB.delete(key)
-    deindex_geohash(key, doc[b'lat'], doc[b'lon'])
     tokens = []
-    for field in config.FIELDS:
-        name = field['key']
-        values = doc.get(name.encode())
-        if values:
-            if not isinstance(values, (list, tuple)):
-                values = [values]
-            for value in values:
-                tokens.extend(deindex_field(key, value))
-    deindex_pairs(tokens)
-    deindex_filters(key, doc)
-    deindex_housenumbers(key, doc, tokens)
+    for indexer in config.DEINDEXERS:
+        indexer(DB, key, doc, tokens, **kwargs)
 
 
 def index_geohash(pipe, key, lat, lon):
@@ -286,3 +163,139 @@ def create_edge_ngrams():
     pool.close()
     pool.join()
     print('Done', count, 'in', time.time() - start)
+
+
+def fields_indexer(pipe, key, doc, tokens, **kwargs):
+    importance = float(doc.get('importance', 0.0)) * config.IMPORTANCE_WEIGHT
+    for field in config.FIELDS:
+        name = field['key']
+        values = doc.get(name)
+        if not values:
+            if not field.get('null', True):
+                # A mandatory field is null.
+                raise ValueError('{} must not be null'.format(name))
+            continue
+        if name != config.HOUSENUMBERS_FIELD:
+            boost = field.get('boost', config.DEFAULT_BOOST)
+            if callable(boost):
+                boost = boost(doc)
+            boost = boost + importance
+            if isinstance(values, (list, tuple)):
+                # We can't save a list as redis hash value.
+                doc[name] = VALUE_SEPARATOR.join(values)
+            else:
+                values = [values]
+            for value in values:
+                extract_tokens(tokens, value, boost=boost)
+    index_tokens(pipe, tokens, key, **kwargs)
+
+
+def fields_deindexer(db, key, doc, tokens, **kwargs):
+    for field in config.FIELDS:
+        name = field['key']
+        values = doc.get(name.encode())
+        if values:
+            if not isinstance(values, (list, tuple)):
+                values = [values]
+            for value in values:
+                tokens.extend(deindex_field(key, value))
+
+
+def document_indexer(pipe, key, doc, tokens, **kwargs):
+    index_geohash(pipe, key, doc['lat'], doc['lon'])
+    pipe.hmset(key, doc)
+
+
+def document_deindexer(db, key, doc, tokens, **kwargs):
+    db.delete(key)
+    deindex_geohash(key, doc[b'lat'], doc[b'lon'])
+
+
+def housenumbers_indexer(pipe, key, doc, tokens, **kwargs):
+    housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
+    if not housenumbers:
+        return
+    del doc['housenumbers']
+    to_index = {}
+    for number, point in housenumbers.items():
+        vals = [number, point['lat'], point['lon']]
+        for field in config.HOUSENUMBERS_PAYLOAD_FIELDS:
+            vals.append(point.get(field, ''))
+        val = '|'.join(map(str, vals))
+        for hn in preprocess_housenumber(number.replace(' ', '')):
+            doc[housenumber_field_key(hn)] = val
+            # Pair every document term to each housenumber, but do not pair
+            # housenumbers together.
+            pipe.sadd(pair_key(hn), *tokens.keys())
+            to_index[hn] = config.DEFAULT_BOOST
+        index_geohash(pipe, key, point['lat'], point['lon'])
+    index_tokens(pipe, to_index, key, **kwargs)
+
+
+def housenumbers_deindexer(db, key, doc, tokens, **kwargs):
+    for field, value in doc.items():
+        field = field.decode()
+        if not field.startswith('h|'):
+            continue
+        number, lat, lon, *extra = value.decode().split('|')
+        hn = field[2:]
+        for token in tokens:
+            k = '|'.join(['didx', hn, token])
+            commons = db.zinterstore(k, [token_key(hn), token_key(token)])
+            db.delete(k)
+            if not commons:
+                db.srem(pair_key(hn), token)
+                db.srem(pair_key(token), hn)
+        deindex_geohash(key, lat, lon)
+        deindex_token(key, hn)
+
+
+def pairs_indexer(pipe, key, doc, tokens, **kwargs):
+    els = set(tokens.keys())  # Unique values.
+    for el in els:
+        values = set([])
+        for el2 in els:
+            if el != el2:
+                values.add(el2)
+        if values:
+            pipe.sadd(pair_key(el), *values)
+
+
+def pairs_deindexer(db, key, doc, tokens, **kwargs):
+    els = list(set(tokens))  # Unique values.
+    loop = 0
+    for el in els:
+        for el2 in els[loop:]:
+            if el != el2:
+                key = '|'.join(['didx', el, el2])
+                # Do we have other documents that share el and el2?
+                commons = db.zinterstore(key, [token_key(el), token_key(el2)])
+                db.delete(key)
+                if not commons:
+                    db.srem(pair_key(el), el2)
+                    db.srem(pair_key(el2), el)
+        loop += 1
+
+
+def filters_indexer(pipe, key, doc, tokens, **kwargs):
+    for name in config.FILTERS:
+        value = doc.get(name)
+        if value:
+            # We need a SortedSet because it will be used in intersect with
+            # tokens SortedSets.
+            pipe.sadd(filter_key(name, value), key)
+    # Special case for housenumber type, because it's not a real type
+    if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
+       and doc.get(config.HOUSENUMBERS_FIELD):
+        pipe.sadd(filter_key("type", "housenumber"), key)
+
+
+def filters_deindexer(db, key, doc, tokens, **kwargs):
+    for name in config.FILTERS:
+        # Doc is raw from DB, so it has byte keys.
+        value = doc.get(name.encode())
+        if value:
+            # Doc is raw from DB, so it has byte values.
+            db.srem(filter_key(name, value.decode()), key)
+    if "type" in config.FILTERS:
+        db.srem(filter_key("type", "housenumber"), key)

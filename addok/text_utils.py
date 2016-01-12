@@ -1,21 +1,27 @@
 import re
 
+from addok import config
+from addok.utils import yielder
 from ngram import NGram
 from unidecode import unidecode
-
-from ... import config
-
 
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 
-def tokenize(text):
+def _tokenize(text):
     """Split text into a list of tokens."""
     return PATTERN.findall(text)
 
 
-def normalize(s):
+def tokenize(pipe):
+    for text in pipe:
+        for token in _tokenize(text):
+            yield token
+
+
+def _normalize(s):
     return unidecode(s.lower())
+normalize = yielder(_normalize)
 
 
 SYNONYMS = {}
@@ -37,8 +43,9 @@ def load_synonyms():
 load_synonyms()
 
 
-def synonymize(s):
+def _synonymize(s):
     return SYNONYMS.get(s, s)
+synonymize = yielder(_synonymize)
 
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
