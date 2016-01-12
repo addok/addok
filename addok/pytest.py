@@ -10,7 +10,7 @@ def pytest_configure():
     config.REDIS['db'] = 15
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    config.load_plugins(config, load_external=False)
+    config.load(config, discover=False)
 
 
 def pytest_runtest_setup(item):

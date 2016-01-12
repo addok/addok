@@ -8,11 +8,12 @@ def main():
     subparsers = main_parser.add_subparsers(title='Available commands',
                                             metavar='')
 
+    # main_parser.add_argument('--config', help='Local config')
     # if args['--config']:
     #     os.environ['ADDOK_CONFIG_MODULE'] = args['--config']
 
     from addok import config
-    config.load_plugins(config)
+    config.load(config)
     config.pm.hook.addok_register_command(subparsers=subparsers)
     args = main_parser.parse_args()
     if getattr(args, 'func', None):

@@ -7,9 +7,8 @@ import sys
 from .default import *  # noqa
 from addok import hooks
 
-# Try to load local setting from a local path.
-localpath = os.environ.get('ADDOK_CONFIG_MODULE')
-if localpath:
+
+def extend_from_file(path):
     d = imp.new_module('config')
     d.__file__ = localpath
     try:
@@ -19,48 +18,39 @@ if localpath:
         from addok.helpers import red
         print(red('Unable to import {} from '
                   'ADDOK_CONFIG_MODULE'.format(localpath)))
-        sys.exit(1)
+        sys.exit(e)
     else:
         print('Loaded local config from', localpath)
-        for key in dir(d):
-            if key.isupper():
-                globals()[key] = getattr(d, key)
+        extend_from_object(d)
+
+
+def extend_from_object(d):
+    for key in dir(d):
+        if key.isupper():
+            globals()[key] = getattr(d, key)
+
 
 HOUSENUMBERS_FIELD = None
 NAME_FIELD = None
-FIELDS.extend(EXTRA_FIELDS)
-for field in FIELDS:
-    key = field['key']
-    if field.get('type') == 'housenumbers' or key == 'housenumbers':
-        HOUSENUMBERS_FIELD = key
-        field['type'] = 'housenumbers'
-    elif field.get('type') == 'name' or key == 'name':
-        NAME_FIELD = key
-        field['type'] = 'name'
 
 
 pm = pluggy.PluginManager('addok')
 pm.add_hookspecs(hooks)
 
 
-def load_plugins(config, load_external=True):
-    load_core_plugins()
-    if load_external:
-        load_external_plugins()
-    names = [name for name, module in pm.list_name_plugin()]
-    print('Addok loaded plugins: {}'.format(', '.join(names)))
-    pm.hook.addok_configure(config=config)
+def consolidate():
+    global HOUSENUMBERS_FIELD
+    global NAME_FIELD
+    FIELDS.extend(EXTRA_FIELDS)
+    for field in FIELDS:
+        key = field['key']
+        if field.get('type') == 'housenumbers' or key == 'housenumbers':
+            HOUSENUMBERS_FIELD = key
+            field['type'] = 'housenumbers'
+        elif field.get('type') == 'name' or key == 'name':
+            NAME_FIELD = key
+            field['type'] = 'name'
     resolve_paths()
-
-
-def load_core_plugins():
-    for path in PLUGINS:
-        plugin = importlib.import_module(path)
-        pm.register(plugin)
-
-
-def load_external_plugins():
-    pm.load_setuptools_entrypoints("addok.ext")
 
 
 def resolve_path(name):
@@ -78,3 +68,37 @@ def resolve_paths():
     ]
     for name in names:
         resolve_path(name)
+
+
+def load(config, discover=True):
+    # 1. Try to load local setting from a local path (allow to include or
+    # exclude plugins from local config).
+    localpath = os.environ.get('ADDOK_CONFIG_MODULE')
+    if localpath:
+        extend_from_file(localpath)
+
+    # 2. Load plugins.
+    load_core_plugins()
+    if discover:
+        pm.load_setuptools_entrypoints("addok.ext")
+    names = [name for name, module in pm.list_name_plugin()]
+    print('Addok loaded plugins: {}'.format(', '.join(names)))
+
+    # 3. Allow plugins to set default config.
+    pm.hook.addok_preconfigure(config=config)
+
+    # 4. Now reload local config if any, to override any plugin default.
+    if localpath:
+        extend_from_file(localpath)
+
+    # 5. Now let plugin configure themselves.
+    pm.hook.addok_configure(config=config)
+
+    # 5. Finally, consolidate values.
+    consolidate()
+
+
+def load_core_plugins():
+    for path in PLUGINS:
+        plugin = importlib.import_module(path)
+        pm.register(plugin)

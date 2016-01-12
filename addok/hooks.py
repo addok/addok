@@ -11,8 +11,13 @@ def addok_register_http_endpoints(endpoints):
 
 
 @spec
+def addok_preconfigure(config):
+    """Configure addok by patching config object before user local config."""
+
+
+@spec
 def addok_configure(config):
-    """Configure addok by patching config object."""
+    """Configure addok by patching config object after user local config."""
 
 
 @spec
