@@ -13,9 +13,9 @@ from . import config, hooks
 from .core import (Search, Result, Token, compute_geohash_key, make_fuzzy,
                    preprocess_query, reverse, token_frequency)
 from .db import DB
-from .index_utils import VALUE_SEPARATOR, document_key, pair_key, token_key
-from .text_utils import compare_ngrams
-from .utils import (blue, cyan, green, haversine_distance, km_to_score,
+from .helpers.index import VALUE_SEPARATOR, document_key, pair_key, token_key
+from .helpers.text import compare_ngrams
+from .helpers import (blue, cyan, green, haversine_distance, km_to_score,
                     magenta, red, white, yellow)
 
 

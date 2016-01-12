@@ -104,7 +104,7 @@ def test_should_do_autocomplete_on_last_term(street):
 
 
 def test_synonyms_should_be_replaced(street, monkeypatch):
-    monkeypatch.setattr('addok.text_utils.SYNONYMS', {'bd': 'boulevard'})
+    monkeypatch.setattr('addok.helpers.text.SYNONYMS', {'bd': 'boulevard'})
     street.update(name='boulevard des Fleurs')
     assert search('bd')
 

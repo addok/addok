@@ -1,7 +1,7 @@
 from addok import config
-from addok.text_utils import (ascii, compare_ngrams, contains, equals,
+from addok.helpers.text import (ascii, compare_ngrams, contains, equals,
                               startswith)
-from addok.utils import haversine_distance, km_to_score
+from addok.helpers import haversine_distance, km_to_score
 
 
 def make_labels(helper, result):

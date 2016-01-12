@@ -3,10 +3,10 @@ from multiprocessing import Pool
 
 import geohash
 
-from . import config
-from .db import DB
-from .text_utils import compute_edge_ngrams
-from .utils import iter_pipe
+from addok import config
+from addok.db import DB
+from addok.helpers.text import compute_edge_ngrams
+from addok.helpers import iter_pipe
 
 VALUE_SEPARATOR = '|~|'
 

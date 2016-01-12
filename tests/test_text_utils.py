@@ -1,6 +1,6 @@
 import pytest
 
-from addok.text_utils import (alphanumerize, ascii, compare_ngrams,
+from addok.helpers.text import (alphanumerize, ascii, compare_ngrams,
                               compute_edge_ngrams, contains, equals,
                               make_fuzzy, _normalize, startswith, _synonymize,
                               _tokenize)
@@ -86,7 +86,7 @@ def test_alphanumerize(input, output):
 def test_synonymize(input, output, monkeypatch):
     # Make sure we control synonyms.
     SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
-    monkeypatch.setattr('addok.text_utils.SYNONYMS', SYNONYMS)
+    monkeypatch.setattr('addok.helpers.text.SYNONYMS', SYNONYMS)
     assert _synonymize(input) == output
 
 
@@ -148,7 +148,7 @@ def test_ascii_should_cache_cleaned_string(monkeypatch):
     def do_not_call_me(x):
         assert False
 
-    monkeypatch.setattr('addok.text_utils.alphanumerize',
+    monkeypatch.setattr('addok.helpers.text.alphanumerize',
                         do_not_call_me)
 
     ascii(s)  # Should not call alphanumerize.

@@ -1,7 +1,7 @@
 import re
 
 from addok import config
-from addok.utils import yielder
+from addok.helpers import yielder
 from ngram import NGram
 from unidecode import unidecode
 

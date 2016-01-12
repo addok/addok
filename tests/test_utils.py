@@ -1,11 +1,11 @@
 import pytest
 
-from addok.utils import import_by_path
-from addok.text_utils import tokenize
+from addok.helpers import import_by_path
+from addok.helpers.text import tokenize
 
 
 @pytest.mark.parametrize("input,expected", [
-    ('addok.text_utils.tokenize', tokenize),
+    ('addok.helpers.text.tokenize', tokenize),
     (tokenize, tokenize),
 ])
 def test_import_by_path(input, expected):

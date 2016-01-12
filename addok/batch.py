@@ -4,8 +4,8 @@ import time
 from multiprocessing import Pool
 
 from addok import config, hooks
-from addok.index_utils import deindex_document, index_document
-from addok.utils import iter_pipe, yielder
+from addok.helpers.index import deindex_document, index_document
+from addok.helpers import iter_pipe, yielder
 
 
 def run(args):

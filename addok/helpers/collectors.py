@@ -1,5 +1,5 @@
-from . import config
-from .db import DB
+from addok import config
+from addok.db import DB
 
 
 def only_commons(helper):

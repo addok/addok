@@ -16,7 +16,7 @@ if localpath:
         with open(localpath) as config_file:
             exec(compile(config_file.read(), localpath, 'exec'), d.__dict__)
     except IOError as e:
-        from addok.utils import red
+        from addok.helpers import red
         print(red('Unable to import {} from '
                   'ADDOK_CONFIG_MODULE'.format(localpath)))
         sys.exit(1)
@@ -64,7 +64,7 @@ def load_external_plugins():
 
 
 def resolve_path(name):
-    from addok.utils import import_by_path
+    from addok.helpers import import_by_path
     attr = globals()[name]
     for idx, path in enumerate(attr):
         attr[idx] = import_by_path(path)

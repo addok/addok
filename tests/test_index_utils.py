@@ -1,5 +1,5 @@
 from addok.db import DB
-from addok.index_utils import (index_edge_ngrams, index_document,
+from addok.helpers.index import (index_edge_ngrams, index_document,
                                deindex_document, create_edge_ngrams)
 
 

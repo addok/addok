@@ -51,7 +51,7 @@ class DummyDoc(dict):
         self.index()
 
     def index(self):
-        from addok.index_utils import index_document
+        from addok.helpers.index import index_document
         index_document(self)
 
 
