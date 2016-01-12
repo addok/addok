@@ -1,3 +1,14 @@
+## 0.5.0
+- Expose housenumber parent name in result geojson
+- add support for housenumber payload ([#134](https://github.com/etalab/addok/issues/134))
+- Fix clean_query being too much greedy for "cs" ([#125](https://github.com/etalab/addok/issues/125)
+- also accept long for longitude
+- replace "s/s" in French preprocessing
+- fix autocomplete querystring casting to boolean
+- Always add housenumber in label candidates if set ([#120](https://github.com/etalab/addok/issues/120))
+- make CSVView more hackable by plugins ([#116][https://github.com/etalab/addok/issues/116))
+
+
 ## 0.4.0
 - fix filters not taken into account in manual scan ([#105](https://github.com/etalab/addok/issues/105))
 - added experimental list support for document values
