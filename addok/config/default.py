@@ -44,7 +44,7 @@ RESULTS_COLLECTORS = [
     'addok.helpers.collectors.no_meaningful_but_common_try_autocomplete',
     'addok.helpers.collectors.bucket_with_meaningful',
     'addok.helpers.collectors.reduce_with_other_commons',
-    'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',
+    'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',  # noqa
     'addok.helpers.collectors.autocomplete',
     'addok.helpers.collectors.check_bucket_full',
     'addok.helpers.collectors.check_cream',
@@ -52,8 +52,8 @@ RESULTS_COLLECTORS = [
     'addok.helpers.collectors.extend_results_reducing_tokens',
 ]
 SEARCH_RESULT_PROCESSORS = [
-    'addok.helpers.results.make_labels',
     'addok.helpers.results.match_housenumber',
+    'addok.helpers.results.make_labels',
     'addok.helpers.results.score_by_importance',
     'addok.helpers.results.score_by_autocomplete_distance',
     'addok.helpers.results.score_by_ngram_distance',
