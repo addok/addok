@@ -1,7 +1,8 @@
 from codecs import open  # To use a consistent encoding
+import glob
+from setuptools import find_packages, setup, Extension
 from os import path
-
-from setuptools import find_packages, setup
+import sys
 
 import addok
 
@@ -15,8 +16,41 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 def is_pkg(line):
     return line and not line.startswith(('--', 'git', '#'))
 
+
+def list_modules(dirname):
+    filenames = glob.glob(path.join(dirname, '*.py'))
+
+    module_names = []
+    for name in filenames:
+        module, ext = path.splitext(path.basename(name))
+        if module != '__init__':
+            module_names.append(module)
+
+    return module_names
+
+
 with open('requirements.txt', encoding='utf-8') as reqs:
     install_requires = [l for l in reqs.read().split('\n') if is_pkg(l)]
+
+try:
+    from Cython.Distutils import build_ext
+    CYTHON = True
+except ImportError:
+    sys.stdout.write('\nNOTE: Cython not installed. Addok will '
+                     'still work fine, but may run a bit slower.\n\n')
+    CYTHON = False
+    cmdclass = {}
+    ext_modules = []
+else:
+    ext_modules = [
+        Extension('addok.' + ext, [path.join('addok', 'helpers', ext + '.py')])
+        for ext in list_modules(path.join(here, 'addok'))]
+
+    ext_modules = [
+        Extension('addok.helpers' + ext, [path.join('addok', ext + '.py')])
+        for ext in list_modules(path.join(here, 'helpers', 'addok'))]
+
+    cmdclass = {'build_ext': build_ext}
 
 setup(
     name='addok',
