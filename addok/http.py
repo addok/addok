@@ -103,7 +103,7 @@ class View(object, metaclass=WithEndPoint):
             lat = float(req.get_param('lat'))
             for key in ('lon', 'lng', 'long'):
                 lon = req.get_param(key)
-                if lon:
+                if lon is not None:
                     lon = float(lon)
                     break
         except (ValueError, TypeError):
