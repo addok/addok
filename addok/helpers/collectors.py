@@ -103,21 +103,25 @@ def autocomplete(helper):
     helper.autocomplete(helper.meaningful)
 
 
-def fuzzy(helper):
-    if helper._fuzzy and not helper.has_cream():
-        if helper.not_found:
-            helper.fuzzy(helper.not_found)
-        if helper.bucket_dry and not helper.has_cream():
-            helper.fuzzy(helper.meaningful)
-        if helper.bucket_dry and not helper.has_cream():
-            helper.fuzzy(helper.meaningful, include_common=False)
-
-
 def extend_results_reducing_tokens(helper):
-    if helper.has_cream():
+    if helper.has_cream() or not helper.bucket_dry:
         return  # No need.
-    if helper.bucket_dry:
-        helper.reduce_tokens()
+    # Only if bucket is empty or we have margin on should_match_threshold.
+    if (helper.bucket_empty
+            or len(helper.meaningful) - 1 > helper.should_match_threshold):
+        helper.debug('Bucket dry. Trying to remove some tokens.')
+
+        def sorter(t):
+            # First numbers, then by frequency
+            return (2 if t.original.isdigit() else 1, t.frequency)
+
+        helper.meaningful.sort(key=sorter, reverse=True)
+        for token in helper.meaningful:
+            keys = helper.keys[:]
+            keys.remove(token.db_key)
+            helper.add_to_bucket(keys)
+            if helper.bucket_overflow:
+                break
 
 
 def check_bucket_full(helper):

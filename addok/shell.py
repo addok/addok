@@ -10,13 +10,13 @@ from pathlib import Path
 import geohash
 
 from . import config, hooks
-from .core import (Result, Search, Token, compute_geohash_key, make_fuzzy,
-                   preprocess_query, reverse, token_frequency)
+from .core import (Result, Search, Token, compute_geohash_key, preprocess_query,
+                   reverse, token_frequency)
 from .db import DB
 from .helpers import (blue, cyan, green, haversine_distance, km_to_score,
                       magenta, red, white, yellow)
 from .helpers.index import VALUE_SEPARATOR, document_key, pair_key, token_key
-from .helpers.text import compare_ngrams
+from .helpers.text import compare_ngrams, make_fuzzy
 
 
 def run_cli(args):

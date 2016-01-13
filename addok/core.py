@@ -8,7 +8,7 @@ from .db import DB
 from .helpers import iter_pipe
 from .helpers.index import (VALUE_SEPARATOR, document_key, edge_ngram_key,
                             filter_key, geohash_key, pair_key, token_key)
-from .helpers.text import ascii, make_fuzzy
+from .helpers.text import ascii
 
 
 def preprocess_query(s):
@@ -177,9 +177,6 @@ class Token(object):
         if DB.exists(self.key):
             self.db_key = self.key
 
-    def make_fuzzy(self, fuzzy=1):
-        self.neighbors = make_fuzzy(self.original, fuzzy)
-
     def autocomplete(self):
         key = edge_ngram_key(self.original)
         self.autocomplete_keys = [token_key(k.decode())
@@ -222,7 +219,7 @@ class Search(BaseHelper):
                  verbose=False):
         super().__init__(verbose=verbose)
         self.match_all = match_all
-        self._fuzzy = fuzzy
+        self.fuzzy = fuzzy
         self.limit = limit
         self.min = self.limit
         self._autocomplete = autocomplete
@@ -316,71 +313,6 @@ class Search(BaseHelper):
                 if use_geohash and self.geohash_key:
                     extra_keys.append(self.geohash_key)
                 self.add_to_bucket(keys + extra_keys)
-
-    def fuzzy(self, tokens, include_common=True):
-        if not self.bucket_dry or not tokens:
-            return
-        self.debug('Fuzzy on. Trying with %s.', tokens)
-        tokens.sort(key=lambda t: len(t), reverse=True)
-        allkeys = self.keys[:]
-        if include_common:
-            # As we are in fuzzy, try to narrow as much as possible by adding
-            # unused commons tokens.
-            common = [t for t in self.common if t.db_key not in self.keys]
-            allkeys.extend([t.db_key for t in common])
-        for try_one in tokens:
-            if self.bucket_full:
-                break
-            keys = allkeys[:]
-            if try_one.db_key in keys:
-                keys.remove(try_one.db_key)
-            if try_one.isdigit():
-                continue
-            self.debug('Going fuzzy with %s', try_one)
-            try_one.make_fuzzy(fuzzy=self.fuzzy)
-            if len(keys):
-                # Only retains tokens that have been seen in the index at least
-                # once with the other tokens.
-                DB.sadd(self.query, *try_one.neighbors)
-                interkeys = [pair_key(k[2:]) for k in keys]
-                interkeys.append(self.query)
-                fuzzy_words = DB.sinter(interkeys)
-                DB.delete(self.query)
-                # Keep the priority we gave in building fuzzy terms (inversion
-                # first, then substitution, etc.).
-                fuzzy_words = [w.decode() for w in fuzzy_words]
-                fuzzy_words.sort(key=lambda x: try_one.neighbors.index(x))
-            else:
-                # The token we are considering is alone.
-                fuzzy_words = []
-                for neighbor in try_one.neighbors:
-                    key = token_key(neighbor)
-                    count = DB.zcard(key)
-                    if count:
-                        fuzzy_words.append(neighbor)
-            self.debug('Found fuzzy candidates %s', fuzzy_words)
-            fuzzy_keys = [token_key(w) for w in fuzzy_words]
-            for key in fuzzy_keys:
-                if self.bucket_dry:
-                    self.add_to_bucket(keys + [key])
-
-    def reduce_tokens(self):
-        # Only if bucket is empty or we have margin on should_match_threshold.
-        if self.bucket_empty\
-           or len(self.meaningful) - 1 > self.should_match_threshold:
-            self.debug('Bucket dry. Trying to remove some tokens.')
-
-            def sorter(t):
-                # First numbers, then by frequency
-                return (2 if t.original.isdigit() else 1, t.frequency)
-
-            self.meaningful.sort(key=sorter, reverse=True)
-            for token in self.meaningful:
-                keys = self.keys[:]
-                keys.remove(token.db_key)
-                self.add_to_bucket(keys)
-                if self.bucket_overflow:
-                    break
 
     def intersect(self, keys, limit=0):
         if not limit > 0:

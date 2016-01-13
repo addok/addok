@@ -48,7 +48,6 @@ RESULTS_COLLECTORS = [
     'addok.helpers.collectors.autocomplete',
     'addok.helpers.collectors.check_bucket_full',
     'addok.helpers.collectors.check_cream',
-    'addok.helpers.collectors.fuzzy',
     'addok.helpers.collectors.extend_results_reducing_tokens',
 ]
 SEARCH_RESULT_PROCESSORS = [
@@ -126,4 +125,5 @@ PLUGINS = [
     'addok.shell',
     'addok.http',
     'addok.batch',
+    'addok.fuzzy',
 ]
