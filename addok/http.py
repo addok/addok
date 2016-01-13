@@ -3,9 +3,7 @@ import logging
 import logging.handlers
 from pathlib import Path
 
-from werkzeug.exceptions import BadRequest, HTTPException, NotFound
-from werkzeug.routing import Map, Rule
-from werkzeug.wrappers import Request, Response
+import falcon
 
 from addok import hooks
 from addok.core import Result, reverse, search
@@ -46,21 +44,14 @@ def log_query(query, results):
         query_logger.debug('\t'.join([query, result, score]))
 
 
-def app(environ, start_response):
-    if not config.URL_MAP:
-        endpoints = []
-        config.pm.hook.addok_register_http_endpoints(endpoints=endpoints)
-        rules = [Rule(path, endpoint=endpoint) for path, endpoint in endpoints]
-        config.URL_MAP = Map(rules, strict_slashes=False)
-    urls = config.URL_MAP.bind_to_environ(environ)
-    try:
-        endpoint, kwargs = urls.match()
-        request = Request(environ)
-        response = View.serve(endpoint, request, **kwargs)
-    except HTTPException as e:
-        return e(environ, start_response)
-    else:
-        return response(environ, start_response)
+class CorsMiddleware:
+
+    def process_response(self, req, resp, resource):
+        resp.set_header('Access-Control-Allow-Origin', '*')
+        resp.set_header('Access-Control-Allow-Headers', 'X-Requested-With')
+
+
+api = application = falcon.API(middleware=[CorsMiddleware()])
 
 
 class WithEndPoint(type):
@@ -69,8 +60,8 @@ class WithEndPoint(type):
 
     def __new__(mcs, name, bases, attrs, **kwargs):
         cls = super().__new__(mcs, name, bases, attrs)
-        if hasattr(cls, 'endpoint'):
-            mcs.endpoints[cls.endpoint] = cls
+        if hasattr(cls, 'url'):
+            api.add_route(cls.url, cls())
         return cls
 
 
@@ -78,39 +69,14 @@ class View(object, metaclass=WithEndPoint):
 
     config = config
 
-    def __init__(self, request):
-        self.request = request
-
-    def match_filters(self):
+    def match_filters(self, req):
         filters = {}
         for name in config.FILTERS:
-            value = self.request.args.get(name, self.request.form.get(name))
-            if value:
-                filters[name] = value
+            req.get_param(name, store=filters)
         return filters
 
-    @classmethod
-    def serve(cls, endpoint, request, **kwargs):
-        Class = WithEndPoint.endpoints.get(endpoint)
-        if not Class:
-            raise BadRequest()
-        view = Class(request)
-        if request.method == 'POST' and hasattr(view, 'post'):
-            response = view.post(**kwargs)
-        elif view.request.method == 'GET' and hasattr(view, 'get'):
-            response = view.get(**kwargs)
-        elif view.request.method == 'OPTIONS':
-            response = view.options(**kwargs)
-        else:
-            raise BadRequest()
-        if isinstance(response, tuple):
-            response = Response(*response)
-        elif isinstance(response, str):
-            response = Response(response)
-        return cls.cors(response)
-
-    def to_geojson(self, results, query=None, filters=None, center=None,
-                   limit=None):
+    def to_geojson(self, req, resp, results, query=None, filters=None,
+                   center=None, limit=None):
         results = {
             "type": "FeatureCollection",
             "version": "draft",
@@ -126,99 +92,75 @@ class View(object, metaclass=WithEndPoint):
             results['center'] = center
         if limit:
             results['limit'] = limit
-        return self.json(results)
+        self.json(req, resp, results)
 
-    def json(self, content):
-        response = Response(json.dumps(content), mimetype='text/plain')
-        response.headers['Content-Type'] = 'application/json; charset=utf-8'
-        return response
+    def json(self, req, resp, content):
+        resp.body = json.dumps(content)
+        resp.content_type = 'application/json; charset=utf-8'
 
-    def options(self):
-        return Response('')
-
-    @staticmethod
-    def cors(response):
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "X-Requested-With"
-        return response
+    def parse_lon_lat(self, req):
+        try:
+            lat = float(req.get_param('lat'))
+            for key in ('lon', 'lng', 'long'):
+                lon = req.get_param(key)
+                if lon:
+                    lon = float(lon)
+                    break
+        except (ValueError, TypeError):
+            lat = None
+            lon = None
+        return lon, lat
 
 
 class Get(View):
 
-    endpoint = 'get'
+    url = '/get/{doc_id}'
 
-    def get(self, doc_id):
+    def on_get(self, req, resp, doc_id, **kwargs):
         try:
             result = Result.from_id(doc_id)
         except ValueError:
-            raise NotFound()
+            raise falcon.HTTPNotFound()
         else:
-            return self.json(result.to_geojson())
+            self.json(req, resp, result.to_geojson())
 
 
 class Search(View):
 
-    endpoint = 'search'
+    url = '/search'
 
-    def get(self):
-        query = self.request.args.get('q', '')
+    def on_get(self, req, resp, **kwargs):
+        query = req.get_param('q')
         if not query:
-            return Response('Missing query', status=400)
-        try:
-            limit = int(self.request.args.get('limit'))
-        except (ValueError, TypeError):
-            limit = 5
-        try:
-            autocomplete = int(self.request.args.get('autocomplete')) == 1
-        except (ValueError, TypeError):
-            autocomplete = True
-        try:
-            lat = float(self.request.args.get('lat'))
-            lon = float(self.request.args.get('lon',
-                        self.request.args.get('lng',
-                        self.request.args.get('long'))))
-            center = [lat, lon]
-        except (ValueError, TypeError):
-            lat = None
-            lon = None
-            center = None
-        filters = self.match_filters()
+            raise falcon.HTTPBadRequest('Missing query', 'Missing query')
+        limit = req.get_param_as_int('limit') or 5  # use config
+        autocomplete = req.get_param_as_bool('autocomplete')
+        lon, lat = self.parse_lon_lat(req)
+        center = None
+        if lon and lat:
+            center = (lon, lat)
+        filters = self.match_filters(req)
         results = search(query, limit=limit, autocomplete=autocomplete,
                          lat=lat, lon=lon, **filters)
         if not results:
             log_notfound(query)
         log_query(query, results)
-        return self.to_geojson(results, query=query, filters=filters,
-                               center=center, limit=limit)
+        self.to_geojson(req, resp, results, query=query, filters=filters,
+                        center=center, limit=limit)
 
 
 class Reverse(View):
 
-    endpoint = 'reverse'
+    url = '/reverse'
 
-    def get(self):
-        try:
-            lat = float(self.request.args.get('lat'))
-            lon = float(self.request.args.get('lon',
-                        self.request.args.get('lng')))
-        except (ValueError, TypeError):
-            raise BadRequest()
-        try:
-            limit = int(self.request.args.get('limit'))
-        except (ValueError, TypeError):
-            limit = 1
-        filters = self.match_filters()
+    def on_get(self, req, resp, **kwargs):
+        lon, lat = self.parse_lon_lat(req)
+        if lon is None or lat is None:
+            raise falcon.HTTPBadRequest('Invalid args', 'Invalid args')
+        limit = req.get_param_as_int('limit') or 1
+        filters = self.match_filters(req)
         results = reverse(lat=lat, lon=lon, limit=limit, **filters)
-        return self.to_geojson(results, filters=filters, limit=limit)
-
-
-@hooks.register
-def addok_register_http_endpoints(endpoints):
-    endpoints.extend([
-        ('/get/<doc_id>/', 'get'),
-        ('/search/', 'search'),
-        ('/reverse/', 'reverse'),
-    ])
+        self.to_geojson(req, resp, results, filters=filters, limit=limit)
 
 
 @hooks.register
@@ -233,6 +175,10 @@ def addok_register_command(subparsers):
 
 
 def run(args):
-    from werkzeug.serving import run_simple
-    run_simple(args.host, int(args.port), app, use_debugger=True,
-               use_reloader=True)
+    from wsgiref.simple_server import make_server
+    httpd = make_server(args.host, int(args.port), application)
+    print("Serving HTTP on {}:{}...".format(args.host, args.port))
+    try:
+        httpd.serve_forever()
+    except (KeyboardInterrupt, EOFError):
+        print('Bye!')

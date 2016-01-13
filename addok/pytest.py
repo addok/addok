@@ -1,8 +1,6 @@
 import uuid
 
 import pytest
-from werkzeug.test import Client
-from werkzeug.wrappers import BaseResponse
 
 
 def pytest_configure():
@@ -88,11 +86,11 @@ def housenumber(factory):
 
 
 @pytest.fixture
-def client():
+def app():
     # Do not import before redis config has been
     # patched.
-    from addok.http import app
-    return Client(app, BaseResponse)
+    from addok.http import application
+    return application
 
 
 class MonkeyPatchWrapper(object):
