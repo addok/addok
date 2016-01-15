@@ -71,6 +71,9 @@ def resolve_paths():
 
 
 def load(config, discover=True):
+    if config.LOADED:
+        return
+    config.LOADED = True
     # 1. Try to load local setting from a local path (allow to include or
     # exclude plugins from local config).
     localpath = os.environ.get('ADDOK_CONFIG_MODULE')
@@ -96,6 +99,7 @@ def load(config, discover=True):
 
     # 5. Finally, consolidate values.
     consolidate()
+LOADED = False
 
 
 def load_core_plugins():

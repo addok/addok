@@ -51,21 +51,16 @@ class CorsMiddleware:
         resp.set_header('Access-Control-Allow-Headers', 'X-Requested-With')
 
 
-api = application = falcon.API(middleware=[CorsMiddleware()])
+def application(env, start_response):
+    config.load(config)
+    middlewares = [CorsMiddleware()]
+    config.pm.hook.addok_register_api_middleware(middlewares=middlewares)
+    api = falcon.API(middleware=middlewares)
+    config.pm.hook.addok_register_api_endpoint(api=api)
+    return api(env, start_response)
 
 
-class WithEndPoint(type):
-
-    endpoints = {}
-
-    def __new__(mcs, name, bases, attrs, **kwargs):
-        cls = super().__new__(mcs, name, bases, attrs)
-        if hasattr(cls, 'url'):
-            api.add_route(cls.url, cls())
-        return cls
-
-
-class View(object, metaclass=WithEndPoint):
+class View:
 
     config = config
 
@@ -114,8 +109,6 @@ class View(object, metaclass=WithEndPoint):
 
 class Get(View):
 
-    url = '/get/{doc_id}'
-
     def on_get(self, req, resp, doc_id, **kwargs):
         try:
             result = Result.from_id(doc_id)
@@ -126,8 +119,6 @@ class Get(View):
 
 
 class Search(View):
-
-    url = '/search'
 
     def on_get(self, req, resp, **kwargs):
         query = req.get_param('q')
@@ -151,8 +142,6 @@ class Search(View):
 
 class Reverse(View):
 
-    url = '/reverse'
-
     def on_get(self, req, resp, **kwargs):
         lon, lat = self.parse_lon_lat(req)
         if lon is None or lat is None:
@@ -164,20 +153,26 @@ class Reverse(View):
 
 
 @hooks.register
+def addok_register_api_endpoint(api):
+    api.add_route('/get/{doc_id}', Get())
+    api.add_route('/search', Search())
+    api.add_route('/reverse', Reverse())
+
+
+@hooks.register
 def addok_register_command(subparsers):
     parser = subparsers.add_parser('serve', help='Run debug server')
     parser.set_defaults(func=run)
     parser.add_argument('--host', default='127.0.0.1',
                         help='Host to expose the demo serve on')
     parser.add_argument('--port', action='store_const', default=7878,
-                        const=int,
-                        help='Port to expose the demo server on')
+                        const=int, help='Port to expose the demo server on')
 
 
 def run(args):
     from wsgiref.simple_server import make_server
     httpd = make_server(args.host, int(args.port), application)
-    print("Serving HTTP on {}:{}...".format(args.host, args.port))
+    print("Serving HTTP on {}:{}…".format(args.host, args.port))
     try:
         httpd.serve_forever()
     except (KeyboardInterrupt, EOFError):

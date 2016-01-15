@@ -5,7 +5,13 @@ register = pluggy.HookimplMarker('addok')
 
 
 @spec
-def addok_register_http_endpoints(endpoints):
+def addok_register_api_endpoint(api):
+    """Add new endpoints to Addok API."""
+    pass
+
+
+@spec
+def addok_register_api_middleware(middlewares):
     """Add new endpoints to Addok API."""
     pass
 
