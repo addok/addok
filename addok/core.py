@@ -6,8 +6,8 @@ import geohash
 from . import config
 from .db import DB
 from .helpers import iter_pipe
-from .helpers.index import (VALUE_SEPARATOR, document_key, edge_ngram_key,
-                            filter_key, geohash_key, pair_key, token_key)
+from .helpers.index import (VALUE_SEPARATOR, document_key, filter_key,
+                            geohash_key, token_key, token_key_frequency)
 from .helpers.text import ascii
 
 
@@ -15,20 +15,8 @@ def preprocess_query(s):
     return list(iter_pipe(s, config.QUERY_PROCESSORS + config.PROCESSORS))
 
 
-def token_key_frequency(key):
-    return DB.zcard(key)
-
-
 def token_frequency(token):
     return token_key_frequency(token_key(token))
-
-
-def score_autocomplete_candidates(key):
-    card = DB.zcard(key)
-    if card > config.COMMON_THRESHOLD:
-        return 0
-    else:
-        return card
 
 
 def compute_geohash_key(geoh, with_neighbors=True):
@@ -177,13 +165,6 @@ class Token(object):
         if DB.exists(self.key):
             self.db_key = self.key
 
-    def autocomplete(self):
-        key = edge_ngram_key(self.original)
-        self.autocomplete_keys = [token_key(k.decode())
-                                  for k in DB.smembers(key)]
-        self.autocomplete_keys.sort(key=score_autocomplete_candidates,
-                                    reverse=True)
-
     @property
     def is_common(self):
         return self.frequency > config.COMMON_THRESHOLD
@@ -222,7 +203,7 @@ class Search(BaseHelper):
         self.fuzzy = fuzzy
         self.limit = limit
         self.min = self.limit
-        self._autocomplete = autocomplete
+        self.autocomplete = autocomplete
 
     def __call__(self, query, lat=None, lon=None, **filters):
         self.lat = lat
@@ -292,27 +273,6 @@ class Search(BaseHelper):
     def search_all(self):
         for token in self.tokens:
             token.search()
-
-    def autocomplete(self, tokens, skip_commons=False, use_geohash=False):
-        self.debug('Autocompleting %s', self.last_token)
-        # self.last_token.autocomplete()
-        keys = [t.db_key for t in tokens if not t.is_last]
-        pair_keys = [pair_key(t.original) for t in tokens if not t.is_last]
-        key = edge_ngram_key(self.last_token.original)
-        autocomplete_tokens = DB.sinter(pair_keys + [key])
-        self.debug('Found tokens to autocomplete %s', autocomplete_tokens)
-        for token in autocomplete_tokens:
-            key = token_key(token.decode())
-            if skip_commons\
-               and token_key_frequency(key) > config.COMMON_THRESHOLD:
-                self.debug('Skip common token to autocomplete %s', key)
-                continue
-            if not self.bucket_overflow or self.last_token in self.not_found:
-                self.debug('Trying to extend bucket. Autocomplete %s', key)
-                extra_keys = [key]
-                if use_geohash and self.geohash_key:
-                    extra_keys.append(self.geohash_key)
-                self.add_to_bucket(keys + extra_keys)
 
     def intersect(self, keys, limit=0):
         if not limit > 0:

@@ -9,7 +9,6 @@ def only_commons(helper):
         if helper.geohash_key:
             keys.append(helper.geohash_key)
             helper.debug('Adding geohash %s', helper.geohash_key)
-            helper.autocomplete(helper.tokens, use_geohash=True)
         if len(keys) == 1 or helper.geohash_key:
             helper.add_to_bucket(keys)
         if helper.bucket_dry and len(keys) > 1:
@@ -34,22 +33,6 @@ def only_commons(helper):
                         break
                 helper.debug('%s results after scan (%s loops)',
                              len(helper.bucket), count)
-        helper.autocomplete(helper.tokens, skip_commons=True)
-        if not helper.bucket_empty:
-            helper.debug('Only common terms. Return.')
-            return True
-
-
-def no_meaningful_but_common_try_autocomplete(helper):
-    if not helper.meaningful and helper.common:
-        # Only commons terms, try to reduce with autocomplete.
-        helper.debug('Only commons, trying autocomplete')
-        helper.autocomplete(helper.common)
-        helper.meaningful = helper.common[:1]
-        if not helper.pass_should_match_threshold:
-            return False
-        if helper.bucket_full or helper.bucket_overflow or helper.has_cream():
-            return True
 
 
 def bucket_with_meaningful(helper):
@@ -62,7 +45,7 @@ def bucket_with_meaningful(helper):
     helper.keys = [t.db_key for t in helper.meaningful]
     if helper.bucket_empty:
         helper.new_bucket(helper.keys, helper.SMALL_BUCKET_LIMIT)
-        if (not helper._autocomplete and helper.cream > 0 and
+        if (not helper.autocomplete and helper.cream > 0 and
                 helper.cream < helper.SMALL_BUCKET_LIMIT):
             # Do not check cream before computing autocomplete when
             # autocomplete is on.
@@ -92,19 +75,10 @@ def ensure_geohash_results_are_included_if_center_is_given(helper):
         helper.add_to_bucket(helper.keys + [helper.geohash_key], helper.limit)
 
 
-def autocomplete(helper):
-    if helper.bucket_overflow:
-        return
-    if not helper._autocomplete:
-        helper.debug('Autocomplete not active. Abort.')
-        return
-    if helper.geohash_key:
-        helper.autocomplete(helper.meaningful, use_geohash=True)
-    helper.autocomplete(helper.meaningful)
-
-
 def extend_results_reducing_tokens(helper):
-    if helper.has_cream() or not helper.bucket_dry:
+    if helper.bucket_full or helper.has_cream():
+        return True
+    if not helper.bucket_dry:
         return  # No need.
     # Only if bucket is empty or we have margin on should_match_threshold.
     if (helper.bucket_empty
@@ -122,11 +96,3 @@ def extend_results_reducing_tokens(helper):
             helper.add_to_bucket(keys)
             if helper.bucket_overflow:
                 break
-
-
-def check_bucket_full(helper):
-    return helper.bucket_full
-
-
-def check_cream(helper):
-    return helper.has_cream()

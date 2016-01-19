@@ -41,13 +41,9 @@ BATCH_PROCESSORS = [
 ]
 RESULTS_COLLECTORS = [
     'addok.helpers.collectors.only_commons',
-    'addok.helpers.collectors.no_meaningful_but_common_try_autocomplete',
     'addok.helpers.collectors.bucket_with_meaningful',
     'addok.helpers.collectors.reduce_with_other_commons',
     'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',  # noqa
-    'addok.helpers.collectors.autocomplete',
-    'addok.helpers.collectors.check_bucket_full',
-    'addok.helpers.collectors.check_cream',
     'addok.helpers.collectors.extend_results_reducing_tokens',
 ]
 SEARCH_RESULT_PROCESSORS = [
@@ -66,14 +62,12 @@ REVERSE_RESULT_PROCESSORS = [
 INDEXERS = [
     'addok.helpers.index.fields_indexer',
     'addok.helpers.index.filters_indexer',
-    'addok.helpers.index.pairs_indexer',
     'addok.helpers.index.housenumbers_indexer',
     'addok.helpers.index.document_indexer',
 ]
 DEINDEXERS = [
     'addok.helpers.index.fields_deindexer',
     'addok.helpers.index.filters_deindexer',
-    'addok.helpers.index.pairs_deindexer',
     'addok.helpers.index.housenumbers_deindexer',
     'addok.helpers.index.document_deindexer',
 ]
@@ -125,5 +119,8 @@ PLUGINS = [
     'addok.shell',
     'addok.http',
     'addok.batch',
+    'addok.pairs',
     'addok.fuzzy',
+    'addok.autocomplete',
 ]
+INDEX_EDGE_NGRAMS = True

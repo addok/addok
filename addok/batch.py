@@ -30,6 +30,7 @@ def preprocess_batch(d):
 
 def process_file(filepath):
     print('Import from file', filepath)
+    config.INDEX_EDGE_NGRAMS = False  # Run command "ngrams" instead.
     with open(filepath) as f:
         batch(map(preprocess_batch, f))
 
@@ -51,7 +52,7 @@ def process(doc):
     if doc.get('_action') in ['delete', 'update']:
         deindex_document(doc['id'])
     if doc.get('_action') in ['index', 'update', None]:
-        index_document(doc, update_ngrams=False)
+        index_document(doc)
 
 
 def batch(iterable):

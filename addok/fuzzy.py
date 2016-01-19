@@ -1,6 +1,7 @@
 from addok import hooks
 from addok.db import DB
-from addok.helpers.index import pair_key, token_key
+from addok.helpers.index import token_key
+from addok.pairs import pair_key
 from addok.helpers.text import make_fuzzy
 
 
@@ -10,7 +11,7 @@ def fuzzy_collector(helper):
             try_fuzzy(helper, helper.not_found)
         if helper.bucket_dry and not helper.has_cream():
             try_fuzzy(helper, helper.meaningful)
-        if helper.bucket_dry and not helper.has_cream():
+        if helper.bucket_dry and not helper.has_cream() and helper.common:
             try_fuzzy(helper, helper.meaningful, include_common=False)
 
 

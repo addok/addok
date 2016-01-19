@@ -1,6 +1,6 @@
 from addok.db import DB
-from addok.helpers.index import (create_edge_ngrams, deindex_document,
-                                 index_document, index_edge_ngrams)
+from addok.helpers.index import deindex_document, index_document
+from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
 
 
 def count_keys():
@@ -307,6 +307,7 @@ def test_field_with_only_non_alphanumeric_chars_is_not_indexed():
 
 def test_create_edge_ngrams(config):
     config.MIN_EDGE_NGRAMS = 2
+    config.INDEX_EDGE_NGRAMS = False
     doc = {
         'id': 'xxxx',
         'lat': '49.32545',
@@ -314,7 +315,7 @@ def test_create_edge_ngrams(config):
         'name': '28 Lilas',  # 28 should not appear in ngrams
         'city': 'Paris'
     }
-    index_document(doc, update_ngrams=False)
+    index_document(doc)
     assert not DB.exists('n|li')
     assert not DB.exists('n|lil')
     assert not DB.exists('n|lila')

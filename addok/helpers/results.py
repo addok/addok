@@ -54,7 +54,7 @@ def score_by_importance(helper, result):
 
 
 def score_by_autocomplete_distance(helper, result):
-    if not helper._autocomplete:
+    if not helper.autocomplete:
         return
     score = 0
     query = ascii(helper.query)
@@ -85,7 +85,7 @@ def _score_by_ngram_distance(helper, result):
 
 
 def score_by_ngram_distance(helper, result):
-    if helper._autocomplete:
+    if helper.autocomplete:
         return
     _score_by_ngram_distance(helper, result)
 

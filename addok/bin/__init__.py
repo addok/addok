@@ -26,8 +26,5 @@ def main():
     else:
         main_parser.print_help()
 
-    # elif args['ngrams']:
-    #     create_edge_ngrams()
-
 if __name__ == '__main__':
     main()

@@ -1,12 +1,8 @@
-import time
-from multiprocessing import Pool
-
 import geohash
 
 from addok import config
 from addok.db import DB
 from addok.helpers import iter_pipe
-from addok.helpers.text import compute_edge_ngrams
 
 VALUE_SEPARATOR = '|~|'
 
@@ -42,30 +38,16 @@ def housenumber_field_key(s):
     return 'h|{}'.format(s)
 
 
-def edge_ngram_key(s):
-    return 'n|{}'.format(s)
-
-
 def geohash_key(s):
     return 'g|{}'.format(s)
-
-
-def pair_key(s):
-    return 'p|{}'.format(s)
 
 
 def filter_key(k, v):
     return 'f|{}|{}'.format(k, v)
 
 
-def index_edge_ngrams(pipe, token):
-    for ngram in compute_edge_ngrams(token):
-        pipe.sadd(edge_ngram_key(ngram), token)
-
-
-def deindex_edge_ngrams(token):
-    for ngram in compute_edge_ngrams(token):
-        DB.srem(edge_ngram_key(ngram), token)
+def token_key_frequency(key):
+    return DB.zcard(key)
 
 
 def extract_tokens(tokens, string, boost):
@@ -78,11 +60,9 @@ def extract_tokens(tokens, string, boost):
             tokens[token] = boost
 
 
-def index_tokens(pipe, tokens, key, update_ngrams=True):
+def index_tokens(pipe, tokens, key, **kwargs):
     for token, boost in tokens.items():
         pipe.zadd(token_key(token), boost, key)
-        if update_ngrams:
-            index_edge_ngrams(pipe, token)
 
 
 def deindex_field(key, string):
@@ -95,8 +75,6 @@ def deindex_field(key, string):
 def deindex_token(key, token):
     tkey = token_key(token)
     DB.zrem(tkey, key)
-    if not DB.exists(tkey):
-        deindex_edge_ngrams(token)
 
 
 def index_document(doc, **kwargs):
@@ -136,33 +114,6 @@ def deindex_geohash(key, lat, lon):
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
     geok = geohash_key(geoh)
     DB.srem(geok, key)
-
-
-def index_ngram_key(key):
-    key = key.decode()
-    _, token = key.split('|')
-    if token.isdigit():
-        return
-    index_edge_ngrams(DB, token)
-
-
-def create_edge_ngrams():
-    start = time.time()
-    pool = Pool()
-    count = 0
-    chunk = []
-    for key in DB.scan_iter(match='w|*'):
-        count += 1
-        chunk.append(key)
-        if count % 10000 == 0:
-            pool.map(index_ngram_key, chunk)
-            print("Done", count, time.time() - start)
-            chunk = []
-    if chunk:
-        pool.map(index_ngram_key, chunk)
-    pool.close()
-    pool.join()
-    print('Done', count, 'in', time.time() - start)
 
 
 def fields_indexer(pipe, key, doc, tokens, **kwargs):
@@ -224,9 +175,6 @@ def housenumbers_indexer(pipe, key, doc, tokens, **kwargs):
         val = '|'.join(map(str, vals))
         for hn in preprocess_housenumber(number.replace(' ', '')):
             doc[housenumber_field_key(hn)] = val
-            # Pair every document term to each housenumber, but do not pair
-            # housenumbers together.
-            pipe.sadd(pair_key(hn), *tokens.keys())
             to_index[hn] = config.DEFAULT_BOOST
         index_geohash(pipe, key, point['lat'], point['lon'])
     index_tokens(pipe, to_index, key, **kwargs)
@@ -239,42 +187,8 @@ def housenumbers_deindexer(db, key, doc, tokens, **kwargs):
             continue
         number, lat, lon, *extra = value.decode().split('|')
         hn = field[2:]
-        for token in tokens:
-            k = '|'.join(['didx', hn, token])
-            commons = db.zinterstore(k, [token_key(hn), token_key(token)])
-            db.delete(k)
-            if not commons:
-                db.srem(pair_key(hn), token)
-                db.srem(pair_key(token), hn)
         deindex_geohash(key, lat, lon)
         deindex_token(key, hn)
-
-
-def pairs_indexer(pipe, key, doc, tokens, **kwargs):
-    els = set(tokens.keys())  # Unique values.
-    for el in els:
-        values = set([])
-        for el2 in els:
-            if el != el2:
-                values.add(el2)
-        if values:
-            pipe.sadd(pair_key(el), *values)
-
-
-def pairs_deindexer(db, key, doc, tokens, **kwargs):
-    els = list(set(tokens))  # Unique values.
-    loop = 0
-    for el in els:
-        for el2 in els[loop:]:
-            if el != el2:
-                key = '|'.join(['didx', el, el2])
-                # Do we have other documents that share el and el2?
-                commons = db.zinterstore(key, [token_key(el), token_key(el2)])
-                db.delete(key)
-                if not commons:
-                    db.srem(pair_key(el), el2)
-                    db.srem(pair_key(el2), el)
-        loop += 1
 
 
 def filters_indexer(pipe, key, doc, tokens, **kwargs):
