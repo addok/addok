@@ -1,5 +1,5 @@
 from addok import config, hooks
-from addok.helpers.index import token_key, preprocess_housenumber
+from addok.helpers.index import preprocess_housenumber, token_key
 
 
 def pair_key(s):

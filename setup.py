@@ -1,8 +1,9 @@
-from codecs import open  # To use a consistent encoding
 import glob
-from setuptools import find_packages, setup, Extension
-from os import path
 import sys
+from codecs import open  # To use a consistent encoding
+from os import path
+
+from setuptools import Extension, find_packages, setup
 
 import addok
 

@@ -25,12 +25,11 @@ def make_labels(helper, result):
 def match_housenumber(helper, result):
     if not helper.check_housenumber:
         return
-    originals = [t.original for t in helper.tokens]
     name_tokens = result.name.split()
-    for original in originals:
+    for original in helper.tokens:
         if original in result.housenumbers:
             raw, lat, lon, *extra = result.housenumbers[original].split('|')
-            if raw in name_tokens and originals.count(original) != 2:
+            if raw in name_tokens and helper.tokens.count(original) != 2:
                 # Consider that user is not requesting a housenumber if
                 # token is also in name (ex. rue du 8 mai), unless this
                 # token is twice in the query (8 rue du 8 mai).
@@ -72,13 +71,13 @@ def score_by_autocomplete_distance(helper, result):
             if score >= config.MATCH_THRESHOLD:
                 break
     if not score:
-        _score_by_ngram_distance(helper, result)
+        _score_by_ngram_distance(helper, result, scale=0.9)
 
 
-def _score_by_ngram_distance(helper, result):
+def _score_by_ngram_distance(helper, result, scale=1.0):
     for label in result.labels:
         label = ascii(label)
-        score = compare_ngrams(label, helper.query)
+        score = compare_ngrams(label, helper.query) * scale
         result.add_score('str_distance', score, ceiling=1.0)
         if score >= config.MATCH_THRESHOLD:
             break

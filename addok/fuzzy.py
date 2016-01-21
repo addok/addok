@@ -1,8 +1,8 @@
 from addok import hooks
 from addok.db import DB
 from addok.helpers.index import token_key
-from addok.pairs import pair_key
 from addok.helpers.text import make_fuzzy
+from addok.pairs import pair_key
 
 
 def fuzzy_collector(helper):
@@ -35,7 +35,7 @@ def try_fuzzy(helper, tokens, include_common=True):
         if try_one.isdigit():
             continue
         helper.debug('Going fuzzy with %s', try_one)
-        neighbors = make_fuzzy(try_one.original, max=helper.fuzzy)
+        neighbors = make_fuzzy(try_one, max=helper.fuzzy)
         if len(keys):
             # Only retains tokens that have been seen in the index at least
             # once with the other tokens.

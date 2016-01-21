@@ -1,6 +1,6 @@
+from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
 from addok.db import DB
 from addok.helpers.index import deindex_document, index_document
-from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
 
 
 def count_keys():

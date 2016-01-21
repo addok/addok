@@ -50,6 +50,10 @@ def token_key_frequency(key):
     return DB.zcard(key)
 
 
+def token_frequency(token):
+    return token_key_frequency(token_key(token))
+
+
 def extract_tokens(tokens, string, boost):
     els = list(preprocess(string))
     if not els:

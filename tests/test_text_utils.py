@@ -3,7 +3,7 @@ import pytest
 from addok.helpers.text import (_normalize, _synonymize, _tokenize,
                                 alphanumerize, ascii, compare_ngrams,
                                 compute_edge_ngrams, contains, equals,
-                                make_fuzzy, startswith)
+                                make_fuzzy, startswith, Token)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -68,7 +68,7 @@ def test_compare_ngrams(left, right, score):
     ['Erispœ', 'erispoe'],
 ])
 def test_normalize(input, output):
-    assert _normalize(input) == output
+    assert _normalize(Token(input)) == output
 
 
 @pytest.mark.parametrize('input,output', [
@@ -76,7 +76,7 @@ def test_normalize(input, output):
     ['   ', ' '],
 ])
 def test_alphanumerize(input, output):
-    assert alphanumerize(input) == output
+    assert alphanumerize(Token(input)) == output
 
 
 @pytest.mark.parametrize('input,output', [
@@ -87,7 +87,7 @@ def test_synonymize(input, output, monkeypatch):
     # Make sure we control synonyms.
     SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
     monkeypatch.setattr('addok.helpers.text.SYNONYMS', SYNONYMS)
-    assert _synonymize(input) == output
+    assert _synonymize(Token(input)) == output
 
 
 def test_compute_edge_ngrams():

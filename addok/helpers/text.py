@@ -1,11 +1,50 @@
 import re
 
 from addok import config
+from addok.db import DB
 from addok.helpers import yielder
+from addok.helpers.index import token_frequency, token_key
 from ngram import NGram
 from unidecode import unidecode
 
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
+
+
+class Token(str):
+
+    def __new__(cls, original, position=0, is_last=False):
+        obj = str.__new__(cls, original)
+        obj.position = position
+        obj.is_last = is_last
+        obj.db_key = None
+        return obj
+
+    def __repr__(self):
+        return '<Token {}>'.format(self)
+
+    def update(self, value):
+        token = Token(value, position=self.position, is_last=self.is_last)
+        return token
+
+    def search(self):
+        if DB.exists(self.key):
+            self.db_key = self.key
+
+    @property
+    def is_common(self):
+        return self.frequency > config.COMMON_THRESHOLD
+
+    @property
+    def frequency(self):
+        if not hasattr(self, '_frequency'):
+            self._frequency = token_frequency(self)
+        return self._frequency
+
+    @property
+    def key(self):
+        if not hasattr(self, '_key'):
+            self._key = token_key(self)
+        return self._key
 
 
 def _tokenize(text):
@@ -15,12 +54,12 @@ def _tokenize(text):
 
 def tokenize(pipe):
     for text in pipe:
-        for token in _tokenize(text):
-            yield token
+        for position, token in enumerate(_tokenize(text)):
+            yield Token(token, position=position)
 
 
 def _normalize(s):
-    return unidecode(s.lower())
+    return s.update(unidecode(s.lower()))
 normalize = yielder(_normalize)
 
 
@@ -43,8 +82,8 @@ def load_synonyms():
 load_synonyms()
 
 
-def _synonymize(s):
-    return SYNONYMS.get(s, s)
+def _synonymize(t):
+    return t.update(SYNONYMS.get(t, t))
 synonymize = yielder(_synonymize)
 
 

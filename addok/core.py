@@ -7,16 +7,12 @@ from . import config
 from .db import DB
 from .helpers import iter_pipe
 from .helpers.index import (VALUE_SEPARATOR, document_key, filter_key,
-                            geohash_key, token_key, token_key_frequency)
+                            geohash_key)
 from .helpers.text import ascii
 
 
 def preprocess_query(s):
     return list(iter_pipe(s, config.QUERY_PROCESSORS + config.PROCESSORS))
-
-
-def token_frequency(token):
-    return token_key_frequency(token_key(token))
 
 
 def compute_geohash_key(geoh, with_neighbors=True):
@@ -143,42 +139,6 @@ class Result(object):
         return Result(document_key(_id))
 
 
-class Token(object):
-
-    def __init__(self, original, position=0, is_last=False):
-        self.original = original
-        self.position = position
-        self.is_last = is_last
-        self.key = token_key(original)
-        self.db_key = None
-
-    def __len__(self):
-        return len(self.original)
-
-    def __str__(self):
-        return self.original
-
-    def __repr__(self):
-        return '<Token {}>'.format(self.original)
-
-    def search(self):
-        if DB.exists(self.key):
-            self.db_key = self.key
-
-    @property
-    def is_common(self):
-        return self.frequency > config.COMMON_THRESHOLD
-
-    @property
-    def frequency(self):
-        if not hasattr(self, '_frequency'):
-            self._frequency = token_frequency(self.original)
-        return self._frequency
-
-    def isdigit(self):
-        return self.original.isdigit()
-
-
 class BaseHelper(object):
 
     def __init__(self, verbose):
@@ -260,14 +220,10 @@ class Search(BaseHelper):
         return self._sorted_bucket[:self.limit]
 
     def preprocess(self):
-        self.tokens = []
-        token = None
-        for position, token in enumerate(preprocess_query(self.query)):
-            token = Token(token, position=position)
-            self.tokens.append(token)
-        if token:
-            token.is_last = True
-            self.last_token = token
+        self.tokens = preprocess_query(self.query)
+        if self.tokens:
+            self.tokens[-1].is_last = True
+            self.last_token = self.tokens[-1]
         self.tokens.sort(key=lambda x: len(x), reverse=True)
 
     def search_all(self):

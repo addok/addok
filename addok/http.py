@@ -4,7 +4,6 @@ import logging.handlers
 from pathlib import Path
 
 import falcon
-
 from addok import hooks
 from addok.core import Result, reverse, search
 

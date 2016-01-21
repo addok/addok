@@ -87,7 +87,7 @@ def extend_results_reducing_tokens(helper):
 
         def sorter(t):
             # First numbers, then by frequency
-            return (2 if t.original.isdigit() else 1, t.frequency)
+            return (2 if t.isdigit() else 1, t.frequency)
 
         helper.meaningful.sort(key=sorter, reverse=True)
         for token in helper.meaningful:

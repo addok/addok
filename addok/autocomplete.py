@@ -3,9 +3,9 @@ from multiprocessing import Pool
 
 from addok import config, hooks
 from addok.db import DB
-from addok.pairs import pair_key
 from addok.helpers.index import token_key, token_key_frequency
 from addok.helpers.text import compute_edge_ngrams
+from addok.pairs import pair_key
 
 
 def edge_ngram_key(s):
@@ -76,8 +76,8 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
     helper.debug('Autocompleting %s', helper.last_token)
     # helper.last_token.autocomplete()
     keys = [t.db_key for t in tokens if not t.is_last]
-    pair_keys = [pair_key(t.original) for t in tokens if not t.is_last]
-    key = edge_ngram_key(helper.last_token.original)
+    pair_keys = [pair_key(t) for t in tokens if not t.is_last]
+    key = edge_ngram_key(helper.last_token)
     autocomplete_tokens = DB.sinter(pair_keys + [key])
     helper.debug('Found tokens to autocomplete %s', autocomplete_tokens)
     for token in autocomplete_tokens:
