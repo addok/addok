@@ -88,11 +88,13 @@ def load(config, discover=True):
     load_core_plugins()
     if discover:
         pm.load_setuptools_entrypoints("addok.ext")
-    names = [name for name, module in pm.list_name_plugin()]
-    print('Addok loaded plugins: {}'.format(', '.join(names)))
 
-    # 3. Allow plugins to set default config.
+    # 3. Allow to unregister plugins from other plugins or to set default
+    # config.
     pm.hook.addok_preconfigure(config=config)
+
+    names = [name for name, module in pm.list_name_plugin() if module]
+    print('Addok loaded plugins: {}'.format(', '.join(names)))
 
     # 4. Now reload local config if any, to override any plugin default.
     if localpath:
