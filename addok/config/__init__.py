@@ -81,6 +81,10 @@ def load(config, discover=True):
         extend_from_file(localpath)
 
     # 2. Load plugins.
+    if BLOCKED_PLUGINS:
+        print('Blocked plugins: ', ', '.join(BLOCKED_PLUGINS))
+        for name in BLOCKED_PLUGINS:
+            pm.set_blocked(name)
     load_core_plugins()
     if discover:
         pm.load_setuptools_entrypoints("addok.ext")

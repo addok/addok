@@ -29,7 +29,7 @@ RESOURCES_ROOT = Path(__file__).parent.parent.joinpath('resources')
 SYNONYMS_PATH = RESOURCES_ROOT.joinpath('synonyms').joinpath('fr.txt')
 
 # Pipeline stream to be used.
-PROCESSORS = [
+PROCESSORS = [  # Rename in TOKEN_PROCESSORS
     'addok.helpers.text.tokenize',
     'addok.helpers.text.normalize',
     'addok.helpers.text.synonymize',
@@ -123,4 +123,5 @@ PLUGINS = [
     'addok.fuzzy',
     'addok.autocomplete',
 ]
+BLOCKED_PLUGINS = []
 INDEX_EDGE_NGRAMS = True
