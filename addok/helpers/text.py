@@ -12,18 +12,22 @@ PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 class Token(str):
 
-    def __new__(cls, original, position=0, is_last=False):
-        obj = str.__new__(cls, original)
+    def __new__(cls, value, position=0, is_last=False, raw=None):
+        obj = str.__new__(cls, value)
         obj.position = position
         obj.is_last = is_last
         obj.db_key = None
+        obj.raw = raw or value  # Allow to keep raw on update.
         return obj
 
     def __repr__(self):
         return '<Token {}>'.format(self)
 
-    def update(self, value):
-        token = Token(value, position=self.position, is_last=self.is_last)
+    def update(self, value, **kwargs):
+        default = dict(position=self.position, is_last=self.is_last,
+                       raw=self.raw)
+        default.update(kwargs)
+        token = Token(value=value, **kwargs)
         return token
 
     def search(self):
