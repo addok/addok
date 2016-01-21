@@ -64,7 +64,7 @@ def resolve_paths():
     names = [
         'QUERY_PROCESSORS', 'RESULTS_COLLECTORS', 'SEARCH_RESULT_PROCESSORS',
         'REVERSE_RESULT_PROCESSORS', 'PROCESSORS', 'INDEXERS', 'DEINDEXERS',
-        'BATCH_PROCESSORS'
+        'BATCH_PROCESSORS', 'SEARCH_PREPROCESSORS'
     ]
     for name in names:
         resolve_path(name)

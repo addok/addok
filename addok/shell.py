@@ -10,13 +10,13 @@ from pathlib import Path
 import geohash
 
 from . import config, hooks
-from .core import (Result, Search, compute_geohash_key, preprocess_query,
-                   reverse)
+from .core import Result, Search, compute_geohash_key, reverse
 from .db import DB
 from .helpers import (blue, cyan, green, haversine_distance, km_to_score,
                       magenta, red, white, yellow)
 from .helpers.index import (VALUE_SEPARATOR, document_key, token_frequency,
                             token_key)
+from .helpers.search import preprocess_query
 from .helpers.text import Token, compare_ngrams, make_fuzzy
 from .pairs import pair_key
 

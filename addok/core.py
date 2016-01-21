@@ -1,18 +1,12 @@
 import time
-from math import ceil
 
 import geohash
 
 from . import config
 from .db import DB
-from .helpers import iter_pipe
 from .helpers.index import (VALUE_SEPARATOR, document_key, filter_key,
                             geohash_key)
 from .helpers.text import ascii
-
-
-def preprocess_query(s):
-    return list(iter_pipe(s, config.QUERY_PROCESSORS + config.PROCESSORS))
 
 
 def compute_geohash_key(geoh, with_neighbors=True):
@@ -155,6 +149,7 @@ class BaseHelper(object):
 class Search(BaseHelper):
 
     SMALL_BUCKET_LIMIT = 10
+    MAX_MEANINGUL = 10
 
     def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True,
                  verbose=False):
@@ -175,22 +170,14 @@ class Search(BaseHelper):
         self.not_found = []
         self.common = []
         self.keys = []
+        self.matched_keys = set([])
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
         self.filters = [filter_key(k, v) for k, v in filters.items() if v]
         self.query = ascii(query.strip())
-        self.preprocess()
+        for func in config.SEARCH_PREPROCESSORS:
+            func(self)
         if not self.tokens:
             return []
-        self.search_all()
-        self.set_should_match_threshold()
-        for token in self.tokens:
-            if token.is_common:
-                self.common.append(token)
-            elif token.db_key:
-                self.meaningful.append(token)
-            else:
-                self.not_found.append(token)
-        self.common.sort(key=lambda x: x.frequency)
         self.debug('Taken tokens: %s', self.meaningful)
         self.debug('Common tokens: %s', self.common)
         self.debug('Not found tokens: %s', self.not_found)
@@ -199,7 +186,7 @@ class Search(BaseHelper):
         for collector in config.RESULTS_COLLECTORS:
             self.debug('** %s **', collector.__name__.upper())
             if collector(self):
-                return self.render()
+                break
         return self.render()
 
     @property
@@ -219,17 +206,6 @@ class Search(BaseHelper):
         self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
         return self._sorted_bucket[:self.limit]
 
-    def preprocess(self):
-        self.tokens = preprocess_query(self.query)
-        if self.tokens:
-            self.tokens[-1].is_last = True
-            self.last_token = self.tokens[-1]
-        self.tokens.sort(key=lambda x: len(x), reverse=True)
-
-    def search_all(self):
-        for token in self.tokens:
-            token.search()
-
     def intersect(self, keys, limit=0):
         if not limit > 0:
             limit = config.BUCKET_LIMIT
@@ -240,7 +216,7 @@ class Search(BaseHelper):
             if len(keys) == 1:
                 ids = DB.zrevrange(keys[0], 0, limit - 1)
             else:
-                DB.zinterstore(self.query, keys)
+                DB.zinterstore(self.query, set(keys))
                 ids = DB.zrevrange(self.query, 0, limit - 1)
                 DB.delete(self.query)
         return set(ids)
@@ -297,10 +273,6 @@ class Search(BaseHelper):
         self.debug('Checking cream.')
         self.convert()
         return self.cream > 0
-
-    def set_should_match_threshold(self):
-        self.matched_keys = set([])
-        self.should_match_threshold = ceil(2 / 3 * len(self.tokens))
 
     @property
     def pass_should_match_threshold(self):
