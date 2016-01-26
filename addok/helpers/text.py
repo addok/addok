@@ -2,8 +2,8 @@ import re
 
 from addok import config
 from addok.db import DB
-from addok.helpers import yielder
-from addok.helpers.index import token_frequency, token_key
+from addok.helpers import yielder, keys
+from addok.helpers.index import token_frequency
 from ngram import NGram
 from unidecode import unidecode
 
@@ -27,7 +27,7 @@ class Token(str):
         default = dict(position=self.position, is_last=self.is_last,
                        raw=self.raw)
         default.update(kwargs)
-        token = Token(value=value, **kwargs)
+        token = Token(value=value, **default)
         return token
 
     def search(self):
@@ -47,7 +47,7 @@ class Token(str):
     @property
     def key(self):
         if not hasattr(self, '_key'):
-            self._key = token_key(self)
+            self._key = keys.token_key(self)
         return self._key
 
 

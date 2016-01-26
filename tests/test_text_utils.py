@@ -1,9 +1,9 @@
 import pytest
 
-from addok.helpers.text import (_normalize, _synonymize, _tokenize,
+from addok.helpers.text import (Token, _normalize, _synonymize, _tokenize,
                                 alphanumerize, ascii, compare_ngrams,
                                 compute_edge_ngrams, contains, equals,
-                                make_fuzzy, startswith, Token)
+                                make_fuzzy, startswith)
 
 
 @pytest.mark.parametrize('input,output', [

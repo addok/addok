@@ -1,6 +1,6 @@
 from addok import hooks
 from addok.db import DB
-from addok.helpers.index import token_key
+from addok.helpers import keys as dbkeys
 from addok.helpers.text import make_fuzzy
 from addok.pairs import pair_key
 
@@ -52,12 +52,12 @@ def try_fuzzy(helper, tokens, include_common=True):
             # The token we are considering is alone.
             fuzzy_words = []
             for neighbor in neighbors:
-                key = token_key(neighbor)
+                key = dbkeys.token_key(neighbor)
                 count = DB.zcard(key)
                 if count:
                     fuzzy_words.append(neighbor)
         helper.debug('Found fuzzy candidates %s', fuzzy_words)
-        fuzzy_keys = [token_key(w) for w in fuzzy_words]
+        fuzzy_keys = [dbkeys.token_key(w) for w in fuzzy_words]
         for key in fuzzy_keys:
             if helper.bucket_dry:
                 helper.add_to_bucket(keys + [key])

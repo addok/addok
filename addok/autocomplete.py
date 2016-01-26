@@ -3,7 +3,8 @@ from multiprocessing import Pool
 
 from addok import config, hooks
 from addok.db import DB
-from addok.helpers.index import token_key, token_key_frequency
+from addok.helpers import keys as dbkeys
+from addok.helpers.index import token_key_frequency
 from addok.helpers.text import compute_edge_ngrams
 from addok.pairs import pair_key
 
@@ -31,7 +32,7 @@ def edge_ngram_indexer(pipe, key, doc, tokens, **kwargs):
 def edge_ngram_deindexer(db, key, doc, tokens, **kwargs):
     if config.INDEX_EDGE_NGRAMS:
         for token in tokens:
-            tkey = token_key(token)
+            tkey = dbkeys.token_key(token)
             if not DB.exists(tkey):
                 deindex_edge_ngrams(token)
 
@@ -81,7 +82,7 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
     autocomplete_tokens = DB.sinter(pair_keys + [key])
     helper.debug('Found tokens to autocomplete %s', autocomplete_tokens)
     for token in autocomplete_tokens:
-        key = token_key(token.decode())
+        key = dbkeys.token_key(token.decode())
         if skip_commons\
            and token_key_frequency(key) > config.COMMON_THRESHOLD:
             helper.debug('Skip common token to autocomplete %s', key)

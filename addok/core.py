@@ -4,15 +4,15 @@ import geohash
 
 from . import config
 from .db import DB
-from .helpers.index import (VALUE_SEPARATOR, document_key, filter_key,
-                            geohash_key)
+from .helpers.index import VALUE_SEPARATOR
 from .helpers.text import ascii
+from .helpers import keys
 
 
 def compute_geohash_key(geoh, with_neighbors=True):
     if with_neighbors:
         neighbors = geohash.expand(geoh)
-        neighbors = [geohash_key(n) for n in neighbors]
+        neighbors = [keys.geohash_key(n) for n in neighbors]
     else:
         neighbors = [geoh]
     key = 'gx|{}'.format(geoh)
@@ -130,7 +130,7 @@ class Result(object):
     @classmethod
     def from_id(self, _id):
         """Return a result from it's document id."""
-        return Result(document_key(_id))
+        return Result(keys.document_key(_id))
 
 
 class BaseHelper(object):
@@ -172,7 +172,7 @@ class Search(BaseHelper):
         self.keys = []
         self.matched_keys = set([])
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
-        self.filters = [filter_key(k, v) for k, v in filters.items() if v]
+        self.filters = [keys.filter_key(k, v) for k, v in filters.items() if v]
         self.query = ascii(query.strip())
         for func in config.SEARCH_PREPROCESSORS:
             func(self)
@@ -289,7 +289,7 @@ class Reverse(BaseHelper):
         self.limit = limit
         self.fetched = []
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
-        self.filters = [filter_key(k, v) for k, v in filters.items()]
+        self.filters = [keys.filter_key(k, v) for k, v in filters.items()]
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
         self.fetch(hashes)
@@ -310,7 +310,7 @@ class Reverse(BaseHelper):
     def fetch(self, hashes):
         self.debug('Fetching %s', hashes)
         for h in hashes:
-            k = geohash_key(h)
+            k = keys.geohash_key(h)
             self.intersect(k)
             self.fetched.append(h)
 

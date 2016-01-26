@@ -13,9 +13,8 @@ from . import config, hooks
 from .core import Result, Search, compute_geohash_key, reverse
 from .db import DB
 from .helpers import (blue, cyan, green, haversine_distance, km_to_score,
-                      magenta, red, white, yellow)
-from .helpers.index import (VALUE_SEPARATOR, document_key, token_frequency,
-                            token_key)
+                      magenta, red, white, yellow, keys)
+from .helpers.index import VALUE_SEPARATOR, token_frequency
 from .helpers.search import preprocess_query
 from .helpers.text import Token, compare_ngrams, make_fuzzy
 from .pairs import pair_key
@@ -33,7 +32,7 @@ def addok_register_command(subparsers):
 
 
 def doc_by_id(_id):
-    return DB.hgetall(document_key(_id))
+    return DB.hgetall(keys.document_key(_id))
 
 
 def indexed_string(s):
@@ -218,8 +217,9 @@ class Cli(object):
         for token in indexed_string(field):
             print(
                 white(token),
-                blue(DB.zscore(token_key(token), document_key(_id))),
-                blue(DB.zrevrank(token_key(token), document_key(_id))),
+                blue(DB.zscore(keys.token_key(token), keys.document_key(_id))),
+                blue(DB.zrevrank(keys.token_key(token),
+                                 keys.document_key(_id))),
             )
 
     def do_index(self, _id):
@@ -236,7 +236,7 @@ class Cli(object):
     def do_bestscore(self, word):
         """Return document linked to word with higher score.
         BESTSCORE lilas"""
-        key = token_key(indexed_string(word)[0])
+        key = keys.token_key(indexed_string(word)[0])
         for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
             result = Result(_id)
             print(white(result), blue(score), blue(result.id))
@@ -302,7 +302,7 @@ class Cli(object):
         except:
             return self.error('Malformed query. Use: ID lat lon')
         try:
-            result = Result(document_key(_id))
+            result = Result(keys.document_key(_id))
         except ValueError as e:
             return self.error(e)
         center = (float(lat), float(lon))
@@ -383,7 +383,7 @@ class Cli(object):
         word = list(preprocess_query(word))[0]
         token = Token(word)
         token.make_fuzzy()
-        neighbors = [(n, DB.zcard(token_key(n))) for n in token.neighbors]
+        neighbors = [(n, DB.zcard(keys.token_key(n))) for n in token.neighbors]
         neighbors.sort(key=lambda n: n[1], reverse=True)
         for token, freq in neighbors:
             if freq == 0:
@@ -398,7 +398,7 @@ class Cli(object):
         if 'LIMIT' in words:
             words, limit = words.split('LIMIT')
             limit = int(limit)
-        tokens = [token_key(w) for w in preprocess_query(words)]
+        tokens = [keys.token_key(w) for w in preprocess_query(words)]
         DB.zinterstore(words, tokens)
         results = DB.zrevrange(words, 0, limit, withscores=True)
         DB.delete(words)

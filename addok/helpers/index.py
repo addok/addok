@@ -2,7 +2,8 @@ import geohash
 
 from addok import config
 from addok.db import DB
-from addok.helpers import iter_pipe
+
+from . import iter_pipe, keys
 
 VALUE_SEPARATOR = '|~|'
 
@@ -26,32 +27,12 @@ def preprocess_housenumber(s):
 _HOUSENUMBER_CACHE = {}
 
 
-def token_key(s):
-    return 'w|{}'.format(s)
-
-
-def document_key(s):
-    return 'd|{}'.format(s)
-
-
-def housenumber_field_key(s):
-    return 'h|{}'.format(s)
-
-
-def geohash_key(s):
-    return 'g|{}'.format(s)
-
-
-def filter_key(k, v):
-    return 'f|{}|{}'.format(k, v)
-
-
 def token_key_frequency(key):
     return DB.zcard(key)
 
 
 def token_frequency(token):
-    return token_key_frequency(token_key(token))
+    return token_key_frequency(keys.token_key(token))
 
 
 def extract_tokens(tokens, string, boost):
@@ -66,7 +47,7 @@ def extract_tokens(tokens, string, boost):
 
 def index_tokens(pipe, tokens, key, **kwargs):
     for token, boost in tokens.items():
-        pipe.zadd(token_key(token), boost, key)
+        pipe.zadd(keys.token_key(token), boost, key)
 
 
 def deindex_field(key, string):
@@ -77,12 +58,12 @@ def deindex_field(key, string):
 
 
 def deindex_token(key, token):
-    tkey = token_key(token)
+    tkey = keys.token_key(token)
     DB.zrem(tkey, key)
 
 
 def index_document(doc, **kwargs):
-    key = document_key(doc['id'])
+    key = keys.document_key(doc['id'])
     pipe = DB.pipeline()
     tokens = {}
     for indexer in config.INDEXERS:
@@ -95,7 +76,7 @@ def index_document(doc, **kwargs):
 
 
 def deindex_document(id_, **kwargs):
-    key = document_key(id_)
+    key = keys.document_key(id_)
     doc = DB.hgetall(key)
     if not doc:
         return
@@ -108,7 +89,7 @@ def index_geohash(pipe, key, lat, lon):
     lat = float(lat)
     lon = float(lon)
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
-    geok = geohash_key(geoh)
+    geok = keys.geohash_key(geoh)
     pipe.sadd(geok, key)
 
 
@@ -116,7 +97,7 @@ def deindex_geohash(key, lat, lon):
     lat = float(lat)
     lon = float(lon)
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
-    geok = geohash_key(geoh)
+    geok = keys.geohash_key(geoh)
     DB.srem(geok, key)
 
 
@@ -178,7 +159,7 @@ def housenumbers_indexer(pipe, key, doc, tokens, **kwargs):
             vals.append(point.get(field, ''))
         val = '|'.join(map(str, vals))
         for hn in preprocess_housenumber(number.replace(' ', '')):
-            doc[housenumber_field_key(hn)] = val
+            doc[keys.housenumber_field_key(hn)] = val
             to_index[hn] = config.DEFAULT_BOOST
         index_geohash(pipe, key, point['lat'], point['lon'])
     index_tokens(pipe, to_index, key, **kwargs)
@@ -201,11 +182,11 @@ def filters_indexer(pipe, key, doc, tokens, **kwargs):
         if value:
             # We need a SortedSet because it will be used in intersect with
             # tokens SortedSets.
-            pipe.sadd(filter_key(name, value), key)
+            pipe.sadd(keys.filter_key(name, value), key)
     # Special case for housenumber type, because it's not a real type
     if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
        and doc.get(config.HOUSENUMBERS_FIELD):
-        pipe.sadd(filter_key("type", "housenumber"), key)
+        pipe.sadd(keys.filter_key("type", "housenumber"), key)
 
 
 def filters_deindexer(db, key, doc, tokens, **kwargs):
@@ -214,6 +195,6 @@ def filters_deindexer(db, key, doc, tokens, **kwargs):
         value = doc.get(name.encode())
         if value:
             # Doc is raw from DB, so it has byte values.
-            db.srem(filter_key(name, value.decode()), key)
+            db.srem(keys.filter_key(name, value.decode()), key)
     if "type" in config.FILTERS:
-        db.srem(filter_key("type", "housenumber"), key)
+        db.srem(keys.filter_key("type", "housenumber"), key)

@@ -1,5 +1,6 @@
 from addok import config, hooks
-from addok.helpers.index import preprocess_housenumber, token_key
+from addok.helpers import keys
+from addok.helpers.index import preprocess_housenumber
 
 
 def pair_key(s):
@@ -25,7 +26,8 @@ def pairs_deindexer(db, key, doc, tokens, **kwargs):
             if el != el2:
                 key = '|'.join(['didx', el, el2])
                 # Do we have other documents that share el and el2?
-                commons = db.zinterstore(key, [token_key(el), token_key(el2)])
+                commons = db.zinterstore(key, [keys.token_key(el),
+                                               keys.token_key(el2)])
                 db.delete(key)
                 if not commons:
                     db.srem(pair_key(el), el2)
@@ -53,7 +55,8 @@ def housenumbers_pairs_deindexer(db, key, doc, tokens, **kwargs):
         hn = field[2:]
         for token in tokens:
             k = '|'.join(['didx', hn, token])
-            commons = db.zinterstore(k, [token_key(hn), token_key(token)])
+            commons = db.zinterstore(k, [keys.token_key(hn),
+                                         keys.token_key(token)])
             db.delete(k)
             if not commons:
                 db.srem(pair_key(hn), token)

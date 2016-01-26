@@ -33,7 +33,7 @@ def _match_housenumber(helper, result, tokens):
     for token in tokens:
         if token in result.housenumbers:
             raw, lat, lon, *extra = result.housenumbers[token].split('|')
-            if raw in name_tokens and helper.tokens.count(token) != 2:
+            if raw in name_tokens and tokens.count(token) != 2:
                 # Consider that user is not requesting a housenumber if
                 # token is also in name (ex. rue du 8 mai), unless this
                 # token is twice in the query (8 rue du 8 mai).
