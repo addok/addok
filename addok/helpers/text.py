@@ -2,7 +2,7 @@ import re
 
 from addok import config
 from addok.db import DB
-from addok.helpers import yielder, keys
+from addok.helpers import keys, yielder
 from addok.helpers.index import token_frequency
 from ngram import NGram
 from unidecode import unidecode
@@ -89,39 +89,6 @@ load_synonyms()
 def _synonymize(t):
     return t.update(SYNONYMS.get(t, t))
 synonymize = yielder(_synonymize)
-
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
-
-
-def make_fuzzy(word, max=1):
-    """Naive neighborhoods algo."""
-    # inversions
-    neighbors = []
-    for i in range(0, len(word) - 1):
-        neighbor = list(word)
-        neighbor[i], neighbor[i+1] = neighbor[i+1], neighbor[i]
-        neighbors.append(''.join(neighbor))
-    # substitutions
-    for letter in letters:
-        for i in range(0, len(word)):
-            neighbor = list(word)
-            if letter != neighbor[i]:
-                neighbor[i] = letter
-                neighbors.append(''.join(neighbor))
-    # insertions
-    for letter in letters:
-        for i in range(0, len(word) + 1):
-            neighbor = list(word)
-            neighbor.insert(i, letter)
-            neighbors.append(''.join(neighbor))
-    if len(word) > 3:
-        # removal
-        for i in range(0, len(word)):
-            neighbor = list(word)
-            del neighbor[i]
-            neighbors.append(''.join(neighbor))
-    return neighbors
 
 
 class ascii(str):

@@ -4,8 +4,10 @@ from multiprocessing import Pool
 from addok import config, hooks
 from addok.db import DB
 from addok.helpers import keys as dbkeys
+from addok.helpers import magenta, white
 from addok.helpers.index import token_key_frequency
-from addok.helpers.text import compute_edge_ngrams
+from addok.helpers.search import preprocess_query
+from addok.helpers.text import Token, compute_edge_ngrams
 from addok.pairs import pair_key
 
 
@@ -148,3 +150,16 @@ def addok_configure(config):
     if target in config.DEINDEXERS:
         idx = config.DEINDEXERS.index(target)
         config.DEINDEXERS.insert(idx + 1, edge_ngram_deindexer)
+
+
+def do_autocomplete(self, s):
+    """Shows autocomplete results for a given token."""
+    s = list(preprocess_query(s))[0]
+    keys = [k.decode() for k in DB.smembers(edge_ngram_key(s))]
+    print(white(keys))
+    print(magenta('({} elements)'.format(len(keys))))
+
+
+@hooks.register
+def addok_register_shell_command(cmd):
+    cmd.register_command(do_autocomplete)

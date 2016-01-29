@@ -4,9 +4,9 @@ import geohash
 
 from . import config
 from .db import DB
+from .helpers import keys
 from .helpers.index import VALUE_SEPARATOR
 from .helpers.text import ascii
-from .helpers import keys
 
 
 def compute_geohash_key(geoh, with_neighbors=True):

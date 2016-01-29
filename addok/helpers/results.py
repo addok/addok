@@ -23,7 +23,7 @@ def make_labels(helper, result):
 
 
 def match_housenumber(helper, result):
-    _match_housenumber(helper, result, set(helper.tokens))
+    _match_housenumber(helper, result, helper.tokens)
 
 
 def _match_housenumber(helper, result, tokens):

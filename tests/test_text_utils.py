@@ -1,9 +1,10 @@
 import pytest
 
+from addok.fuzzy import make_fuzzy
 from addok.helpers.text import (Token, _normalize, _synonymize, _tokenize,
                                 alphanumerize, ascii, compare_ngrams,
                                 compute_edge_ngrams, contains, equals,
-                                make_fuzzy, startswith)
+                                startswith)
 
 
 @pytest.mark.parametrize('input,output', [

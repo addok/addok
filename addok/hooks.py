@@ -29,3 +29,8 @@ def addok_configure(config):
 @spec
 def addok_register_command(subparsers):
     """Register command for Addok CLI."""
+
+
+@spec
+def addok_register_shell_command(cmd):
+    """Register command for Addok shell."""

@@ -1,5 +1,5 @@
 import atexit
-import inspect
+import cmd
 import json
 import logging
 import re
@@ -12,61 +12,24 @@ import geohash
 from . import config, hooks
 from .core import Result, Search, compute_geohash_key, reverse
 from .db import DB
-from .helpers import (blue, cyan, green, haversine_distance, km_to_score,
-                      magenta, red, white, yellow, keys)
+from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
+                      magenta, red, white, yellow)
 from .helpers.index import VALUE_SEPARATOR, token_frequency
 from .helpers.search import preprocess_query
-from .helpers.text import Token, compare_ngrams, make_fuzzy
-from .pairs import pair_key
+from .helpers.text import compare_ngrams
 
 
-def run_cli(args):
-    cli = Cli()
-    cli()
+class Cmd(cmd.Cmd):
 
-
-@hooks.register
-def addok_register_command(subparsers):
-    parser = subparsers.add_parser('shell', help='Run a shell to inspect index')
-    parser.set_defaults(func=run_cli)
-
-
-def doc_by_id(_id):
-    return DB.hgetall(keys.document_key(_id))
-
-
-def indexed_string(s):
-    return list(preprocess_query(s))
-
-
-def word_frequency(word):
-    try:
-        token = list(preprocess_query(word))[0]
-    except IndexError:
-        # Word has been filtered out.
-        return
-    return token_frequency(token)
-
-
-def set_debug():
-    logging.basicConfig(level=logging.DEBUG)
-
-
-class Cli(object):
-
+    intro = (white('\nWelcome to the Addok shell o/\n') +
+             magenta('Type HELP or ? to list commands.\n'))
+    prompt = '> '
     HISTORY_FILE = '.cli_history'
 
     def __init__(self):
-        self._inspect_commands()
-        readline.set_completer(self.completer)
-        readline.parse_and_bind("tab: complete")
         self._init_history_file()
-
-    def _inspect_commands(self):
-        self.COMMANDS = {}
-        for name, func in inspect.getmembers(Cli, inspect.isfunction):
-            if name.startswith('do_'):
-                self.COMMANDS[name[3:].upper()] = func.__doc__ or ''
+        super().__init__()
+        self.do_HELP = self.do_help
 
     def _init_history_file(self):
         if hasattr(readline, "read_history_file"):
@@ -83,16 +46,68 @@ class Cli(object):
     def history_file(self):
         return str(Path(config.LOG_DIR).joinpath(self.HISTORY_FILE))
 
-    def completer(self, text, state):
-        for cmd in self.COMMANDS.keys():
-            if cmd.startswith(text.upper()):
-                if not state:
-                    return cmd + " "
-                else:
-                    state -= 1
-
     def error(self, message):
         print(red(message))
+
+    def default(self, line):
+        if line == 'EOF':
+            return self.close()
+        return self.do_SEARCH(line)
+
+    def close(self):
+        print(red("Bye!"))
+        return True
+
+    def loop(self, *args):
+        try:
+            self.cmdloop()
+        except KeyboardInterrupt:
+            return self.close()
+
+    def completenames(self, text, *ignored):
+        return super().completenames(text.upper(), *ignored)
+
+    def get_names(self):
+        # Let's use uppercase version to be consistent.
+        return [n for n in super().get_names() if n != 'do_help']
+
+    @classmethod
+    def register_command(cls, command, name=None, doc=None):
+        if name is None:
+            name = command.__name__
+        if doc is None:
+            doc = command.__doc__
+        if name.startswith('do_'):
+            name = name[3:]
+        name = 'do_' + name.upper()
+        setattr(cls, name, command)
+        attr = getattr(cls, name)
+        attr.__doc__ = doc
+
+    @classmethod
+    def register_commands(cls, *commands, **named):
+        for command in commands:
+            cls.register_command(command)
+        for name, command in named.items():
+            cls.register_command(command, name)
+
+    def do_help(self, command):
+        """Display this help message."""
+        if command:
+            doc = getattr(self, 'do_' + command).__doc__
+            print(cyan(doc.replace(' ' * 8, '')))
+        else:
+            print(magenta('Available commands:'))
+            print(magenta('Type "HELP <command>" to get more info.'))
+            names = self.get_names()
+            names.sort()
+            for name in names:
+                if name[:3] != 'do_':
+                    continue
+                doc = getattr(self, name).__doc__
+                doc = doc.split('\n')[0]
+                print(yellow(name[3:]),
+                      cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
 
     @staticmethod
     def _match_option(key, string):
@@ -149,127 +164,41 @@ class Cli(object):
         print(formatter("{} ms".format(duration)), '/',
               cyan('{} results'.format(len(results))))
 
-    def do_search(self, query):
+    def do_SEARCH(self, query):
         """Issue a search (default command, can be omitted):
         SEARCH rue des Lilas [CENTER lat lon] [LIMIT 10]"""
         self._search(query)
 
-    def do_explain(self, query):
+    def do_EXPLAIN(self, query):
         """Issue a search with debug info:
         EXPLAIN rue des Lilas"""
         self._search(query, verbose=True)
 
-    def do_bucket(self, query):
+    def do_BUCKET(self, query):
         """Issue a search and return all the collected bucket, not only up to
         limit elements:
         BUCKET rue des Lilas"""
         self._search(query, bucket=True)
 
-    def do_tokenize(self, string):
-        """Inspect how a string is tokenized before being indexed.
-        TOKENIZE Rue des Lilas"""
-        print(white(' '.join(indexed_string(string))))
+    def do_INTERSECT(self, words):
+        """Do a raw intersect between tokens (default limit 100).
+        INTERSECT rue des lilas [LIMIT 100]"""
+        start = time.time()
+        limit = 100
+        if 'LIMIT' in words:
+            words, limit = words.split('LIMIT')
+            limit = int(limit)
+        tokens = [keys.token_key(w) for w in preprocess_query(words)]
+        DB.zinterstore(words, tokens)
+        results = DB.zrevrange(words, 0, limit, withscores=True)
+        DB.delete(words)
+        for id_, score in results:
+            r = Result(id_)
+            print(white(r), blue(r.id), cyan(score))
+        duration = round((time.time() - start) * 1000, 1)
+        print(magenta("({} in {} ms)".format(len(results), duration)))
 
-    def do_help(self, *args):
-        """Display this help message."""
-        for name, doc in sorted(self.COMMANDS.items(), key=lambda x: x[0]):
-            print(yellow(name),
-                  cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
-
-    def do_get(self, _id):
-        """Get document from index with its id.
-        GET 772210180J"""
-        doc = doc_by_id(_id)
-        if not doc:
-            return self.error('id "{}" not found'.format(_id))
-        housenumbers = {}
-        for key, value in doc.items():
-            key = key.decode()
-            value = value.decode()
-            if key.startswith('h|'):
-                housenumbers[key] = value
-            else:
-                print(white(key),
-                      magenta(', '.join(value.split(VALUE_SEPARATOR))))
-        if housenumbers:
-            def sorter(item):
-                k, v = item
-                return int(re.match(r'\d+', v.split('|')[0]).group())
-            housenumbers = sorted(housenumbers.items(), key=sorter)
-            housenumbers = ['{}: {}'.format(k[2:], v) for k, v in housenumbers]
-            print(white('housenumbers'), magenta(', '.join(housenumbers)))
-
-    def do_frequency(self, word):
-        """Return word frequency in index.
-        FREQUENCY lilas"""
-        print(white(word_frequency(word)))
-
-    def do_autocomplete(self, s):
-        """Shows autocomplete results for a given token."""
-        s = list(preprocess_query(s))[0]
-        token = Token(s)
-        token.autocomplete()
-        keys = [k.split('|')[1] for k in token.autocomplete_keys]
-        print(white(keys))
-        print(magenta('({} elements)'.format(len(keys))))
-
-    def _print_field_index_details(self, field, _id):
-        for token in indexed_string(field):
-            print(
-                white(token),
-                blue(DB.zscore(keys.token_key(token), keys.document_key(_id))),
-                blue(DB.zrevrank(keys.token_key(token),
-                                 keys.document_key(_id))),
-            )
-
-    def do_index(self, _id):
-        """Get index details for a document by its id.
-        INDEX 772210180J"""
-        doc = doc_by_id(_id)
-        if not doc:
-            return self.error('id "{}" not found'.format(_id))
-        for field in config.FIELDS:
-            key = field['key'].encode()
-            if key in doc:
-                self._print_field_index_details(doc[key].decode(), _id)
-
-    def do_bestscore(self, word):
-        """Return document linked to word with higher score.
-        BESTSCORE lilas"""
-        key = keys.token_key(indexed_string(word)[0])
-        for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
-            result = Result(_id)
-            print(white(result), blue(score), blue(result.id))
-
-    def do_reverse(self, latlon):
-        """Do a reverse search. Args: lat lon.
-        REVERSE 48.1234 2.9876"""
-        lat, lon = latlon.split()
-        for r in reverse(float(lat), float(lon)):
-            print('{} ({} | {} km | {})'.format(white(r), blue(r.score),
-                                                blue(r.distance), blue(r.id)))
-
-    def do_pair(self, word):
-        """See all token associated with a given token.
-        PAIR lilas"""
-        word = list(preprocess_query(word))[0]
-        key = pair_key(word)
-        tokens = [t.decode() for t in DB.smembers(key)]
-        tokens.sort()
-        print(white(tokens))
-        print(magenta('(Total: {})'.format(len(tokens))))
-
-    def do_distance(self, s):
-        """Print the distance score between two strings. Use | as separator.
-        DISTANCE rue des lilas|porte des lilas"""
-        s = s.split('|')
-        if not len(s) == 2:
-            print(red('Malformed string. Use | between the two strings.'))
-            return
-        one, two = s
-        print(white(compare_ngrams(one, two)))
-
-    def do_dbinfo(self, *args):
+    def do_DBINFO(self, *args):
         """Print some useful infos from Redis DB."""
         info = DB.info()
         keys = [
@@ -281,7 +210,7 @@ class Cli(object):
         if 'db0' in info:
             print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
 
-    def do_dbkey(self, key):
+    def do_DBKEY(self, key):
         """Print raw content of a DB key.
         DBKEY g|u09tyzfe"""
         type_ = DB.type(key).decode()
@@ -294,7 +223,7 @@ class Cli(object):
         print('type:', magenta(type_))
         print('value:', white(out))
 
-    def do_geodistance(self, s):
+    def do_GEODISTANCE(self, s):
         """Compute geodistance from a result to a point.
         GEODISTANCE 772210180J 48.1234 2.9876"""
         try:
@@ -310,7 +239,7 @@ class Cli(object):
         score = km_to_score(km)
         print('km: {} | score: {}'.format(white(km), blue(score)))
 
-    def do_geohashtogeojson(self, geoh):
+    def do_GEOHASHTOGEOJSON(self, geoh):
         """Build GeoJSON corresponding to geohash given as parameter.
         GEOHASHTOGEOJSON u09vej04 [NEIGHBORS 0|1|2]"""
         geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
@@ -351,7 +280,7 @@ class Cli(object):
         }
         print(white(json.dumps(geojson)))
 
-    def do_geohash(self, latlon):
+    def do_GEOHASH(self, latlon):
         """Compute a geohash from latitude and longitude.
         GEOHASH 48.1234 2.9876"""
         try:
@@ -361,7 +290,7 @@ class Cli(object):
         else:
             print(white(geohash.encode(lat, lon, config.GEOHASH_PRECISION)))
 
-    def do_geohashmembers(self, geoh):
+    def do_GEOHASHMEMBERS(self, geoh):
         """Return members of a geohash and its neighbors.
         GEOHASHMEMBERS u09vej04 [NEIGHBORS 0]"""
         geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
@@ -371,72 +300,115 @@ class Cli(object):
                 r = Result(id_)
                 print(white(r), blue(r.id))
 
-    def do_fuzzy(self, word):
-        """Compute fuzzy extensions of word.
-        FUZZY lilas"""
-        word = list(preprocess_query(word))[0]
-        print(white(make_fuzzy(word)))
+    def do_GET(self, _id):
+        """Get document from index with its id.
+        GET 772210180J"""
+        doc = doc_by_id(_id)
+        if not doc:
+            return self.error('id "{}" not found'.format(_id))
+        housenumbers = {}
+        for key, value in doc.items():
+            key = key.decode()
+            value = value.decode()
+            if key.startswith('h|'):
+                housenumbers[key] = value
+            else:
+                print(white(key),
+                      magenta(', '.join(value.split(VALUE_SEPARATOR))))
+        if housenumbers:
+            def sorter(item):
+                k, v = item
+                return int(re.match(r'\d+', v.split('|')[0]).group())
+            housenumbers = sorted(housenumbers.items(), key=sorter)
+            housenumbers = ['{}: {}'.format(k[2:], v) for k, v in housenumbers]
+            print(white('housenumbers'), magenta(', '.join(housenumbers)))
 
-    def do_fuzzyindex(self, word):
-        """Compute fuzzy extensions of word that exist in index.
-        FUZZYINDEX lilas"""
-        word = list(preprocess_query(word))[0]
-        token = Token(word)
-        token.make_fuzzy()
-        neighbors = [(n, DB.zcard(keys.token_key(n))) for n in token.neighbors]
-        neighbors.sort(key=lambda n: n[1], reverse=True)
-        for token, freq in neighbors:
-            if freq == 0:
-                break
-            print(white(token), blue(freq))
+    def do_FREQUENCY(self, word):
+        """Return word frequency in index.
+        FREQUENCY lilas"""
+        print(white(word_frequency(word)))
 
-    def do_intersect(self, words):
-        """Do a raw intersect between tokens (default limit 100).
-        INTERSECT rue des lilas [LIMIT 100]"""
-        start = time.time()
-        limit = 100
-        if 'LIMIT' in words:
-            words, limit = words.split('LIMIT')
-            limit = int(limit)
-        tokens = [keys.token_key(w) for w in preprocess_query(words)]
-        DB.zinterstore(words, tokens)
-        results = DB.zrevrange(words, 0, limit, withscores=True)
-        DB.delete(words)
-        for id_, score in results:
-            r = Result(id_)
-            print(white(r), blue(r.id), cyan(score))
-        duration = round((time.time() - start) * 1000, 1)
-        print(magenta("({} in {} ms)".format(len(results), duration)))
+    def _print_field_index_details(self, field, _id):
+        for token in indexed_string(field):
+            print(
+                white(token),
+                blue(DB.zscore(keys.token_key(token), keys.document_key(_id))),
+                blue(DB.zrevrank(keys.token_key(token),
+                                 keys.document_key(_id))),
+            )
 
-    def prompt(self):
-        command = input("> ")
-        return command
+    def do_INDEX(self, _id):
+        """Get index details for a document by its id.
+        INDEX 772210180J"""
+        doc = doc_by_id(_id)
+        if not doc:
+            return self.error('id "{}" not found'.format(_id))
+        for field in config.FIELDS:
+            key = field['key'].encode()
+            if key in doc:
+                self._print_field_index_details(doc[key].decode(), _id)
 
-    def handle_command(self, command_line):
-        if not command_line:
+    def do_BESTSCORE(self, word):
+        """Return document linked to word with higher score.
+        BESTSCORE lilas"""
+        key = keys.token_key(indexed_string(word)[0])
+        for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
+            result = Result(_id)
+            print(white(result), blue(score), blue(result.id))
+
+    def do_REVERSE(self, latlon):
+        """Do a reverse search. Args: lat lon.
+        REVERSE 48.1234 2.9876"""
+        lat, lon = latlon.split()
+        for r in reverse(float(lat), float(lon)):
+            print('{} ({} | {} km | {})'.format(white(r), blue(r.score),
+                                                blue(r.distance), blue(r.id)))
+
+    def do_TOKENIZE(self, string):
+        """Inspect how a string is tokenized before being indexed.
+        TOKENIZE Rue des Lilas"""
+        print(white(' '.join(indexed_string(string))))
+
+    def do_STRDISTANCE(self, s):
+        """Print the distance score between two strings. Use | as separator.
+        STRDISTANCE rue des lilas|porte des lilas"""
+        s = s.split('|')
+        if not len(s) == 2:
+            print(red('Malformed string. Use | between the two strings.'))
             return
-        if not command_line.startswith(tuple(self.COMMANDS.keys())):
-            action = 'SEARCH'
-            arg = command_line
-        elif command_line.count(' '):
-            action, arg = command_line.split(' ', 1)
-        else:
-            action = command_line
-            arg = None
-        fx_name = 'do_{}'.format(action.lower())
-        if hasattr(self, fx_name):
-            return getattr(self, fx_name)(arg)
-        else:
-            print(red('No command for {}'.format(command_line)))
+        one, two = s
+        print(white(compare_ngrams(one, two)))
 
-    def __call__(self):
-        self.do_help()
 
-        while 1:
-            try:
-                command = self.prompt()
-                self.handle_command(command)
-            except (KeyboardInterrupt, EOFError):
-                print(red("\nExiting, bye!"))
-                break
-            print(yellow('-' * 80))
+def invoke(args=None):
+    cmd = Cmd()
+    config.pm.hook.addok_register_shell_command(cmd=cmd)
+    cmd.loop()
+
+
+@hooks.register
+def addok_register_command(subparsers):
+    parser = subparsers.add_parser('shell',
+                                   help='Run a shell to inspect Addok')
+    parser.set_defaults(func=invoke)
+
+
+def doc_by_id(_id):
+    return DB.hgetall(keys.document_key(_id))
+
+
+def indexed_string(s):
+    return list(preprocess_query(s))
+
+
+def word_frequency(word):
+    try:
+        token = list(preprocess_query(word))[0]
+    except IndexError:
+        # Word has been filtered out.
+        return
+    return token_frequency(token)
+
+
+def set_debug():
+    logging.basicConfig(level=logging.DEBUG)

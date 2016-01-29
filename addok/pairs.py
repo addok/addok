@@ -1,6 +1,8 @@
 from addok import config, hooks
-from addok.helpers import keys
+from addok.db import DB
+from addok.helpers import keys, magenta, white
 from addok.helpers.index import preprocess_housenumber
+from addok.helpers.search import preprocess_query
 
 
 def pair_key(s):
@@ -81,3 +83,19 @@ def addok_configure(config):
     if target in config.DEINDEXERS:
         idx = config.DEINDEXERS.index(target)
         config.DEINDEXERS.insert(idx, housenumbers_pairs_deindexer)
+
+
+def pair(word):
+    """See all token associated with a given token.
+    PAIR lilas"""
+    word = list(preprocess_query(word))[0]
+    key = pair_key(word)
+    tokens = [t.decode() for t in DB.smembers(key)]
+    tokens.sort()
+    print(white(tokens))
+    print(magenta('(Total: {})'.format(len(tokens))))
+
+
+@hooks.register
+def addok_register_shell_command(cmd):
+    cmd.register_command(pair)

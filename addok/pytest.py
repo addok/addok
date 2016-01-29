@@ -31,9 +31,8 @@ def pytest_addoption(parser):
 
 def pytest_exception_interact(node, call, report):
     if node.config.getvalue("addokshell"):
-        from addok.shell import Cli
-        cli = Cli()
-        cli()
+        from addok.shell import invoke
+        invoke()
 
 
 class DummyDoc(dict):
