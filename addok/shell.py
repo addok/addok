@@ -379,6 +379,32 @@ class Cmd(cmd.Cmd):
         one, two = s
         print(white(compare_ngrams(one, two)))
 
+    def do_CONFIG(self, name):
+        """Inspect loaded Addok config.
+        CONFIG COMMON_THRESHOLD"""
+        if not name:
+            for name in self.complete_CONFIG():
+                self.do_CONFIG(name)
+            return
+        value = getattr(config, name.upper(), 'Not found.')
+        print(blue(name), white(format_config(value)))
+
+    def complete_CONFIG(self, text=None, *ignored):
+        text = text or ''
+        return [a for a in dir(config) if a.startswith(text) and a.isupper()]
+
+
+def format_config(value):
+    out = ''
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            out += format_config(item)
+    elif type(value).__name__ == 'function':
+        out = '\n{}.{}'.format(str(value.__module__), value.__name__)
+    else:
+        out = '\n{}'.format(value)
+    return out
+
 
 def invoke(args=None):
     cmd = Cmd()
