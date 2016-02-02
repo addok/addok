@@ -44,12 +44,13 @@ except ImportError:
     ext_modules = []
 else:
     ext_modules = [
-        Extension('addok.' + ext, [path.join('addok', 'helpers', ext + '.py')])
+        Extension('addok.' + ext, [path.join('addok', ext + '.py')])
         for ext in list_modules(path.join(here, 'addok'))]
 
-    ext_modules = [
-        Extension('addok.helpers' + ext, [path.join('addok', ext + '.py')])
-        for ext in list_modules(path.join(here, 'helpers', 'addok'))]
+    ext_modules.extend([
+        Extension('addok.helpers.' + ext,
+                  [path.join('addok', 'helpers', ext + '.py')])
+        for ext in list_modules(path.join(here, 'addok', 'helpers'))])
 
     cmdclass = {'build_ext': build_ext}
 
@@ -78,8 +79,10 @@ setup(
     install_requires=install_requires,
     extras_require={'test': ['pytest'], 'docs': 'mkdocs'},
     include_package_data=True,
+    ext_modules=ext_modules,
     entry_points={
         'console_scripts': ['addok=addok.bin:main'],
         'pytest11': ['addok=addok.pytest'],
     },
+    cmdclass=cmdclass,
 )
