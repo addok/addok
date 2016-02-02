@@ -74,7 +74,7 @@ class View:
         results = {
             "type": "FeatureCollection",
             "version": "draft",
-            "features": [r.to_geojson() for r in results],
+            "features": [r.format() for r in results],
             "attribution": config.ATTRIBUTION,
             "licence": config.LICENCE,
         }
@@ -114,7 +114,7 @@ class Get(View):
         except ValueError:
             raise falcon.HTTPNotFound()
         else:
-            self.json(req, resp, result.to_geojson())
+            self.json(req, resp, result.format())
 
 
 class Search(View):

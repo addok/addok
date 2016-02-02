@@ -79,34 +79,11 @@ class Result(object):
                 continue
             yield key
 
-    def to_geojson(self):
-        properties = {
-            "label": str(self),
-        }
-        if self._scores:
-            properties["score"] = self.score
-        for key in self.keys:
-            val = getattr(self, key, None)
-            if val:
-                properties[key] = val
-        housenumber = getattr(self, 'housenumber', None)
-        if housenumber:
-            if self._doc.get('type'):
-                properties[self._doc['type']] = properties.get('name')
-            properties['name'] = '{} {}'.format(housenumber,
-                                                properties.get('name'))
-        try:
-            properties['distance'] = int(self.distance)
-        except ValueError:
-            pass
-        return {
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [float(self.lon), float(self.lat)]
-            },
-            "properties": properties
-        }
+    def format(self):
+        result = self
+        for formatter in config.RESULTS_FORMATTERS:
+            result = formatter(result)
+        return result
 
     def add_score(self, name, score, ceiling):
         if score >= self._scores.get(name, (0, 0))[0]:

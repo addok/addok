@@ -50,7 +50,13 @@ def consolidate():
         elif field.get('type') == 'name' or key == 'name':
             NAME_FIELD = key
             field['type'] = 'name'
-    resolve_paths()
+    names = [
+        'QUERY_PROCESSORS', 'RESULTS_COLLECTORS', 'SEARCH_RESULT_PROCESSORS',
+        'REVERSE_RESULT_PROCESSORS', 'PROCESSORS', 'INDEXERS', 'DEINDEXERS',
+        'BATCH_PROCESSORS', 'SEARCH_PREPROCESSORS', 'RESULTS_FORMATTERS',
+    ]
+    for name in names:
+        resolve_path(name)
 
 
 def resolve_path(name):
@@ -58,16 +64,6 @@ def resolve_path(name):
     attr = globals()[name]
     for idx, path in enumerate(attr):
         attr[idx] = import_by_path(path)
-
-
-def resolve_paths():
-    names = [
-        'QUERY_PROCESSORS', 'RESULTS_COLLECTORS', 'SEARCH_RESULT_PROCESSORS',
-        'REVERSE_RESULT_PROCESSORS', 'PROCESSORS', 'INDEXERS', 'DEINDEXERS',
-        'BATCH_PROCESSORS', 'SEARCH_PREPROCESSORS'
-    ]
-    for name in names:
-        resolve_path(name)
 
 
 def load(config, discover=True):

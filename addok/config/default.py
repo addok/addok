@@ -65,6 +65,9 @@ REVERSE_RESULT_PROCESSORS = [
     'addok.helpers.results.make_labels',
     'addok.helpers.results.score_by_geo_distance',
 ]
+RESULTS_FORMATTERS = [
+    'addok.helpers.formatters.geojson',
+]
 INDEXERS = [
     'addok.helpers.index.fields_indexer',
     'addok.helpers.index.filters_indexer',
