@@ -2,6 +2,7 @@ git+https://github.com/falconry/falcon
 hiredis==0.2.0
 ngram==3.3.0
 pluggy==0.3.1
+progressist==0.0.4
 python-geohash==0.8.5
 redis==2.10.5
 Unidecode==0.04.19

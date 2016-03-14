@@ -1,7 +1,9 @@
 import json
+import os
 import sys
-import time
-from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor
+
+from progressist import ProgressBar
 
 from addok import config, hooks
 from addok.helpers import iter_pipe, yielder
@@ -55,22 +57,27 @@ def process(doc):
         index_document(doc)
 
 
+class Bar(ProgressBar):
+    animation = '{spinner}'
+    template = 'Importing… {animation} Done: {done} | Elapsed: {elapsed}'
+    throttle = 100
+
+
 def batch(iterable):
-    start = time.time()
-    pool = Pool()
-    count = 0
-    chunk = []
-    for doc in iterable:
-        if not doc:
-            continue
-        chunk.append(doc)
-        count += 1
-        if count % 10000 == 0:
-            pool.map(process, chunk)
-            print("Done", count, time.time() - start)
-            chunk = []
-    if chunk:
-        pool.map(process, chunk)
-    pool.close()
-    pool.join()
-    print('Done', count, 'in', time.time() - start)
+    bar = Bar()
+    with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+        count = 0
+        chunk = []
+        for item in iterable:
+            if not item:
+                continue
+            chunk.append(item)
+            count += 1
+            if count % 10000 == 0:
+                for r in executor.map(process, chunk):
+                    bar()
+                chunk = []
+        if chunk:
+            for r in executor.map(process, chunk):
+                bar()
+        bar.finish()
