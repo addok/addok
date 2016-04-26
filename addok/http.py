@@ -53,9 +53,9 @@ class CorsMiddleware:
 def application(env, start_response):
     config.load(config)
     middlewares = [CorsMiddleware()]
-    hooks.register_api_middleware(middlewares=middlewares)
+    hooks.register_api_middleware(middlewares)
     api = falcon.API(middleware=middlewares)
-    hooks.register_api_endpoint(api=api)
+    hooks.register_api_endpoint(api)
     return api(env, start_response)
 
 

@@ -106,8 +106,9 @@ class Cmd(cmd.Cmd):
                     continue
                 doc = getattr(self, name).__doc__
                 doc = doc.split('\n')[0]
-                print(yellow(name[3:]),
-                      cyan(doc.replace(' ' * 8, ' ').replace('\n', '')))
+                print('{} {}'.format(yellow(name[3:]),
+                                     cyan(doc.replace(' ' * 8, ' ')
+                                             .replace('\n', ''))))
 
     @staticmethod
     def _match_option(key, string):
@@ -161,8 +162,8 @@ class Cmd(cmd.Cmd):
                                         blue(format_scores(result))))
         duration = round((time.time() - start) * 1000, 1)
         formatter = red if duration > 50 else green
-        print(formatter("{} ms".format(duration)), '/',
-              cyan('{} results'.format(len(results))))
+        print('{} / {}'.format(formatter("{} ms".format(duration)),
+                               cyan('{} results'.format(len(results)))))
 
     def do_SEARCH(self, query):
         """Issue a search (default command, can be omitted):
@@ -194,7 +195,7 @@ class Cmd(cmd.Cmd):
         DB.delete(words)
         for id_, score in results:
             r = Result(id_)
-            print(white(r), blue(r.id), cyan(score))
+            print('{} {} {}'.format(white(r), blue(r.id), cyan(score)))
         duration = round((time.time() - start) * 1000, 1)
         print(magenta("({} in {} ms)".format(len(results), duration)))
 
@@ -298,7 +299,7 @@ class Cmd(cmd.Cmd):
         if key:
             for id_ in DB.smembers(key):
                 r = Result(id_)
-                print(white(r), blue(r.id))
+                print('{} {}'.format(white(r), blue(r.id)))
 
     def do_GET(self, _id):
         """Get document from index with its id.
@@ -313,8 +314,9 @@ class Cmd(cmd.Cmd):
             if key.startswith('h|'):
                 housenumbers[key] = value
             else:
-                print(white(key),
-                      magenta(', '.join(value.split(VALUE_SEPARATOR))))
+                print('{} {}'.format(white(key),
+                                     magenta(', '.join(
+                                             value.split(VALUE_SEPARATOR)))))
         if housenumbers:
             def sorter(item):
                 k, v = item
