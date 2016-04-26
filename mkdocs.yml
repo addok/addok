@@ -3,6 +3,7 @@ pages:
 - [index.md, Home]
 - [install.md, Installation]
 - [config.md, Configuration]
+- [plugins.md, Plugins]
 - [import.md, Import]
 - [api.md, API]
 - [shell.md, Shell]

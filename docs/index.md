@@ -12,13 +12,14 @@ Addok works with Redis as backend.
 - it does batch geocoding (through CSV for now)
 - it has a debug shell for inspecting the index
 - it's configurable in many details
+- it's extendable by plugins
 - it's open source
 
 Start by [installing it](install.md).
 
 ## Show me the code
 
-The code is published via [Github](https://github.com/etalab/addok/).
+The code is published via [Github](https://github.com/addok/addok/).
 
 ## Licence
 

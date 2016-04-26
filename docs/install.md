@@ -3,7 +3,7 @@
 ## Dependencies
 
 - Redis
-- python3.4
+- python >= 3.4
 
 ## Install using a virtualenv
 
@@ -20,4 +20,4 @@
         pip install addok
 
 ## What to do next?
-Now you certainly want to [configure Addok](config.md), or directly [import data](import.md).
+Now you certainly want to [configure Addok](config.md), install [plugins](plugins.md) or directly [import data](import.md).
