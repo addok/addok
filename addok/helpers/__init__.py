@@ -1,6 +1,10 @@
+from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
+import os
+
+from progressist import ProgressBar
 
 
 def iter_pipe(pipe, processors):
@@ -103,3 +107,28 @@ def cyan(s):
 
 def white(s):
     return colorText(s, 'white')
+
+
+class Bar(ProgressBar):
+    animation = '{spinner}'
+    template = '{prefix} {animation} Done: {done} | Elapsed: {elapsed}'
+
+
+def parallelize(func, iterable, chunk_size=10000, **bar_kwargs):
+    bar = Bar(**bar_kwargs)
+    with ProcessPoolExecutor(max_workers=os.cpu_count() * 2) as executor:
+        count = 0
+        chunk = []
+        for item in iterable:
+            if not item:
+                continue
+            chunk.append(item)
+            count += 1
+            if count % chunk_size == 0:
+                for r in executor.map(func, chunk):
+                    bar()
+                chunk = []
+        if chunk:
+            for r in executor.map(func, chunk):
+                bar()
+        bar.finish()

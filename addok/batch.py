@@ -1,12 +1,8 @@
 import json
-import os
 import sys
-from concurrent.futures import ProcessPoolExecutor
-
-from progressist import ProgressBar
 
 from addok import config
-from addok.helpers import iter_pipe, yielder
+from addok.helpers import iter_pipe, yielder, parallelize
 from addok.helpers.index import deindex_document, index_document
 
 
@@ -56,27 +52,6 @@ def process(doc):
         index_document(doc)
 
 
-class Bar(ProgressBar):
-    animation = '{spinner}'
-    template = 'Importing… {animation} Done: {done} | Elapsed: {elapsed}'
-    throttle = 100
-
-
 def batch(iterable):
-    bar = Bar()
-    with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
-        count = 0
-        chunk = []
-        for item in iterable:
-            if not item:
-                continue
-            chunk.append(item)
-            count += 1
-            if count % 20000 == 0:
-                for r in executor.map(process, chunk):
-                    bar()
-                chunk = []
-        if chunk:
-            for r in executor.map(process, chunk):
-                bar()
-        bar.finish()
+    parallelize(process, iterable, prefix='Importing…', chunk_size=20000,
+                throttle=500)

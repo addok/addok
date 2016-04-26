@@ -1,10 +1,7 @@
-import time
-from multiprocessing import Pool
-
 from addok import config
 from addok.db import DB
 from addok.helpers import keys as dbkeys
-from addok.helpers import magenta, white
+from addok.helpers import magenta, white, parallelize
 from addok.helpers.index import token_key_frequency
 from addok.helpers.search import preprocess_query
 from addok.helpers.text import compute_edge_ngrams
@@ -106,22 +103,8 @@ def index_ngram_key(key):
 
 
 def create_edge_ngrams(*args):
-    start = time.time()
-    pool = Pool()
-    count = 0
-    chunk = []
-    for key in DB.scan_iter(match='w|*'):
-        count += 1
-        chunk.append(key)
-        if count % 10000 == 0:
-            pool.map(index_ngram_key, chunk)
-            print("Done", count, time.time() - start)
-            chunk = []
-    if chunk:
-        pool.map(index_ngram_key, chunk)
-    pool.close()
-    pool.join()
-    print('Done', count, 'in', time.time() - start)
+    parallelize(index_ngram_key, DB.scan_iter(match='w|*'),
+                prefix="Computing ngrams", throttle=1000)
 
 
 def register_command(subparsers):
