@@ -408,12 +408,11 @@ def format_config(value):
 
 def invoke(args=None):
     cmd = Cmd()
-    config.pm.hook.addok_register_shell_command(cmd=cmd)
+    hooks.register_shell_command(cmd)
     cmd.loop()
 
 
-@hooks.register
-def addok_register_command(subparsers):
+def register_command(subparsers):
     parser = subparsers.add_parser('shell',
                                    help='Run a shell to inspect Addok')
     parser.set_defaults(func=invoke)

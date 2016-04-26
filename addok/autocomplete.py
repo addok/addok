@@ -1,13 +1,13 @@
 import time
 from multiprocessing import Pool
 
-from addok import config, hooks
+from addok import config
 from addok.db import DB
 from addok.helpers import keys as dbkeys
 from addok.helpers import magenta, white
 from addok.helpers.index import token_key_frequency
 from addok.helpers.search import preprocess_query
-from addok.helpers.text import Token, compute_edge_ngrams
+from addok.helpers.text import compute_edge_ngrams
 from addok.pairs import pair_key
 
 
@@ -124,14 +124,12 @@ def create_edge_ngrams(*args):
     print('Done', count, 'in', time.time() - start)
 
 
-@hooks.register
-def addok_register_command(subparsers):
+def register_command(subparsers):
     parser = subparsers.add_parser('ngrams', help='Create edge ngrams.')
     parser.set_defaults(func=create_edge_ngrams)
 
 
-@hooks.register
-def addok_configure(config):
+def configure(config):
     config.RESULTS_COLLECTORS.insert(0, only_commons_but_geohash_try_autocomplete_collector)  # noqa
     target = 'addok.helpers.collectors.only_commons'
     if target in config.RESULTS_COLLECTORS:
@@ -160,6 +158,5 @@ def do_autocomplete(self, s):
     print(magenta('({} elements)'.format(len(keys))))
 
 
-@hooks.register
-def addok_register_shell_command(cmd):
+def register_shell_command(cmd):
     cmd.register_command(do_autocomplete)

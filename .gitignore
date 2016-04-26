@@ -4,7 +4,7 @@ __pycache__
 *.sjson
 notes.md
 .cli_history
-addok/config/local.py
+addok/config/local*.py
 addok.egg-info/
 debian/addok
 debian/addok.postinst.debhelper
@@ -21,3 +21,4 @@ dist/
 .cache
 scripts/*
 htmlcov/*
+prof/

@@ -1,10 +1,10 @@
 from math import ceil
 
-from addok import config
 from addok.helpers import iter_pipe
 
 
 def preprocess_query(s):
+    from addok import config
     return list(iter_pipe(s, config.QUERY_PROCESSORS + config.PROCESSORS))
 
 

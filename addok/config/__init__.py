@@ -1,9 +1,9 @@
 import imp
 import importlib
-import pluggy
 import os
 import sys
 
+from .default import FIELDS, EXTRA_FIELDS, PLUGINS, BLOCKED_PLUGINS, PLUGINS
 from .default import *  # noqa
 from addok import hooks
 
@@ -34,10 +34,6 @@ HOUSENUMBERS_FIELD = None
 NAME_FIELD = None
 
 
-pm = pluggy.PluginManager('addok')
-pm.add_hookspecs(hooks)
-
-
 def consolidate():
     global HOUSENUMBERS_FIELD
     global NAME_FIELD
@@ -54,6 +50,7 @@ def consolidate():
         'QUERY_PROCESSORS', 'RESULTS_COLLECTORS', 'SEARCH_RESULT_PROCESSORS',
         'REVERSE_RESULT_PROCESSORS', 'PROCESSORS', 'INDEXERS', 'DEINDEXERS',
         'BATCH_PROCESSORS', 'SEARCH_PREPROCESSORS', 'RESULTS_FORMATTERS',
+        'HOUSENUMBER_PROCESSORS',
     ]
     for name in names:
         resolve_path(name)
@@ -80,31 +77,31 @@ def load(config, discover=True):
     if BLOCKED_PLUGINS:
         print('Blocked plugins: ', ', '.join(BLOCKED_PLUGINS))
         for name in BLOCKED_PLUGINS:
-            pm.set_blocked(name)
+            hooks.block(name)
     load_core_plugins()
     if discover:
-        pm.load_setuptools_entrypoints("addok.ext")
+        hooks.load()
 
     # 3. Allow to unregister plugins from other plugins or to set default
     # config.
-    pm.hook.addok_preconfigure(config=config)
+    hooks.preconfigure(config)
 
-    names = [name for name, module in pm.list_name_plugin() if module]
-    print('Addok loaded plugins: {}'.format(', '.join(names)))
+    print('Addok loaded plugins: {}'.format(', '.join(hooks.plugins.keys())))
 
     # 4. Now reload local config if any, to override any plugin default.
     if localpath:
         extend_from_file(localpath)
 
     # 5. Now let plugin configure themselves.
-    pm.hook.addok_configure(config=config)
+    hooks.configure(config)
 
     # 5. Finally, consolidate values.
     consolidate()
+
 LOADED = False
 
 
 def load_core_plugins():
     for path in PLUGINS:
         plugin = importlib.import_module(path)
-        pm.register(plugin)
+        hooks.register(plugin)

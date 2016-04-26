@@ -1,4 +1,4 @@
-from addok import config, hooks
+from addok import config
 from addok.db import DB
 from addok.helpers import keys, magenta, white
 from addok.helpers.index import preprocess_housenumber
@@ -65,8 +65,7 @@ def housenumbers_pairs_deindexer(db, key, doc, tokens, **kwargs):
                 db.srem(pair_key(token), hn)
 
 
-@hooks.register
-def addok_configure(config):
+def configure(config):
     target = 'addok.helpers.index.document_indexer'
     if target in config.INDEXERS:
         idx = config.INDEXERS.index(target)
@@ -96,6 +95,5 @@ def pair(word):
     print(magenta('(Total: {})'.format(len(tokens))))
 
 
-@hooks.register
-def addok_register_shell_command(cmd):
+def register_shell_command(cmd):
     cmd.register_command(pair)

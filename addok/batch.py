@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from progressist import ProgressBar
 
-from addok import config, hooks
+from addok import config
 from addok.helpers import iter_pipe, yielder
 from addok.helpers.index import deindex_document, index_document
 
@@ -18,8 +18,7 @@ def run(args):
         process_stdin(sys.stdin)
 
 
-@hooks.register
-def addok_register_command(subparsers):
+def register_command(subparsers):
     parser = subparsers.add_parser('batch', help='Batch import documents')
     parser.add_argument('filepath', nargs='*',
                         help='Path to file to process')

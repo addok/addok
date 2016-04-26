@@ -35,6 +35,7 @@ PROCESSORS = [  # Rename in TOKEN_PROCESSORS
     'addok.helpers.text.synonymize',
 ]
 QUERY_PROCESSORS = []
+# Remove SEARCH_PREFIXES.
 SEARCH_PREPROCESSORS = [
     'addok.helpers.search.tokenize',
     'addok.helpers.search.search_tokens',

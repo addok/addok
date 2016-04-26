@@ -1,9 +1,12 @@
 import uuid
+import os
 
 import pytest
 
 
 def pytest_configure():
+    # Be sure not to load local config during tests.
+    os.environ['ADDOK_CONFIG_MODULE'] = ''
     from addok import config
     config.REDIS['db'] = 15
     import logging

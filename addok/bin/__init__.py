@@ -17,9 +17,9 @@ def main():
     subparsers = main_parser.add_subparsers(title='Available commands',
                                             metavar='')
 
-    from addok import config
+    from addok import config, hooks
     config.load(config)
-    config.pm.hook.addok_register_command(subparsers=subparsers)
+    hooks.register_command(subparsers)
     args = main_parser.parse_args()
     if getattr(args, 'func', None):
         args.func(args)

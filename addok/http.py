@@ -53,9 +53,9 @@ class CorsMiddleware:
 def application(env, start_response):
     config.load(config)
     middlewares = [CorsMiddleware()]
-    config.pm.hook.addok_register_api_middleware(middlewares=middlewares)
+    hooks.register_api_middleware(middlewares=middlewares)
     api = falcon.API(middleware=middlewares)
-    config.pm.hook.addok_register_api_endpoint(api=api)
+    hooks.register_api_endpoint(api=api)
     return api(env, start_response)
 
 
@@ -125,6 +125,10 @@ class Search(View):
             raise falcon.HTTPBadRequest('Missing query', 'Missing query')
         limit = req.get_param_as_int('limit') or 5  # use config
         autocomplete = req.get_param_as_bool('autocomplete')
+        if autocomplete is None:
+            # Default is True.
+            # https://github.com/falconry/falcon/pull/493#discussion_r44376219
+            autocomplete = True
         lon, lat = self.parse_lon_lat(req)
         center = None
         if lon and lat:
@@ -151,15 +155,13 @@ class Reverse(View):
         self.to_geojson(req, resp, results, filters=filters, limit=limit)
 
 
-@hooks.register
-def addok_register_api_endpoint(api):
+def register_api_endpoint(api):
     api.add_route('/get/{doc_id}', Get())
     api.add_route('/search', Search())
     api.add_route('/reverse', Reverse())
 
 
-@hooks.register
-def addok_register_command(subparsers):
+def register_command(subparsers):
     parser = subparsers.add_parser('serve', help='Run debug server')
     parser.set_defaults(func=run)
     parser.add_argument('--host', default='127.0.0.1',

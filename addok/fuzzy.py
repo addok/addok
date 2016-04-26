@@ -1,6 +1,5 @@
 import string
 
-from addok import hooks
 from addok.db import DB
 from addok.helpers import keys as dbkeys
 from addok.helpers import blue, white
@@ -97,8 +96,7 @@ def try_fuzzy(helper, tokens, include_common=True):
                 helper.add_to_bucket(keys + [key])
 
 
-@hooks.register
-def addok_configure(config):
+def configure(config):
     target = 'addok.helpers.collectors.extend_results_reducing_tokens'
     if target in config.RESULTS_COLLECTORS:
         idx = config.RESULTS_COLLECTORS.index(target)
@@ -126,6 +124,5 @@ def do_fuzzyindex(self, word):
         print(white(token), blue(freq))
 
 
-@hooks.register
-def addok_register_shell_command(cmd):
+def register_shell_command(cmd):
     cmd.register_commands(do_fuzzy, do_fuzzyindex)
