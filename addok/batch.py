@@ -72,7 +72,7 @@ def batch(iterable):
                 continue
             chunk.append(item)
             count += 1
-            if count % 10000 == 0:
+            if count % 20000 == 0:
                 for r in executor.map(process, chunk):
                     bar()
                 chunk = []
