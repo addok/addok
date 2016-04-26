@@ -1,3 +1,4 @@
+from pathlib import Path
 import re
 
 from addok import config
@@ -71,7 +72,7 @@ SYNONYMS = {}
 
 
 def load_synonyms():
-    with config.RESOURCES_ROOT.joinpath(config.SYNONYMS_PATH).open() as f:
+    with Path(config.SYNONYMS_PATH).open() as f:
         for line in f:
             if line.startswith('#'):
                 continue
