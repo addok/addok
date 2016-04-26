@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 from progressist import ProgressBar
 
@@ -64,7 +64,7 @@ class Bar(ProgressBar):
 
 def batch(iterable):
     bar = Bar()
-    with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+    with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
         count = 0
         chunk = []
         for item in iterable:
