@@ -81,7 +81,6 @@ DEINDEXERS = [
     'addok.helpers.index.housenumbers_deindexer',
     'addok.helpers.index.document_deindexer',
 ]
-URL_MAP = None
 
 # Fields to be indexed
 # If you want a housenumbers field but need to name it differently, just add
