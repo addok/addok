@@ -22,7 +22,8 @@ from .helpers.text import compare_ngrams
 class Cmd(cmd.Cmd):
 
     intro = (white('\nWelcome to the Addok shell o/\n') +
-             magenta('Type HELP or ? to list commands.\n'))
+             magenta('Type HELP or ? to list commands.\n') +
+             magenta('Type QUIT or ctrl-C or ctrl-D to quit.\n'))
     prompt = '> '
     HISTORY_FILE = '.cli_history'
 
@@ -51,10 +52,10 @@ class Cmd(cmd.Cmd):
 
     def default(self, line):
         if line == 'EOF':
-            return self.close()
+            return self.quit()
         return self.do_SEARCH(line)
 
-    def close(self):
+    def quit(self):
         print(red("Bye!"))
         return True
 
@@ -62,14 +63,14 @@ class Cmd(cmd.Cmd):
         try:
             self.cmdloop()
         except KeyboardInterrupt:
-            return self.close()
+            return self.quit()
 
     def completenames(self, text, *ignored):
         return super().completenames(text.upper(), *ignored)
 
     def get_names(self):
-        # Let's use uppercase version to be consistent.
-        return [n for n in super().get_names() if n != 'do_help']
+        special = ['do_help', 'do_QUIT']
+        return [n for n in super().get_names() if n not in special]
 
     @classmethod
     def register_command(cls, command, name=None, doc=None):
@@ -164,6 +165,10 @@ class Cmd(cmd.Cmd):
         formatter = red if duration > 50 else green
         print('{} / {}'.format(formatter("{} ms".format(duration)),
                                cyan('{} results'.format(len(results)))))
+
+    def do_QUIT(self, *args):
+        """Quit this shell. Also ctrl-C or Ctrl-D."""
+        return self.quit()
 
     def do_SEARCH(self, query):
         """Issue a search (default command, can be omitted):
