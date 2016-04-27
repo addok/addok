@@ -21,3 +21,5 @@
 
 ## What to do next?
 Now you certainly want to [configure Addok](config.md), install [plugins](plugins.md) or directly [import data](import.md).
+
+See also the full [installation tutorial](tutorial.md).
