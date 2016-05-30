@@ -30,7 +30,7 @@ def _match_housenumber(helper, result, tokens):
     if not helper.check_housenumber:
         return
     name_tokens = result.name.split()
-    for token in tokens:
+    for token in sorted(tokens, key=lambda t: t.position):
         if token in result.housenumbers:
             raw, lat, lon, *extra = result.housenumbers[token].split('|')
             if raw in name_tokens and tokens.count(token) != 2:
