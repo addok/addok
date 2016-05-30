@@ -122,7 +122,7 @@ def fields_indexer(pipe, key, doc, tokens, **kwargs):
             else:
                 values = [values]
             for value in values:
-                extract_tokens(tokens, value, boost=boost)
+                extract_tokens(tokens, str(value), boost=boost)
     index_tokens(pipe, tokens, key, **kwargs)
 
 
