@@ -1,11 +1,5 @@
 # Batch importing data in Addok
 
-For now, two formats are supported:
-
-- JSON stream
-- Nominatim PostgreSQL database
-
-
 ## Import format
 
 By default, Addok expect a [line delimited JSON stream](http://en.wikipedia.org/wiki/JSON_Streaming)
@@ -68,15 +62,11 @@ you can extract it from full file with a command like:
     sed -n 's/"Île-de-France"/&/p' path/to/full.sjson > idf.sjson
 
 
-## Import from Nominatim
+## Import from PostgreSQL
 
-Once you have a [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim)
-database up and running, just run:
 
-    addok batch --dbuser ybon
-    addok ngrams
+See [addok-psql](https://github.com/addok/addok-psql) plugin.
 
-Check out the available [settings for PSQL](config.md#postgresql-settings).
 
 ## Read from stdin
 
