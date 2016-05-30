@@ -57,7 +57,7 @@ class Result(object):
         return self._cache[key]
 
     def __str__(self):
-        return (self.labels[0] if self.labels
+        return (str(self.labels[0]) if self.labels
                 else self._rawattr(config.NAME_FIELD)[0])
 
     def _rawattr(self, key):

@@ -303,3 +303,9 @@ def test_allow_to_set_result_values(factory):
     # Plugins may need that.
     assert result.name == "blah"
     assert result.score == 22
+
+
+def test_should_keep_unchanged_name_as_default_label(factory):
+    factory(name="Porte des Lilas")
+    results = search("porte des lilas")
+    str(results[0]) == "Porte des Lilas"

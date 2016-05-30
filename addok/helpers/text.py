@@ -102,7 +102,11 @@ class ascii(str):
             cache = alphanumerize(unidecode(value.lower()))
         obj = str.__new__(cls, cache)
         obj._cache = cache
+        obj._raw = getattr(value, '_raw', value)
         return obj
+
+    def __str__(self):
+        return self._raw
 
 
 def compare_ngrams(left, right, N=2, pad_len=0):
