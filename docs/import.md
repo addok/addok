@@ -6,10 +6,12 @@ For now, two formats are supported:
 - Nominatim PostgreSQL database
 
 
-## JSON stream
+## Import format
 
 By default, Addok expect a [line delimited JSON stream](http://en.wikipedia.org/wiki/JSON_Streaming)
 as input file. This means *one JSON object per line*.
+Optionally, it's possible to use msgpack. For that, install `msgpack-python` and make sure your
+data files extension is `.msgpack`.
 
 
 #### Keys

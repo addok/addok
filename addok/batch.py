@@ -1,4 +1,5 @@
 import json
+import os.path
 import sys
 
 from addok import config
@@ -22,19 +23,25 @@ def register_command(subparsers):
 
 
 def preprocess_batch(d):
-    return list(iter_pipe(d, config.BATCH_PROCESSORS))[0]
+    config.INDEX_EDGE_NGRAMS = False  # Run command "ngrams" instead.
+    return iter_pipe(d, config.BATCH_PROCESSORS)
 
 
 def process_file(filepath):
     print('Import from file', filepath)
-    config.INDEX_EDGE_NGRAMS = False  # Run command "ngrams" instead.
-    with open(filepath) as f:
-        batch(map(preprocess_batch, f))
+    _, ext = os.path.splitext(filepath)
+    if ext == '.msgpack':
+        import msgpack  # We don't want to make it a required dependency.
+        with open(filepath, mode='rb') as f:
+            batch(preprocess_batch(msgpack.Unpacker(f, encoding='utf-8')))
+    else:
+        with open(filepath) as f:
+            batch(preprocess_batch(f))
 
 
 def process_stdin(stdin):
     print('Import from stdin')
-    batch(map(preprocess_batch, stdin))
+    batch(preprocess_batch(stdin))
 
 
 @yielder

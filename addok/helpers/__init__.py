@@ -8,6 +8,7 @@ from progressist import ProgressBar
 
 
 def iter_pipe(pipe, processors):
+    """Allow for iterators to return either an item or an iterator of items."""
     if isinstance(pipe, str):
         pipe = [pipe]
     for it in processors:
