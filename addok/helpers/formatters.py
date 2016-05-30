@@ -24,5 +24,6 @@ def geojson(result):
             "type": "Point",
             "coordinates": [float(result.lon), float(result.lat)]
         },
-        "properties": properties
+        "properties": properties,
+        "id": result.id
     }
