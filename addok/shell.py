@@ -3,7 +3,12 @@ import cmd
 import json
 import logging
 import re
-import readline
+
+try:
+    import gnureadline as readline # for OSX
+except ImportError:
+    import readline # normal way
+
 import time
 from pathlib import Path
 
