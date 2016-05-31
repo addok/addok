@@ -5,9 +5,9 @@ import logging
 import re
 
 try:
-    import gnureadline as readline
+    import gnureadline as readline # for OSX
 except ImportError:
-    import readline
+    import readline # normal way
 
 import time
 from pathlib import Path
