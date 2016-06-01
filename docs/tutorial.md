@@ -8,7 +8,7 @@ You need sudo grants on this server, and it must be connected to Internet.
 ## Install system dependencies
 
     sudo apt install redis-server python3.4 python3.4-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
-    
+
 
 ## Create a Unix user
 
@@ -34,7 +34,9 @@ you will need to run again this last line.
 
 ## Install addok and plugins
 
-    pip install addok addok-fr addok-france
+    pip install addok  
+    pip install git+https://github.com/addok/addok-fr
+    pip install git+https://github.com/addok/addok-france
 
 Note: if you want batch CSV support on the HTTP API, also install the plugin `addok-csv`.
 
