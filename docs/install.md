@@ -9,11 +9,11 @@
 
 1. Install dependencies:
 
-        sudo apt-get install redis-server python3.4 python3.4-dev python-pip python-virtualenv virtualenvwrapper
+        sudo apt-get install redis-server python3.4 python3.4-dev python-pip python-virtualenv
 
 1. create a virtualenv:
 
-        mkvirtualenv addok --python=/usr/bin/python3.4
+        virtualenv addok --python=/usr/bin/python3.4
 
 1. active virtualenv:
         source addok/bin/activate
