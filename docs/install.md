@@ -11,11 +11,13 @@
 
         sudo apt-get install redis-server python3.4 python3.4-dev python-pip python-virtualenv virtualenvwrapper
 
-1. create a virtualenv:
+2. create a virtualenv:
 
         mkvirtualenv addok --python=/usr/bin/python3.4
 
-1. install python packages:
+3. active virtualenv:
+        source addok/bin/activate
+4. install python packages:
 
         pip install addok
 
