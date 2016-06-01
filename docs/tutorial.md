@@ -7,7 +7,7 @@ You need sudo grants on this server, and it must be connected to Internet.
 
 ## Install system dependencies
 
-    sudo apt install redis-server python3.5 python3.5-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt install redis-server python3.4 python3.4-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
 
   For Mac OS X users only:
 
@@ -55,7 +55,7 @@ tracker](https://github.com/addok/addok/issues) to ask for help.
 
 ## Create a local configuration file
 
-    nano ~/local.py
+    nano ~/addok/local.py
 
 And paste this configuration:
 ```
