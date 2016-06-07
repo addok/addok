@@ -7,13 +7,8 @@ You need sudo grants on this server, and it must be connected to Internet.
 
 ## Install system dependencies
 
-    sudo apt install redis-server python3.5 python3.5-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt install redis-server python3.4 python3.4-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
 
-  For Mac OS X users only:
-
-    pip install gnureadline
-
-  Some platforms, such as Mac OS X, do not ship with GNU readline installed. The readline extension module in the standard library of Mac “system” Python uses NetBSD’s editline (libedit) library instead, which is a readline replacement with a less restrictive software license.
 
 ## Create a Unix user
 
@@ -39,7 +34,9 @@ you will need to run again this last line.
 
 ## Install addok and plugins
 
-    pip install addok addok-fr addok-france
+    pip install git+https://github.com/addok/addok
+    pip install git+https://github.com/addok/addok-fr
+    pip install git+https://github.com/addok/addok-france
 
 Note: if you want batch CSV support on the HTTP API, also install the plugin `addok-csv`.
 
@@ -55,7 +52,7 @@ tracker](https://github.com/addok/addok/issues) to ask for help.
 
 ## Create a local configuration file
 
-    nano ~/local.py
+    nano ~/addok/local.py
 
 And paste this configuration:
 ```
