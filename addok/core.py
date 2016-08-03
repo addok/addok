@@ -1,5 +1,7 @@
+import asyncio
 import time
 
+import asyncio_redis
 import geohash
 
 from . import config
@@ -7,6 +9,10 @@ from .db import DB
 from .helpers import keys
 from .helpers.index import VALUE_SEPARATOR
 from .helpers.text import ascii
+
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 def compute_geohash_key(geoh, with_neighbors=True):
@@ -28,19 +34,24 @@ def compute_geohash_key(geoh, with_neighbors=True):
 
 class Result(object):
 
-    def __init__(self, _id):
+    def __init__(self):
         self.housenumber = None
         self._scores = {}
-        self.load(_id)
         self.labels = []
 
-    def load(self, _id):
-        self._cache = {}
-        doc = DB.hgetall(_id)
+    @classmethod
+    @asyncio.coroutine
+    def load(cls, _id):
+        result = cls()
+        result._id = _id
+        result._cache = {}
+        doc = yield from config.connection.hgetall(_id.decode())
+        doc = yield from doc.asdict()
         if not doc:
             raise ValueError('id "{}" not found'.format(_id[2:]))
-        self._doc = {k.decode(): v.decode() for k, v in doc.items()}
-        self.load_housenumbers()
+        result._doc = doc
+        result.load_housenumbers()
+        return result
 
     def load_housenumbers(self):
         self.housenumbers = {}
@@ -211,15 +222,30 @@ class Search(BaseHelper):
         self.bucket = self.intersect(keys, limit)
         self.debug('%s ids in bucket so far', len(self.bucket))
 
+    async def convert_result(self, _id):
+        self.debug('starting task for _id: ' + _id.decode())
+        result = await Result.load(_id)
+        for processor in config.SEARCH_RESULT_PROCESSORS:
+            processor(self, result)
+        self.debug('finished task for _id: ' + _id.decode())
+        return result
+
+    def result_callback(self, future):
+        result = future.result()
+        self.results[result._id] = result
+
     def convert(self):
         self.debug('Computing results')
+
+        tasks = []
         for _id in self.bucket:
             if _id in self.results:
                 continue
-            result = Result(_id)
-            for processor in config.SEARCH_RESULT_PROCESSORS:
-                processor(self, result)
-            self.results[_id] = result
+            future = asyncio.ensure_future(self.convert_result(_id))
+            future.add_done_callback(self.result_callback)
+            tasks.append(future)
+        asyncio.get_event_loop().run_until_complete(asyncio.wait(tasks))
+
         self.debug('Done computing results')
 
     @property
