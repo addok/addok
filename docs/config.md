@@ -35,6 +35,8 @@ be overriden from the environment variable `ADDOK_LOG_DIR`.
 
     LOG_DIR = 'path/to/dir'
 
+This setting defaults to the root folder of the addok package.
+
 
 ## Basic settings
 
