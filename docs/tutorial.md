@@ -104,7 +104,7 @@ This is for Seine-Saint-Denis, but choose the area you want from the
 
 Run those two commands:
 
-    addok batch ~/BAN_odbl_93-json
+    addok batch BAN_odbl_93-json
     addok ngrams
 
 Let's test that everything is ok. Run the addok shell:
@@ -130,8 +130,8 @@ If you would want to just test the Addok API, you can simply run this command:
 
 And you can now access it through `http://127.0.0.1:7878/`.
 For example, to issue a search, you would call this URL:
-
-    http://127.0.0.1:7878/search/?q=epinay sur seine
+[http://127.0.0.1:7878/search/?q=epinay sur seine](http://127.0.0.1:7878/search/?q=epinay sur seine
+)
 
 But now let's configure a real HTTP server.
 
