@@ -7,7 +7,8 @@ You need sudo grants on this server, and it must be connected to Internet.
 
 ## Install system dependencies
 
-    sudo apt install redis-server python3.5 python3.5-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt install redis-server python3.4 python3.4-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
+
 
 ## Create a Unix user
 
@@ -33,7 +34,9 @@ you will need to run again this last line.
 
 ## Install addok and plugins
 
-    pip install addok addok-fr addok-france
+    pip install git+https://github.com/addok/addok
+    pip install git+https://github.com/addok/addok-fr
+    pip install git+https://github.com/addok/addok-france
 
 Note: if you want batch CSV support on the HTTP API, also install the plugin `addok-csv`.
 
@@ -49,7 +52,7 @@ tracker](https://github.com/addok/addok/issues) to ask for help.
 
 ## Create a local configuration file
 
-    nano ~/local.py
+    nano ~/addok/local.py
 
 And paste this configuration:
 ```
@@ -101,7 +104,7 @@ This is for Seine-Saint-Denis, but choose the area you want from the
 
 Run those two commands:
 
-    addok batch ~/BAN_odbl_93-json
+    addok batch BAN_odbl_93-json
     addok ngrams
 
 Let's test that everything is ok. Run the addok shell:
@@ -127,8 +130,8 @@ If you would want to just test the Addok API, you can simply run this command:
 
 And you can now access it through `http://127.0.0.1:7878/`.
 For example, to issue a search, you would call this URL:
-
-    http://127.0.0.1:7878/search/?q=epinay sur seine
+[http://127.0.0.1:7878/search/?q=epinay sur seine](http://127.0.0.1:7878/search/?q=epinay sur seine
+)
 
 But now let's configure a real HTTP server.
 
