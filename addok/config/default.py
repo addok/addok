@@ -126,7 +126,7 @@ LOG_NOT_FOUND = False
 
 PLUGINS = [
     'addok.shell',
-    'addok.http',
+    'addok.http.base',
     'addok.batch',
     'addok.pairs',
     'addok.fuzzy',

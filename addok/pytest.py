@@ -91,7 +91,7 @@ def housenumber(factory):
 def app():
     # Do not import before redis config has been
     # patched.
-    from addok.http import application
+    from addok.http.wsgi import application
     return application
 
 

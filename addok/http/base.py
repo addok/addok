@@ -4,10 +4,9 @@ import logging.handlers
 from pathlib import Path
 
 import falcon
-from addok import hooks
 from addok.core import Result, reverse, search
 
-from . import config
+from addok import config
 
 if config.LOG_NOT_FOUND:
     notfound_logger = logging.getLogger('notfound')
@@ -48,15 +47,6 @@ class CorsMiddleware:
     def process_response(self, req, resp, resource):
         resp.set_header('Access-Control-Allow-Origin', '*')
         resp.set_header('Access-Control-Allow-Headers', 'X-Requested-With')
-
-
-def application(env, start_response):
-    config.load(config)
-    middlewares = [CorsMiddleware()]
-    hooks.register_api_middleware(middlewares)
-    api = falcon.API(middleware=middlewares)
-    hooks.register_api_endpoint(api)
-    return api(env, start_response)
 
 
 class View:
@@ -171,10 +161,6 @@ def register_command(subparsers):
 
 
 def run(args):
-    from wsgiref.simple_server import make_server
-    httpd = make_server(args.host, int(args.port), application)
-    print("Serving HTTP on {}:{}…".format(args.host, args.port))
-    try:
-        httpd.serve_forever()
-    except (KeyboardInterrupt, EOFError):
-        print('Bye!')
+    # Do not import at load time for preventing config import loop.
+    from .wsgi import simple
+    simple(args)
