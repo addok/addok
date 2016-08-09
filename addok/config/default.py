@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 
 REDIS = {
-    'host': 'localhost',
-    'port': 6379,
-    'db': 0
+    'host': os.environ.get('REDIS_HOST') or 'localhost',
+    'port': os.environ.get('REDIS_PORT') or 6379,
+    'db': os.environ.get('REDIS_DB') or 0,
 }
 
 
