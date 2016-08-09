@@ -1,5 +1,5 @@
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
-from addok.db import DB
+from addok.config import DB  # Do not to that in production code.
 from addok.helpers.index import deindex_document, index_document
 
 

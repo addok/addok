@@ -2,7 +2,6 @@ from pathlib import Path
 import re
 
 from addok import config
-from addok.db import DB
 from addok.helpers import keys, yielder
 from addok.helpers.index import token_frequency
 from ngram import NGram
@@ -32,7 +31,7 @@ class Token(str):
         return token
 
     def search(self):
-        if DB.exists(self.key):
+        if config.DB.exists(self.key):
             self.db_key = self.key
 
     @property

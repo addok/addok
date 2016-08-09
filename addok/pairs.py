@@ -1,5 +1,4 @@
 from addok import config
-from addok.db import DB
 from addok.helpers import keys, magenta, white
 from addok.helpers.index import preprocess_housenumber
 from addok.helpers.search import preprocess_query
@@ -89,7 +88,7 @@ def pair(word):
     PAIR lilas"""
     word = list(preprocess_query(word))[0]
     key = pair_key(word)
-    tokens = [t.decode() for t in DB.smembers(key)]
+    tokens = [t.decode() for t in config.DB.smembers(key)]
     tokens.sort()
     print(white(tokens))
     print(magenta('(Total: {})'.format(len(tokens))))

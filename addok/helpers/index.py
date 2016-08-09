@@ -1,7 +1,6 @@
 import geohash
 
 from addok import config
-from addok.db import DB
 
 from . import iter_pipe, keys
 
@@ -28,7 +27,7 @@ _HOUSENUMBER_CACHE = {}
 
 
 def token_key_frequency(key):
-    return DB.zcard(key)
+    return config.DB.zcard(key)
 
 
 def token_frequency(token):
@@ -59,12 +58,12 @@ def deindex_field(key, string):
 
 def deindex_token(key, token):
     tkey = keys.token_key(token)
-    DB.zrem(tkey, key)
+    config.DB.zrem(tkey, key)
 
 
 def index_document(doc, **kwargs):
     key = keys.document_key(doc['id'])
-    pipe = DB.pipeline()
+    pipe = config.DB.pipeline()
     tokens = {}
     for indexer in config.INDEXERS:
         try:
@@ -77,12 +76,12 @@ def index_document(doc, **kwargs):
 
 def deindex_document(id_, **kwargs):
     key = keys.document_key(id_)
-    doc = DB.hgetall(key)
+    doc = config.DB.hgetall(key)
     if not doc:
         return
     tokens = []
     for indexer in config.DEINDEXERS:
-        indexer(DB, key, doc, tokens, **kwargs)
+        indexer(config.DB, key, doc, tokens, **kwargs)
 
 
 def index_geohash(pipe, key, lat, lon):
@@ -98,7 +97,7 @@ def deindex_geohash(key, lat, lon):
     lon = float(lon)
     geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
     geok = keys.geohash_key(geoh)
-    DB.srem(geok, key)
+    config.DB.srem(geok, key)
 
 
 def fields_indexer(pipe, key, doc, tokens, **kwargs):

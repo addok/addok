@@ -3,6 +3,8 @@ import importlib
 import os
 import sys
 
+import redis
+
 from .default import FIELDS, EXTRA_FIELDS, PLUGINS, BLOCKED_PLUGINS, PLUGINS
 from .default import *  # noqa
 from addok import hooks
@@ -72,6 +74,8 @@ def load(config, discover=True):
     localpath = os.environ.get('ADDOK_CONFIG_MODULE')
     if localpath:
         extend_from_file(localpath)
+
+    config.DB = redis.StrictRedis(**config.REDIS)
 
     # 2. Load plugins.
     if BLOCKED_PLUGINS:

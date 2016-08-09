@@ -15,14 +15,14 @@ def pytest_configure():
 
 
 def pytest_runtest_setup(item):
-    from addok.db import DB
-    assert DB.connection_pool.connection_kwargs['db'] == 15
+    from addok import config
+    assert config.DB.connection_pool.connection_kwargs['db'] == 15
 
 
 def pytest_runtest_teardown(item, nextitem):
-    from addok.db import DB
-    assert DB.connection_pool.connection_kwargs['db'] == 15
-    DB.flushdb()
+    from addok import config
+    assert config.DB.connection_pool.connection_kwargs['db'] == 15
+    config.DB.flushdb()
 
 
 def pytest_addoption(parser):
