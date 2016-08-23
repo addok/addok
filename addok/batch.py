@@ -2,8 +2,8 @@ import json
 import os.path
 import sys
 
-from addok import config
-from addok.helpers import iter_pipe, yielder, parallelize
+from addok.config import config
+from addok.helpers import iter_pipe, parallelize, yielder
 from addok.helpers.index import deindex_document, index_document
 
 

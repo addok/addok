@@ -3,6 +3,8 @@
 import argparse
 import os
 
+from addok.config import config
+
 
 def main():
 
@@ -15,8 +17,8 @@ def main():
     subparsers = main_parser.add_subparsers(title='Available commands',
                                             metavar='')
 
-    from addok import config, hooks
-    config.load(config)
+    from addok import hooks
+    config.load()
     hooks.register_command(subparsers)
     args = main_parser.parse_args(args=extras)
     if getattr(args, 'func', None):

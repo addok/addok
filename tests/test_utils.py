@@ -1,5 +1,4 @@
 import pytest
-
 from addok.helpers import import_by_path
 from addok.helpers.text import tokenize
 

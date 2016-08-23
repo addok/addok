@@ -1,6 +1,6 @@
-from addok import config
+from addok.config import config
 from addok.helpers import keys as dbkeys
-from addok.helpers import magenta, white, parallelize
+from addok.helpers import magenta, parallelize, white
 from addok.helpers.index import token_key_frequency
 from addok.helpers.search import preprocess_query
 from addok.helpers.text import compute_edge_ngrams

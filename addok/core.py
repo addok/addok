@@ -2,7 +2,7 @@ import time
 
 import geohash
 
-from . import config
+from .config import config
 from .helpers import keys
 from .helpers.index import VALUE_SEPARATOR
 from .helpers.text import ascii

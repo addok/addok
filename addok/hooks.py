@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from pkg_resources import iter_entry_points
 
+from pkg_resources import iter_entry_points
 
 plugins = OrderedDict()
 blocked_plugins = set([])

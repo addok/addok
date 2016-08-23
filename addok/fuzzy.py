@@ -1,6 +1,6 @@
 import string
 
-from addok import config
+from addok.config import config
 from addok.helpers import keys as dbkeys
 from addok.helpers import blue, white
 from addok.helpers.search import preprocess_query

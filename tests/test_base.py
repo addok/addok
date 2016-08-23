@@ -1,4 +1,4 @@
-from addok import config
+from addok.config import config
 
 
 def test_connection_port_is_not_default_one():

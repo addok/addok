@@ -1,4 +1,4 @@
-from addok import config
+from addok.config import config
 from addok.helpers import haversine_distance, km_to_score
 from addok.helpers.text import (ascii, compare_ngrams, contains, equals,
                                 startswith)

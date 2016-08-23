@@ -1,11 +1,10 @@
 import falcon
 
-from addok import config, hooks
+from addok.config import config, hooks
 
 from .base import CorsMiddleware
 
-
-config.load(config)
+config.load()
 middlewares = [CorsMiddleware()]
 hooks.register_api_middleware(middlewares)
 application = falcon.API(middleware=middlewares)
