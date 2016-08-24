@@ -1,9 +1,9 @@
 import os
 import imp
 import importlib
-import redis
 
 from addok import hooks
+from addok.db import DB
 from . import default
 
 
@@ -96,7 +96,8 @@ class Config(dict):
             elif field.get('type') == 'name' or key == 'name':
                 self.NAME_FIELD = key
                 field['type'] = 'name'
-        self.DB = redis.StrictRedis(**self.REDIS)
+        DB.connect(**self.REDIS)
+        self.DB = DB
 
     def resolve(self):
         for key in self.path_keys:

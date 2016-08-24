@@ -5,6 +5,7 @@ from addok.helpers.index import token_key_frequency
 from addok.helpers.search import preprocess_query
 from addok.helpers.text import compute_edge_ngrams
 from addok.pairs import pair_key
+from addok.db import DB
 
 
 def edge_ngram_key(s):
@@ -18,7 +19,7 @@ def index_edge_ngrams(pipe, token):
 
 def deindex_edge_ngrams(token):
     for ngram in compute_edge_ngrams(token):
-        config.DB.srem(edge_ngram_key(ngram), token)
+        DB.srem(edge_ngram_key(ngram), token)
 
 
 def edge_ngram_indexer(pipe, key, doc, tokens, **kwargs):
@@ -31,7 +32,7 @@ def edge_ngram_deindexer(db, key, doc, tokens, **kwargs):
     if config.INDEX_EDGE_NGRAMS:
         for token in tokens:
             tkey = dbkeys.token_key(token)
-            if not config.DB.exists(tkey):
+            if not DB.exists(tkey):
                 deindex_edge_ngrams(token)
 
 
@@ -77,7 +78,7 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
     keys = [t.db_key for t in tokens if not t.is_last]
     pair_keys = [pair_key(t) for t in tokens if not t.is_last]
     key = edge_ngram_key(helper.last_token)
-    autocomplete_tokens = config.DB.sinter(pair_keys + [key])
+    autocomplete_tokens = DB.sinter(pair_keys + [key])
     helper.debug('Found tokens to autocomplete %s', autocomplete_tokens)
     for token in autocomplete_tokens:
         key = dbkeys.token_key(token.decode())
@@ -98,11 +99,11 @@ def index_ngram_key(key):
     _, token = key.split('|')
     if token.isdigit():
         return
-    index_edge_ngrams(config.DB, token)
+    index_edge_ngrams(DB, token)
 
 
 def create_edge_ngrams(*args):
-    parallelize(index_ngram_key, config.DB.scan_iter(match='w|*'),
+    parallelize(index_ngram_key, DB.scan_iter(match='w|*'),
                 prefix="Computing ngrams", throttle=1000)
 
 
@@ -135,7 +136,7 @@ def configure(config):
 def do_autocomplete(self, s):
     """Shows autocomplete results for a given token."""
     s = list(preprocess_query(s))[0]
-    keys = [k.decode() for k in config.DB.smembers(edge_ngram_key(s))]
+    keys = [k.decode() for k in DB.smembers(edge_ngram_key(s))]
     print(white(keys))
     print(magenta('({} elements)'.format(len(keys))))
 

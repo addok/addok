@@ -5,6 +5,7 @@ from ngram import NGram
 from unidecode import unidecode
 
 from addok.config import config
+from addok.db import DB
 from addok.helpers import keys, yielder
 from addok.helpers.index import token_frequency
 
@@ -32,7 +33,7 @@ class Token(str):
         return token
 
     def search(self):
-        if config.DB.exists(self.key):
+        if DB.exists(self.key):
             self.db_key = self.key
 
     @property
