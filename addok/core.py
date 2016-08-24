@@ -7,6 +7,8 @@ from .helpers import keys
 from .helpers.index import VALUE_SEPARATOR
 from .helpers.text import ascii
 
+from .db import DB
+
 
 def compute_geohash_key(geoh, with_neighbors=True):
     if with_neighbors:
@@ -15,13 +17,13 @@ def compute_geohash_key(geoh, with_neighbors=True):
     else:
         neighbors = [geoh]
     key = 'gx|{}'.format(geoh)
-    total = config.DB.sunionstore(key, neighbors)
+    total = DB.sunionstore(key, neighbors)
     if not total:
         # No need to keep it.
-        config.DB.delete(key)
+        DB.delete(key)
         key = False
     else:
-        config.DB.expire(key, 10)
+        DB.expire(key, 10)
     return key
 
 
@@ -35,7 +37,7 @@ class Result(object):
 
     def load(self, _id):
         self._cache = {}
-        doc = config.DB.hgetall(_id)
+        doc = DB.hgetall(_id)
         if not doc:
             raise ValueError('id "{}" not found'.format(_id[2:]))
         self._doc = {k.decode(): v.decode() for k, v in doc.items()}
@@ -190,11 +192,11 @@ class Search(BaseHelper):
             if self.filters:
                 keys.extend(self.filters)
             if len(keys) == 1:
-                ids = config.DB.zrevrange(keys[0], 0, limit - 1)
+                ids = DB.zrevrange(keys[0], 0, limit - 1)
             else:
-                config.DB.zinterstore(self.query, set(keys))
-                ids = config.DB.zrevrange(self.query, 0, limit - 1)
-                config.DB.delete(self.query)
+                DB.zinterstore(self.query, set(keys))
+                ids = DB.zrevrange(self.query, 0, limit - 1)
+                DB.delete(self.query)
         return set(ids)
 
     def add_to_bucket(self, keys, limit=None):
@@ -292,9 +294,9 @@ class Reverse(BaseHelper):
 
     def intersect(self, key):
         if self.filters:
-            keys = config.DB.sinter([key] + self.filters)
+            keys = DB.sinter([key] + self.filters)
         else:
-            keys = config.DB.smembers(key)
+            keys = DB.smembers(key)
         self.keys.update(keys)
 
     def convert(self):

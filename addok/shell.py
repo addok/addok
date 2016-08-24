@@ -9,6 +9,7 @@ from pathlib import Path
 import geohash
 
 from . import hooks
+from .db import DB
 from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
@@ -202,9 +203,9 @@ class Cmd(cmd.Cmd):
             words, limit = words.split('LIMIT')
             limit = int(limit)
         tokens = [keys.token_key(w) for w in preprocess_query(words)]
-        config.DB.zinterstore(words, tokens)
-        results = config.DB.zrevrange(words, 0, limit, withscores=True)
-        config.DB.delete(words)
+        DB.zinterstore(words, tokens)
+        results = DB.zrevrange(words, 0, limit, withscores=True)
+        DB.delete(words)
         for id_, score in results:
             r = Result(id_)
             print('{} {} {}'.format(white(r), blue(r.id), cyan(score)))
@@ -213,7 +214,7 @@ class Cmd(cmd.Cmd):
 
     def do_DBINFO(self, *args):
         """Print some useful infos from Redis DB."""
-        info = config.DB.info()
+        info = DB.info()
         keys = [
             'keyspace_misses', 'keyspace_hits', 'used_memory_human',
             'total_commands_processed', 'total_connections_received',
@@ -226,11 +227,11 @@ class Cmd(cmd.Cmd):
     def do_DBKEY(self, key):
         """Print raw content of a DB key.
         DBKEY g|u09tyzfe"""
-        type_ = config.DB.type(key).decode()
+        type_ = DB.type(key).decode()
         if type_ == 'set':
-            out = config.DB.smembers(key)
+            out = DB.smembers(key)
         elif type_ == 'hash':
-            out = config.DB.hgetall(key)
+            out = DB.hgetall(key)
         else:
             out = 'Unsupported type {}'.format(type_)
         print('type:', magenta(type_))
@@ -309,7 +310,7 @@ class Cmd(cmd.Cmd):
         geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
         key = compute_geohash_key(geoh, with_neighbors != '0')
         if key:
-            for id_ in config.DB.smembers(key):
+            for id_ in DB.smembers(key):
                 r = Result(id_)
                 print('{} {}'.format(white(r), blue(r.id)))
 
@@ -346,9 +347,9 @@ class Cmd(cmd.Cmd):
         for token in indexed_string(field):
             print(
                 white(token),
-                blue(config.DB.zscore(keys.token_key(token),
+                blue(DB.zscore(keys.token_key(token),
                                       keys.document_key(_id))),
-                blue(config.DB.zrevrank(keys.token_key(token),
+                blue(DB.zrevrank(keys.token_key(token),
                                         keys.document_key(_id))),
             )
 
@@ -367,7 +368,7 @@ class Cmd(cmd.Cmd):
         """Return document linked to word with higher score.
         BESTSCORE lilas"""
         key = keys.token_key(indexed_string(word)[0])
-        for _id, score in config.DB.zrevrange(key, 0, 20, withscores=True):
+        for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
             result = Result(_id)
             print(white(result), blue(score), blue(result.id))
 
@@ -434,7 +435,7 @@ def register_command(subparsers):
 
 
 def doc_by_id(_id):
-    return config.DB.hgetall(keys.document_key(_id))
+    return DB.hgetall(keys.document_key(_id))
 
 
 def indexed_string(s):

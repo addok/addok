@@ -1,6 +1,7 @@
 import string
 
 from addok.config import config
+from addok.db import DB
 from addok.helpers import keys as dbkeys
 from addok.helpers import blue, white
 from addok.helpers.search import preprocess_query
@@ -72,11 +73,11 @@ def try_fuzzy(helper, tokens, include_common=True):
         if len(keys):
             # Only retains tokens that have been seen in the index at least
             # once with the other tokens.
-            config.DB.sadd(helper.query, *neighbors)
+            DB.sadd(helper.query, *neighbors)
             interkeys = [pair_key(k[2:]) for k in keys]
             interkeys.append(helper.query)
-            fuzzy_words = config.DB.sinter(interkeys)
-            config.DB.delete(helper.query)
+            fuzzy_words = DB.sinter(interkeys)
+            DB.delete(helper.query)
             # Keep the priority we gave in building fuzzy terms (inversion
             # first, then substitution, etc.).
             fuzzy_words = [w.decode() for w in fuzzy_words]
@@ -86,7 +87,7 @@ def try_fuzzy(helper, tokens, include_common=True):
             fuzzy_words = []
             for neighbor in neighbors:
                 key = dbkeys.token_key(neighbor)
-                count = config.DB.zcard(key)
+                count = DB.zcard(key)
                 if count:
                     fuzzy_words.append(neighbor)
         helper.debug('Found fuzzy candidates %s', fuzzy_words)
@@ -116,7 +117,7 @@ def do_fuzzyindex(self, word):
     word = list(preprocess_query(word))[0]
     token = Token(word)
     neighbors = make_fuzzy(token)
-    neighbors = [(n, config.DB.zcard(dbkeys.token_key(n))) for n in neighbors]
+    neighbors = [(n, DB.zcard(dbkeys.token_key(n))) for n in neighbors]
     neighbors.sort(key=lambda n: n[1], reverse=True)
     for token, freq in neighbors:
         if freq == 0:

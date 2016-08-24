@@ -1,5 +1,5 @@
 from addok.config import config
-
+from addok.db import DB
 
 def only_commons(helper):
     if len(helper.tokens) == len(helper.common):
@@ -22,11 +22,11 @@ def only_commons(helper):
             else:
                 helper.debug('INTERSECT_LIMIT hit, manual scan on %s', first)
                 others = [t.db_key for t in helper.tokens[1:]]
-                ids = config.DB.zrevrange(first.db_key, 0, 500)
+                ids = DB.zrevrange(first.db_key, 0, 500)
                 for id_ in ids:
                     count += 1
-                    if (all(config.DB.sismember(f, id_) for f in helper.filters)
-                       and all(config.DB.zrank(k, id_) for k in others)):
+                    if (all(DB.sismember(f, id_) for f in helper.filters)
+                       and all(DB.zrank(k, id_) for k in others)):
                         helper.bucket.add(id_)
                     if helper.bucket_full:
                         break
