@@ -1,6 +1,6 @@
 import geohash
 
-from addok import config
+from addok.config import config
 
 from . import iter_pipe, keys
 

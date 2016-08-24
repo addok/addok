@@ -1,6 +1,8 @@
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
-from addok.config import DB  # Do not to that in production code.
+from addok.config import config
 from addok.helpers.index import deindex_document, index_document
+
+DB = config.DB
 
 
 def count_keys():

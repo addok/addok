@@ -7,7 +7,6 @@ REDIS = {
     'db': os.environ.get('REDIS_DB') or 0,
 }
 
-
 # Max number of results to be retrieved from db and scored.
 BUCKET_LIMIT = 100
 
@@ -124,13 +123,4 @@ LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)
 LOG_QUERIES = False
 LOG_NOT_FOUND = False
 
-PLUGINS = [
-    'addok.shell',
-    'addok.http.base',
-    'addok.batch',
-    'addok.pairs',
-    'addok.fuzzy',
-    'addok.autocomplete',
-]
-BLOCKED_PLUGINS = []
 INDEX_EDGE_NGRAMS = True

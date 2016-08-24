@@ -4,9 +4,9 @@ import logging.handlers
 from pathlib import Path
 
 import falcon
-from addok.core import Result, reverse, search
 
-from addok import config
+from addok.config import config
+from addok.core import Result, reverse, search
 
 if config.LOG_NOT_FOUND:
     notfound_logger = logging.getLogger('notfound')

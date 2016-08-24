@@ -1,4 +1,4 @@
-from addok import config
+from addok.config import config
 
 
 def only_commons(helper):

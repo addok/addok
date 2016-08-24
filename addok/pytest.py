@@ -1,5 +1,5 @@
-import uuid
 import os
+import uuid
 
 import pytest
 
@@ -7,20 +7,20 @@ import pytest
 def pytest_configure():
     # Be sure not to load local config during tests.
     os.environ['ADDOK_CONFIG_MODULE'] = ''
-    from addok import config
-    config.REDIS['db'] = 15
+    from addok.config import config
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    config.load(config, discover=False)
+    config.REDIS['db'] = 15
+    config.load(discover=False)
 
 
 def pytest_runtest_setup(item):
-    from addok import config
+    from addok.config import config
     assert config.DB.connection_pool.connection_kwargs['db'] == 15
 
 
 def pytest_runtest_teardown(item, nextitem):
-    from addok import config
+    from addok.config import config
     assert config.DB.connection_pool.connection_kwargs['db'] == 15
     config.DB.flushdb()
 
@@ -114,5 +114,5 @@ class MonkeyPatchWrapper(object):
 @pytest.fixture()
 def config(request, monkeypatch):
 
-    from addok import config as addok_config
+    from addok.config import config as addok_config
     return MonkeyPatchWrapper(monkeypatch, addok_config)

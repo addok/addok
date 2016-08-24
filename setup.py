@@ -1,3 +1,4 @@
+"Search engine for address. Only address."
 import glob
 import sys
 from codecs import open  # To use a consistent encoding
@@ -57,14 +58,21 @@ else:
 
     cmdclass = {'build_ext': build_ext}
 
+VERSION = (1, 0, 0, 'alpha')
+
+__author__ = 'Yohan Boniface'
+__contact__ = "yohan.boniface@data.gouv.fr"
+__homepage__ = "https://github.com/etalab/addok"
+__version__ = ".".join(map(str, VERSION))
+
 setup(
     name='addok',
-    version=addok.__version__,
-    description=addok.__doc__,
+    version=__version__,
+    description=__doc__,
     long_description=long_description,
-    url=addok.__homepage__,
-    author=addok.__author__,
-    author_email=addok.__contact__,
+    url=__homepage__,
+    author=__author__,
+    author_email=__contact__,
     license='WTFPL',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers

@@ -3,24 +3,27 @@ import cmd
 import json
 import logging
 import re
-
-try:
-    import gnureadline as readline # for OSX
-except ImportError:
-    import readline # normal way
-
 import time
 from pathlib import Path
 
 import geohash
 
-from . import config, hooks
+from . import hooks
+from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, white, yellow)
 from .helpers.index import VALUE_SEPARATOR, token_frequency
 from .helpers.search import preprocess_query
 from .helpers.text import compare_ngrams
+
+try:
+    import gnureadline as readline # for OSX
+except ImportError:
+    import readline # normal way
+
+
+
 
 
 class Cmd(cmd.Cmd):

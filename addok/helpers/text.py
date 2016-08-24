@@ -1,11 +1,12 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
-from addok import config
-from addok.helpers import keys, yielder
-from addok.helpers.index import token_frequency
 from ngram import NGram
 from unidecode import unidecode
+
+from addok.config import config
+from addok.helpers import keys, yielder
+from addok.helpers.index import token_frequency
 
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
 

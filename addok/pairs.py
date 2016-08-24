@@ -1,4 +1,4 @@
-from addok import config
+from addok.config import config
 from addok.helpers import keys, magenta, white
 from addok.helpers.index import preprocess_housenumber
 from addok.helpers.search import preprocess_query
