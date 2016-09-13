@@ -407,7 +407,7 @@ class Cmd(cmd.Cmd):
 
     def complete_CONFIG(self, text=None, *ignored):
         text = text or ''
-        return [a for a in dir(config) if a.startswith(text) and a.isupper()]
+        return [a for a in config.keys() if a.startswith(text) and a.isupper()]
 
 
 def format_config(value):
