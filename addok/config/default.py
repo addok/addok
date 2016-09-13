@@ -25,7 +25,8 @@ MIN_EDGE_NGRAMS = 3
 MAX_EDGE_NGRAMS = 20
 
 RESOURCES_ROOT = Path(__file__).parent.parent.joinpath('resources')
-SYNONYMS_PATH = RESOURCES_ROOT.joinpath('synonyms').joinpath('fr.txt')
+SYNONYMS_PATH = None
+SYNONYMS_FILENAME = 'fr.txt'
 
 # Pipeline stream to be used.
 PROCESSORS = [  # Rename in TOKEN_PROCESSORS / STRING_PROCESSORS?

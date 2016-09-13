@@ -73,7 +73,10 @@ SYNONYMS = {}
 
 
 def load_synonyms():
-    with Path(config.SYNONYMS_PATH).open() as f:
+    path = config.SYNONYMS_PATH
+    if not path:
+        path = config.RESOURCES_ROOT / 'synonyms' / config.SYNONYMS_FILENAME
+    with Path(path).open() as f:
         for line in f:
             if line.startswith('#'):
                 continue
