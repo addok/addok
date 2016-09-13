@@ -1,6 +1,7 @@
 import os
 import imp
 import importlib
+import sys
 
 from addok import hooks
 from addok.db import DB
