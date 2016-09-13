@@ -72,6 +72,7 @@ normalize = yielder(_normalize)
 SYNONYMS = {}
 
 
+@config.on_load
 def load_synonyms():
     path = config.SYNONYMS_PATH
     if not path:
@@ -88,7 +89,6 @@ def load_synonyms():
                 if not synonym:
                     continue
                 SYNONYMS[synonym] = wanted
-load_synonyms()
 
 
 def _synonymize(t):

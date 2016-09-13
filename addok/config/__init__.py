@@ -4,7 +4,6 @@ import importlib
 import sys
 
 from addok import hooks
-from addok.db import DB
 from . import default
 
 
@@ -26,6 +25,7 @@ class Config(dict):
     ]
 
     def __init__(self):
+        self._post_load_func = []
         super().__init__()
         self.extend_from_object(default)
 
@@ -42,6 +42,10 @@ class Config(dict):
         hooks.configure(self)
         self.resolve()
         self.post_process()
+
+    def on_load(self, func):
+        self._post_load_func.append(func)
+        return func
 
     def extend_from_object(self, obj):
         for key in dir(obj):
@@ -98,8 +102,8 @@ class Config(dict):
             elif field.get('type') == 'name' or key == 'name':
                 self.NAME_FIELD = key
                 field['type'] = 'name'
-        DB.connect(**self.REDIS)
-        self.DB = DB
+        for func in self._post_load_func:
+            func()
 
     def resolve(self):
         for key in self.path_keys:
