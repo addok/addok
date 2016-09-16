@@ -1,4 +1,5 @@
 import geohash
+import redis
 
 from addok.config import config
 from addok.db import DB
@@ -72,7 +73,11 @@ def index_document(doc, **kwargs):
         except ValueError as e:
             print(e)
             return  # Do not index.
-    pipe.execute()
+    try:
+        pipe.execute()
+    except redis.RedisError as e:
+        msg = 'Error while importing {}\n{}'.format(doc, str(e))
+        raise ValueError(msg)
 
 
 def deindex_document(id_, **kwargs):
