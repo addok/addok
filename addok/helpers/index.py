@@ -76,7 +76,7 @@ def index_document(doc, **kwargs):
     try:
         pipe.execute()
     except redis.RedisError as e:
-        msg = 'Error while importing {}\n{}'.format(doc, str(e))
+        msg = 'Error while importing document:\n{}\n{}'.format(doc, str(e))
         raise ValueError(msg)
 
 
