@@ -286,6 +286,8 @@ Congratulations!
   You'll be able to check all the configuration keys and be sure they have the
   expected values.
 
+- If your searchs are returning nothing at all or very weird results, it may be that you have
+  indexed with a different configuration than the one you are using when searching.
 
 ## Going further
 
