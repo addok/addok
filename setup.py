@@ -6,8 +6,6 @@ from os import path
 
 from setuptools import Extension, find_packages, setup
 
-import addok
-
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
@@ -84,6 +82,7 @@ setup(
 
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
     keywords='address openstreetmap geocoding',
     packages=find_packages(exclude=['tests']),
