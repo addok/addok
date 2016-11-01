@@ -53,7 +53,7 @@ tracker](https://github.com/addok/addok/issues) to ask for help.
 
 ## Create a local configuration file
 
-    nano ~/addok/local.py
+    nano ~/local.py
 
 And paste this configuration:
 ```
