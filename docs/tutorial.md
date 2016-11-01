@@ -7,7 +7,7 @@ You need sudo grants on this server, and it must be connected to Internet.
 
 ## Install system dependencies
 
-    sudo apt install redis-server python3.4 python3.4-dev python-virtualenv wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt install redis-server python3.4 python3.4-dev python-virtualenv git wget nginx uwsgi uwsgi-plugin-python3 bzip2
 
 
 ## Create a Unix user
@@ -20,6 +20,7 @@ on the various commands and configuration files if you go with your own.
 ## Login as this new user
 
     sudo -u addok -i
+    cd /home/addok
 
 From now on, until we say differently, the commands are run as `addok` user.
 
@@ -237,7 +238,7 @@ Remember to adapt the domain name.
 
 Now quit the `addok` session, simply type ctrl+D.
 
-You should biw be logged in as your normal user, which is sudoer.
+You should be logged in as your normal user, which is sudoer.
 
 - Activate the Nginx configuration file:
 
