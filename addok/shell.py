@@ -77,6 +77,11 @@ class Cmd(cmd.Cmd):
         special = ['do_help', 'do_QUIT']
         return [n for n in super().get_names() if n not in special]
 
+    def postcmd(self, stop, line):
+        if line != 'EOF':
+            print(yellow('-' * 80))
+        return super().postcmd(stop, line)
+
     @classmethod
     def register_command(cls, command, name=None, doc=None):
         if name is None:
