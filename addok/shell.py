@@ -153,7 +153,8 @@ class Cmd(cmd.Cmd):
             name = name.upper()
             if name in query:
                 query, value = self._match_option(name, query)
-                filters[name.lower()] = value.strip()
+                if value:
+                    filters[name.lower()] = value.strip()
         helper = Search(limit=limit, verbose=verbose,
                         autocomplete=autocomplete)
         results = helper(query, lat=lat, lon=lon, **filters)
@@ -182,7 +183,7 @@ class Cmd(cmd.Cmd):
 
     def do_SEARCH(self, query):
         """Issue a search (default command, can be omitted):
-        SEARCH rue des Lilas [CENTER lat lon] [LIMIT 10]"""
+        SEARCH rue des Lilas [CENTER lat lon] [LIMIT 10] [AUTOCOMPLETE 0] [FILTER VALUE…]"""  # noqa
         self._search(query)
 
     def do_EXPLAIN(self, query):
