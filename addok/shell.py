@@ -19,12 +19,9 @@ from .helpers.search import preprocess_query
 from .helpers.text import compare_ngrams
 
 try:
-    import gnureadline as readline # for OSX
+    import gnureadline as readline  # For OSX.
 except ImportError:
-    import readline # normal way
-
-
-
+    import readline  # Normal way.
 
 
 class Cmd(cmd.Cmd):
@@ -347,11 +344,9 @@ class Cmd(cmd.Cmd):
         for token in indexed_string(field):
             print(
                 white(token),
-                blue(DB.zscore(keys.token_key(token),
-                                      keys.document_key(_id))),
+                blue(DB.zscore(keys.token_key(token), keys.document_key(_id))),
                 blue(DB.zrevrank(keys.token_key(token),
-                                        keys.document_key(_id))),
-            )
+                     keys.document_key(_id))))
 
     def do_INDEX(self, _id):
         """Get index details for a document by its id.
