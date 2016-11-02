@@ -73,11 +73,11 @@ def try_fuzzy(helper, tokens, include_common=True):
         if len(keys):
             # Only retains tokens that have been seen in the index at least
             # once with the other tokens.
-            DB.sadd(helper.query, *neighbors)
+            DB.sadd(helper.pid, *neighbors)
             interkeys = [pair_key(k[2:]) for k in keys]
-            interkeys.append(helper.query)
+            interkeys.append(helper.pid)
             fuzzy_words = DB.sinter(interkeys)
-            DB.delete(helper.query)
+            DB.delete(helper.pid)
             # Keep the priority we gave in building fuzzy terms (inversion
             # first, then substitution, etc.).
             fuzzy_words = [w.decode() for w in fuzzy_words]

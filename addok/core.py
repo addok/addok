@@ -1,3 +1,4 @@
+import os
 import time
 
 import geohash
@@ -137,6 +138,7 @@ class Search(BaseHelper):
         self.limit = limit
         self.min = self.limit
         self.autocomplete = autocomplete
+        self.pid = os.getpid()  # Unique id for tmp values in redis.
 
     def __call__(self, query, lat=None, lon=None, **filters):
         self.lat = lat
@@ -195,9 +197,9 @@ class Search(BaseHelper):
             if len(keys) == 1:
                 ids = DB.zrevrange(keys[0], 0, limit - 1)
             else:
-                DB.zinterstore(self.query, set(keys))
-                ids = DB.zrevrange(self.query, 0, limit - 1)
-                DB.delete(self.query)
+                DB.zinterstore(self.pid, set(keys))
+                ids = DB.zrevrange(self.pid, 0, limit - 1)
+                DB.delete(self.pid)
         return set(ids)
 
     def add_to_bucket(self, keys, limit=None):
