@@ -61,10 +61,12 @@ And paste this configuration:
 QUERY_PROCESSORS = [
     "addok_france.extract_address",
     "addok_france.clean_query",
+    "addok_france.remove_leading_zeros",
     "addok_france.glue_ordinal",
     "addok_france.fold_ordinal",
 ]
 HOUSENUMBER_PROCESSORS = [
+    "addok_france.remove_leading_zeros",
     "addok_france.glue_ordinal",
     "addok_france.fold_ordinal",
 ]
