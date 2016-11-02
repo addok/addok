@@ -53,7 +53,8 @@ tracker](https://github.com/addok/addok/issues) to ask for help.
 
 ## Create a local configuration file
 
-    nano ~/local.py
+    mkdir /etc/addok/
+    nano /etc/addok/addok.conf
 
 And paste this configuration:
 ```
@@ -85,13 +86,6 @@ PROCESSORS = [
 
 Save (ctrl+O) and close (Ctrl+X) the file.
 
-Now we need to inform Addok about it.
-We'll create an environment variable for that:
-
-    export ADDOK_CONFIG_MODULE=/home/addok/local.py
-
-Note: this variable will not be persistent if you quit your current terminal session, so
-remember to rerun this command if you open a new terminal window.
 
 ## Download ODbL BAN data and uncompress it:
 
@@ -276,7 +270,8 @@ Congratulations!
 
         sudo tail -f /var/log/nginx/addok.log
 
-- To make sure the environment variable is set in the current shell:
+- To make sure the environment variable is set in the current shell
+  if you changed its location:
 
         echo $ADDOK_CONFIG_MODULE
 
@@ -289,12 +284,3 @@ Congratulations!
 
 - If your searchs are returning nothing at all or very weird results, it may be that you have
   indexed with a different configuration than the one you are using when searching.
-
-## Going further
-
-### Make your local configuration and virtual environment persistent
-
-Edit your `~/.bashrc` file and add those two lines at the end:
-
-    export ADDOK_CONFIG_MODULE=/home/addok/local.py
-    source ~/venv/bin/activate

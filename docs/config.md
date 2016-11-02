@@ -9,11 +9,14 @@ available** for example.
 
 ## Registering your custom config file
 
-An Addok config file is simply a python file that define some keys. This file
-can be anywhere in your system, and you need to define an environment variable
-that points to it:
+An Addok config file is simply a python file that define some keys. The default
+location is `/etc/addok/addok.conf`. But it can be anywhere else in your system,
+and you need to define an environment variable that points to it if you want
+a special location:
 
     export ADDOK_CONFIG_MODULE=path/to/local.py
+
+You can also use the `--config` argument when running the `addok` command line.
 
 ## Environment settings
 
