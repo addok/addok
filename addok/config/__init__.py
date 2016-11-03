@@ -66,8 +66,8 @@ class Config(dict):
             hooks.register(plugin)
 
     def load_local(self):
-        path = os.environ.get('ADDOK_CONFIG_MODULE',
-                              os.path.join('/etc', 'addok', 'addok.conf'))
+        path = (os.environ.get('ADDOK_CONFIG_MODULE')
+                or os.path.join('/etc', 'addok', 'addok.conf'))
         if not path or not os.path.exists(path):
             return
 
