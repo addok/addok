@@ -9,10 +9,11 @@ from . import default
 
 class Config(dict):
 
+    TESTING = False
+
     def __init__(self):
         self._post_load_func = []
         self.loaded = False
-        self.testing = False
         self.path_keys = [
             'QUERY_PROCESSORS', 'RESULTS_COLLECTORS',
             'SEARCH_RESULT_PROCESSORS', 'REVERSE_RESULT_PROCESSORS',
@@ -31,13 +32,13 @@ class Config(dict):
         super().__init__()
         self.extend_from_object(default)
 
-    def load(self, discover=True):
+    def load(self):
         if self.loaded:
             return
         self.loaded = True
         self.load_plugins()
         self.load_core_plugins()
-        if discover:
+        if not Config.TESTING:
             # We don't want to autoload installed plugin during tests.
             hooks.load()
         hooks.preconfigure(self)

@@ -8,12 +8,13 @@ def pytest_configure():
     # Do not import files from the top of the module, otherwise they will
     # not taken into account by the coverage.
     from addok.config import config
+    config.__class__.TESTING = True
     # Be sure not to load local config during tests.
     os.environ['ADDOK_CONFIG_MODULE'] = ''
     import logging
     logging.basicConfig(level=logging.DEBUG)
     config.REDIS['db'] = 15
-    config.load(discover=False)
+    config.load()
 
 
 def pytest_runtest_setup(item):
