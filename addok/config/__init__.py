@@ -36,6 +36,7 @@ class Config(dict):
         self.load_plugins()
         self.load_core_plugins()
         if discover:
+            # We don't want to autoload installed plugin during tests.
             hooks.load()
         hooks.preconfigure(self)
         self.load_local()

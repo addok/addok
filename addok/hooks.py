@@ -24,7 +24,7 @@ def register(module, name=None):
 def spec(func):
 
     def caller(*args, **kwargs):
-        for plugin in plugins.values():
+        for plugin in plugins.copy().values():
             try:
                 getattr(plugin, func.__name__)(*args, **kwargs)
             except AttributeError:
