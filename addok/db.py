@@ -1,5 +1,7 @@
 import redis
 
+from addok.config import config
+
 
 class DBRedis:
     instance = None
@@ -11,3 +13,8 @@ class DBRedis:
         return getattr(self.instance, name)
 
 DB = DBRedis()
+
+
+@config.on_load
+def connect():
+    DB.connect(**config.REDIS)
