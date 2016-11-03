@@ -36,7 +36,6 @@ class Config(dict):
         if self.loaded:
             return
         self.loaded = True
-        self.load_plugins()
         self.load_core_plugins()
         if not Config.TESTING:
             # We don't want to autoload installed plugin during tests.
@@ -55,13 +54,6 @@ class Config(dict):
         for key in dir(obj):
             if key.isupper():
                 self[key] = getattr(obj, key)
-
-    def load_plugins(self):
-        blocked_plugins = os.environ.get('ADDOK_BLOCKED_PLUGINS', '')
-        if blocked_plugins:
-            print('Blocked plugins: ', blocked_plugins)
-            for name in blocked_plugins.split(','):
-                hooks.block(name)
 
     def load_core_plugins(self):
         for path in self.plugins:
