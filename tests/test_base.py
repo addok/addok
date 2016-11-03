@@ -15,3 +15,9 @@ def test_config_on_load_is_called_on_config_load():
 
     config.load()
     assert on_load.called
+
+    on_load.called = False
+
+    # config should not reload if already loaded.
+    config.load()
+    assert not on_load.called

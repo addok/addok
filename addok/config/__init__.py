@@ -8,24 +8,26 @@ from . import default
 
 
 class Config(dict):
-    loaded = False
-    path_keys = [
-        'QUERY_PROCESSORS', 'RESULTS_COLLECTORS', 'SEARCH_RESULT_PROCESSORS',
-        'REVERSE_RESULT_PROCESSORS', 'PROCESSORS', 'INDEXERS', 'DEINDEXERS',
-        'BATCH_PROCESSORS', 'SEARCH_PREPROCESSORS', 'RESULTS_FORMATTERS',
-        'HOUSENUMBER_PROCESSORS',
-    ]
-    plugins = [
-        'addok.shell',
-        'addok.http.base',
-        'addok.batch',
-        'addok.pairs',
-        'addok.fuzzy',
-        'addok.autocomplete',
-    ]
 
     def __init__(self):
         self._post_load_func = []
+        self.loaded = False
+        self.testing = False
+        self.path_keys = [
+            'QUERY_PROCESSORS', 'RESULTS_COLLECTORS',
+            'SEARCH_RESULT_PROCESSORS', 'REVERSE_RESULT_PROCESSORS',
+            'PROCESSORS', 'INDEXERS', 'DEINDEXERS', 'BATCH_PROCESSORS',
+            'SEARCH_PREPROCESSORS', 'RESULTS_FORMATTERS',
+            'HOUSENUMBER_PROCESSORS',
+        ]
+        self.plugins = [
+            'addok.shell',
+            'addok.http.base',
+            'addok.batch',
+            'addok.pairs',
+            'addok.fuzzy',
+            'addok.autocomplete',
+        ]
         super().__init__()
         self.extend_from_object(default)
 
