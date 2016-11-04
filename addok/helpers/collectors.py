@@ -44,7 +44,7 @@ def bucket_with_meaningful(helper):
     helper.keys = [t.db_key for t in helper.meaningful]
     if helper.bucket_empty:
         helper.new_bucket(helper.keys, helper.SMALL_BUCKET_LIMIT)
-        if (not helper.autocomplete and helper.cream > 0 and
+        if (not helper.autocomplete and helper.has_cream() and
                 helper.cream < helper.SMALL_BUCKET_LIMIT):
             # Do not check cream before computing autocomplete when
             # autocomplete is on.

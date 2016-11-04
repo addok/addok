@@ -261,7 +261,9 @@ class Search(BaseHelper):
                     if r.str_distance >= config.MATCH_THRESHOLD])
 
     def has_cream(self):
-        if self.bucket_empty or self.bucket_overflow or len(self.bucket) > 10:
+        if (self.bucket_empty
+           or self.bucket_overflow
+           or len(self.bucket) > self.SMALL_BUCKET_LIMIT):
             return False
         self.debug('Checking cream.')
         self.convert()
