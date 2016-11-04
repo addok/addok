@@ -38,7 +38,10 @@ class Result(object):
 
     def load(self, _id):
         self._cache = {}
-        doc = DB.hgetall(_id)
+        if isinstance(_id, dict):
+            doc = _id
+        else:
+            doc = DB.hgetall(_id)
         if not doc:
             raise ValueError('id "{}" not found'.format(_id[2:]))
         self._doc = {k.decode(): v.decode() for k, v in doc.items()}
@@ -217,13 +220,17 @@ class Search(BaseHelper):
 
     def convert(self):
         self.debug('Computing results')
-        for _id in self.bucket:
-            if _id in self.results:
-                continue
-            result = Result(_id)
+        ids = [i for i in self.bucket if i not in self.results]
+        pipe = DB.pipeline(transaction=False)
+        for _id in ids:
+            pipe.hgetall(_id)
+        buffer = pipe.execute()
+        self.debug('Done getting results data')
+        for doc in buffer:
+            result = Result(doc)
             for processor in config.SEARCH_RESULT_PROCESSORS:
                 processor(self, result)
-            self.results[_id] = result
+            self.results[result.id] = result
         self.debug('Done computing results')
 
     @property
