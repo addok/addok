@@ -397,8 +397,8 @@ class Cmd(cmd.Cmd):
         print(white(compare_ngrams(one, two)))
 
     def do_CONFIG(self, name):
-        """Inspect loaded Addok config.
-        CONFIG COMMON_THRESHOLD"""
+        """Inspect loaded Addok config. Output all config without argument.
+        CONFIG [CONFIG_KEY]"""
         if not name:
             for name in self.complete_CONFIG():
                 self.do_CONFIG(name)
