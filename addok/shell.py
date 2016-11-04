@@ -160,6 +160,9 @@ class Cmd(cmd.Cmd):
         results = helper(query, lat=lat, lon=lon, **filters)
         if bucket:  # Means we want all the bucket
             results = helper._sorted_bucket
+        duration = round((time.time() - start) * 1000, 1)
+        if verbose:
+            helper.report()
 
         def format_scores(result):
             if verbose or bucket:
@@ -172,7 +175,6 @@ class Cmd(cmd.Cmd):
             print('{} ({} | {})'.format(white(result),
                                         blue(result.id),
                                         blue(format_scores(result))))
-        duration = round((time.time() - start) * 1000, 1)
         formatter = red if duration > 50 else green
         print('{} / {}'.format(formatter("{} ms".format(duration)),
                                cyan('{} results'.format(len(results)))))
