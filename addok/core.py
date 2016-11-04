@@ -226,16 +226,17 @@ class Search(BaseHelper):
     def convert(self):
         self.debug('Computing results')
         ids = [i for i in self.bucket if i not in self.results]
-        pipe = DB.pipeline(transaction=False)
-        for _id in ids:
-            pipe.hgetall(_id)
-        buffer = pipe.execute()
-        self.debug('Done getting results data')
-        for doc in buffer:
-            result = Result(doc)
-            for processor in config.SEARCH_RESULT_PROCESSORS:
-                processor(self, result)
-            self.results[result.id] = result
+        if ids:
+            pipe = DB.pipeline(transaction=False)
+            for _id in ids:
+                pipe.hgetall(_id)
+            buffer = pipe.execute()
+            self.debug('Done getting results data')
+            for _id, doc in zip(ids, buffer):
+                result = Result(doc)
+                for processor in config.SEARCH_RESULT_PROCESSORS:
+                    processor(self, result)
+                self.results[_id] = result
         self.debug('Done computing results')
 
     @property
