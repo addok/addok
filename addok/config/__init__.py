@@ -45,6 +45,8 @@ class Config(dict):
         hooks.configure(self)
         self.resolve()
         self.post_process()
+        print('Addok loaded plugins: {}'.format(
+                                             ', '.join(hooks.plugins.keys())))
 
     def on_load(self, func):
         self._post_load_func.append(func)
