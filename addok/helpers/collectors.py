@@ -1,6 +1,7 @@
 from addok.config import config
 from addok.db import DB
 
+
 def only_commons(helper):
     if len(helper.tokens) == len(helper.common):
         # Only common terms, shortcut to search
