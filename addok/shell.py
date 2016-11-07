@@ -123,13 +123,13 @@ class Cmd(cmd.Cmd):
 
     @staticmethod
     def _match_option(key, string):
-        matchs = re.findall('{} [^A-Z]*'.format(key), string)
+        matchs = re.findall('{}[= ][^A-Z]*'.format(key), string)
         option = None
         if matchs:
             option = matchs[0]
             string = string.replace(option, '')
             option = option.replace(key, '')
-        return string.strip(), option.strip() if option else option
+        return string.strip(), option.strip(' =') if option else option
 
     def _search(self, query, verbose=False, bucket=False):
         start = time.time()
