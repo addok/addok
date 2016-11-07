@@ -30,6 +30,9 @@ def preprocess_batch(d):
 def process_file(filepath):
     print('Import from file', filepath)
     _, ext = os.path.splitext(filepath)
+    if not os.path.exists(filepath):
+        sys.stderr.write('File not found: {}'.format(filepath))
+        sys.exit(1)
     if ext == '.msgpack':
         import msgpack  # We don't want to make it a required dependency.
         with open(filepath, mode='rb') as f:
