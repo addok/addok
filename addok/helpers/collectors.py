@@ -21,13 +21,20 @@ def only_commons(helper):
                 keys = [t.db_key for t in helper.tokens]
                 helper.add_to_bucket(keys)
             else:
-                helper.debug('INTERSECT_LIMIT hit, manual scan on %s', first)
+                helper.debug('INTERSECT_LIMIT hit, manual scan')
+                if helper.filters:
+                    helper.debug('Found filters, prefiltering before scan')
+                    tmp_keys = [first.db_key] + helper.filters
+                    DB.zinterstore(helper.pid, set(tmp_keys))
+                    ids = DB.zrevrange(helper.pid, 0, 500)
+                    DB.delete(helper.pid)
+                else:
+                    ids = DB.zrevrange(first.db_key, 0, 500)
                 others = [t.db_key for t in helper.tokens[1:]]
-                ids = DB.zrevrange(first.db_key, 0, 500)
+                helper.debug('manual scan on "%s"', first)
                 for id_ in ids:
                     count += 1
-                    if (all(DB.sismember(f, id_) for f in helper.filters)
-                       and all(DB.zrank(k, id_) for k in others)):
+                    if all(DB.zrank(k, id_) for k in others):
                         helper.bucket.add(id_)
                     if helper.bucket_full:
                         break
