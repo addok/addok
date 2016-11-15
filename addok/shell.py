@@ -431,10 +431,21 @@ def invoke(args=None):
     cmd.loop()
 
 
+def pyinvoke(args=None):
+    try:
+        from IPython import start_ipython
+    except ImportError:
+        print(red('Import is not installed. Type "pip install ipython"'))
+    start_ipython(argv=[], user_ns={'DB': DB, 'config': config})
+
+
 def register_command(subparsers):
     parser = subparsers.add_parser('shell',
                                    help='Run a shell to inspect Addok')
     parser.set_defaults(func=invoke)
+    parser = subparsers.add_parser('pyshell',
+                                   help='Run a python shell with Addok config')
+    parser.set_defaults(func=pyinvoke)
 
 
 def doc_by_id(_id):
