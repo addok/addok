@@ -110,7 +110,8 @@ def test_synonyms_should_be_replaced(street, monkeypatch):
 
 
 def test_should_return_results_if_only_common_terms(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 3)
+    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 2)
+    monkeypatch.setattr('addok.config.config.INTERSECT_LIMIT', 2)
     monkeypatch.setattr('addok.config.config.BUCKET_LIMIT', 3)
     street1 = factory(name="rue de la monnaie", city="Vitry")
     street2 = factory(name="rue de la monnaie", city="Paris")
@@ -122,6 +123,37 @@ def test_should_return_results_if_only_common_terms(factory, monkeypatch):
     assert street2['id'] in ids
     assert street3['id'] in ids
     assert street4['id'] not in ids
+
+
+def test_should_brute_force_if_common_terms_above_limit(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 2)
+    monkeypatch.setattr('addok.config.config.BUCKET_LIMIT', 3)
+    street1 = factory(name="rue de la monnaie", city="Vitry")
+    street2 = factory(name="rue de la monnaie", city="Paris")
+    street3 = factory(name="rue de la monnaie", city="Condom")
+    street4 = factory(name="La monnaye", city="Saint-Loup-Cammas")
+    results = search('rue de la monnaie')
+    ids = [r.id for r in results]
+    assert street1['id'] in ids
+    assert street2['id'] in ids
+    assert street3['id'] in ids
+    assert street4['id'] not in ids
+
+
+def test_should_use_filter_if_only_common_terms(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 2)
+    monkeypatch.setattr('addok.config.config.INTERSECT_LIMIT', 2)
+    monkeypatch.setattr('addok.config.config.BUCKET_LIMIT', 3)
+    street1 = factory(name="rue de la monnaie", city="Vitry")
+    street2 = factory(name="rue de la monnaie", city="Paris")
+    street3 = factory(name="rue de la monnaie", city="Condom")
+    city = factory(name="La monnaie", type="city")
+    results = search('la monnaie', type="city")
+    ids = [r.id for r in results]
+    assert city['id'] in ids
+    assert street1['id'] not in ids
+    assert street2['id'] not in ids
+    assert street3['id'] not in ids
 
 
 def test_not_found_term_is_autocompleted(factory, monkeypatch):

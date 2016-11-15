@@ -1,5 +1,6 @@
 from addok.config import config
 from addok.db import DB
+from addok.helpers import scripts
 
 
 def only_commons(helper):
@@ -28,16 +29,19 @@ def only_commons(helper):
                     DB.zinterstore(helper.pid, set(tmp_keys))
                     ids = DB.zrevrange(helper.pid, 0, 500)
                     DB.delete(helper.pid)
+                    others = [t.db_key for t in helper.tokens[1:]]
+                    for id_ in ids:
+                        count += 1
+                        if all(DB.zrank(k, id_) for k in others):
+                            helper.bucket.add(id_)
+                        if helper.bucket_full:
+                            break
                 else:
-                    ids = DB.zrevrange(first.db_key, 0, 500)
-                others = [t.db_key for t in helper.tokens[1:]]
-                helper.debug('manual scan on "%s"', first)
-                for id_ in ids:
-                    count += 1
-                    if all(DB.zrank(k, id_) for k in others):
-                        helper.bucket.add(id_)
-                    if helper.bucket_full:
-                        break
+                    helper.debug('manual scan on "%s"', first)
+                    ids = scripts.manual_scan(
+                        keys=[t.db_key for t in helper.tokens],
+                        args=[helper.min])
+                    helper.bucket.update(ids)
                 helper.debug('%s results after scan (%s loops)',
                              len(helper.bucket), count)
 
