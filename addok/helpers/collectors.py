@@ -13,37 +13,28 @@ def only_commons(helper):
         if len(keys) == 1 or helper.geohash_key:
             helper.add_to_bucket(keys)
         if helper.bucket_dry and len(keys) > 1:
-            count = 0
             # Scan the less frequent token.
             helper.tokens.sort(key=lambda t: t.frequency)
+            keys = [t.db_key for t in helper.tokens]
             first = helper.tokens[0]
             if first.frequency < config.INTERSECT_LIMIT:
-                helper.debug('Under INTERSECT_LIMIT, brut force.')
-                keys = [t.db_key for t in helper.tokens]
+                helper.debug('Under INTERSECT_LIMIT, force intersect.')
                 helper.add_to_bucket(keys)
             else:
                 helper.debug('INTERSECT_LIMIT hit, manual scan')
                 if helper.filters:
-                    helper.debug('Found filters, prefiltering before scan')
-                    tmp_keys = [first.db_key] + helper.filters
-                    DB.zinterstore(helper.pid, set(tmp_keys))
-                    ids = DB.zrevrange(helper.pid, 0, 500)
-                    DB.delete(helper.pid)
-                    others = [t.db_key for t in helper.tokens[1:]]
-                    for id_ in ids:
-                        count += 1
-                        if all(DB.zrank(k, id_) for k in others):
-                            helper.bucket.add(id_)
-                        if helper.bucket_full:
-                            break
-                else:
-                    helper.debug('manual scan on "%s"', first)
-                    ids = scripts.manual_scan(
-                        keys=[t.db_key for t in helper.tokens],
-                        args=[helper.min])
-                    helper.bucket.update(ids)
-                helper.debug('%s results after scan (%s loops)',
-                             len(helper.bucket), count)
+                    # Always consider filters when doing manual intersect.
+                    keys = keys + helper.filters
+                    # But, hey, can we brute force again?
+                    if any(DB.scard(k) < config.INTERSECT_LIMIT
+                           for k in helper.filters):
+                        helper.debug('Filters under INTERSECT_LIMIT, force')
+                        helper.add_to_bucket(keys)
+                        return
+                helper.debug('manual scan on "%s"', first)
+                ids = scripts.manual_scan(keys=keys, args=[helper.min])
+                helper.bucket.update(ids)
+                helper.debug('%s results after scan', len(helper.bucket))
 
 
 def bucket_with_meaningful(helper):
