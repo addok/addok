@@ -15,6 +15,7 @@ from .core import Result, Search, compute_geohash_key, reverse
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, white, yellow)
 from .helpers.index import VALUE_SEPARATOR, token_frequency
+from .helpers import scripts
 from .helpers.search import preprocess_query
 from .helpers.text import compare_ngrams
 
@@ -411,6 +412,26 @@ class Cmd(cmd.Cmd):
     def complete_CONFIG(self, text=None, *ignored):
         text = text or ''
         return [a for a in config.keys() if a.startswith(text) and a.isupper()]
+
+    def do_SCRIPT(self, args):
+        """Run a Lua script. Takes the raw Redis arguments.
+        SCRIPT manual_scan number_of_keys key1 key2… arg1 arg2
+        """
+        try:
+            name, keys_count, *args = args.split()
+        except ValueError:
+            print(red('Not enough arguments'))
+            return
+        keys_count = int(keys_count)
+        keys = args[:keys_count]
+        args = args[keys_count:]
+        try:
+            output = getattr(scripts, name)(keys=keys, args=args)
+        except AttributeError:
+            print(red('No script named {}'.format(name)))
+            return
+        for line in output:
+            print(white(line))
 
 
 def format_config(value):
