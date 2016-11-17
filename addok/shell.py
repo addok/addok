@@ -415,14 +415,19 @@ class Cmd(cmd.Cmd):
 
     def do_SCRIPT(self, args):
         """Run a Lua script. Takes the raw Redis arguments.
-        SCRIPT manual_scan number_of_keys key1 key2… arg1 arg2
+        SCRIPT script_name number_of_keys key1 key2… arg1 arg2
         """
         try:
             name, keys_count, *args = args.split()
         except ValueError:
             print(red('Not enough arguments'))
             return
-        keys_count = int(keys_count)
+        try:
+            keys_count = int(keys_count)
+        except ValueError:
+            print(red('You must pass the number of keys as first argument'))
+            self.do_HELP('SCRIPT')
+            return
         keys = args[:keys_count]
         args = args[keys_count:]
         try:
@@ -433,6 +438,9 @@ class Cmd(cmd.Cmd):
         except DB.Error as e:
             print(red(e))
             return
+        if not isinstance(output, list):
+            # Script may return just an integer.
+            output = [output]
         for line in output:
             print(white(line))
 
