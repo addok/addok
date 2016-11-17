@@ -65,6 +65,8 @@ def bucket_with_meaningful(helper):
 
 
 def reduce_with_other_commons(helper):
+    if len(helper.tokens) == len(helper.common):
+        return
     for token in helper.common:  # Already ordered by frequency asc.
         if token not in helper.meaningful and helper.bucket_overflow:
             helper.debug('Now considering also common token %s', token)
