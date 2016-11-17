@@ -5,6 +5,7 @@ from addok.config import config
 
 class DBRedis:
     instance = None
+    Error = redis.RedisError
 
     def connect(self, *args, **kwargs):
         self.instance = redis.StrictRedis(*args, **kwargs)

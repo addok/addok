@@ -430,6 +430,9 @@ class Cmd(cmd.Cmd):
         except AttributeError:
             print(red('No script named {}'.format(name)))
             return
+        except DB.Error as e:
+            print(red(e))
+            return
         for line in output:
             print(white(line))
 
