@@ -10,3 +10,21 @@ def test_manual_scan(factory):
                                   args=[2])
     assert results == ['d|{}'.format(street1['id']).encode(),
                        'd|{}'.format(street2['id']).encode()]
+
+
+def test_zinter(factory):
+    docs = (
+        factory(name="rue de la monnaie", city="Vitry"),
+        factory(name="La monnaye", city="Saint-Loup-Cammas"),
+        factory(name="rue de la monnaie", city="Paris", importance=1),
+        factory(name="rue de la monnaie", city="Condom", importance=0.9),
+    )
+    results = scripts.zinter(keys=['w|monnaie', 'w|rue', 'w|de'],
+                             args=['tmp', 2])
+    assert results == ['d|{}'.format(docs[2]['id']).encode(),
+                       'd|{}'.format(docs[3]['id']).encode()]
+    results = scripts.zinter(keys=['w|monnaie', 'w|rue', 'w|de'],
+                             args=['tmp', 3])
+    assert results == ['d|{}'.format(docs[2]['id']).encode(),
+                       'd|{}'.format(docs[3]['id']).encode(),
+                       'd|{}'.format(docs[0]['id']).encode()]

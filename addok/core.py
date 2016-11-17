@@ -4,7 +4,7 @@ import time
 import geohash
 
 from .config import config
-from .helpers import keys
+from .helpers import keys, scripts
 from .helpers.index import VALUE_SEPARATOR
 from .helpers.text import ascii
 
@@ -205,9 +205,7 @@ class Search(BaseHelper):
             if len(keys) == 1:
                 ids = DB.zrevrange(keys[0], 0, limit - 1)
             else:
-                DB.zinterstore(self.pid, set(keys))
-                ids = DB.zrevrange(self.pid, 0, limit - 1)
-                DB.delete(self.pid)
+                ids = scripts.zinter(keys=set(keys), args=[self.pid, limit])
         return set(ids)
 
     def add_to_bucket(self, keys, limit=None):
