@@ -38,6 +38,8 @@ def only_commons(helper):
 
 
 def bucket_with_meaningful(helper):
+    if not helper.meaningful:
+        return
     if len(helper.meaningful) == 1 and helper.common:
         # Avoid running with too less tokens while having commons terms.
         for token in helper.common:
