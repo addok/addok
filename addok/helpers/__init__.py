@@ -23,10 +23,11 @@ def import_by_path(path):
     """
     if not isinstance(path, str):
         return path
-    module_path, name = path.rsplit('.', 1)
-    module = import_module(module_path)
-    attr = getattr(module, name)
-    return attr
+    module_path, *name = path.rsplit('.', 1)
+    func = import_module(module_path)
+    if name:
+        func = getattr(func, name[0])
+    return func
 
 
 def yielder(func):

@@ -5,7 +5,7 @@ from addok.core import search
 def test_process_should_index_by_default(factory):
     doc = factory(skip_index=True, name="Melicocq")
     assert not search("Mélicocq")
-    process(doc)
+    process(doc.copy())
     assert search("Melicocq")
 
 
@@ -21,6 +21,6 @@ def test_process_should_update_if_action_is_given(factory):
     assert search("rue")
     doc["_action"] = "update"
     doc["name"] = "avenue de l'avoine"
-    process(doc)
+    process(doc.copy())
     assert search("avenue")
     assert not search("rue")

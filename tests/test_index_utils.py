@@ -1,6 +1,5 @@
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
-from addok.config import config
-from addok.helpers.index import deindex_document, index_document
+from addok.helpers.index import deindex_document, index_document, get_document
 from addok.db import DB
 
 
@@ -41,7 +40,7 @@ DOC = {
 def test_index_document():
     index_document(DOC.copy())
     assert DB.exists('d|xxxx')
-    assert DB.type('d|xxxx') == b'hash'
+    assert DB.type('d|xxxx') == b'string'
     assert DB.exists('w|rue')
     assert b'd|xxxx' in DB.zrange('w|rue', 0, -1)
     assert DB.exists('w|des')
@@ -149,30 +148,6 @@ def test_deindex_document_should_not_affect_other_docs():
     assert DB.exists('f|type|housenumber')
     assert b'd|xxxx2' in DB.smembers('f|type|housenumber')
     assert len(DB.keys()) == 19
-
-
-def test_index_should_join_housenumbers_payload_fields(config):
-    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['key', 'one']
-    doc = {
-        'id': 'xxxx',
-        'type': 'street',
-        'name': 'rue des Lilas',
-        'city': 'Paris',
-        'lat': '49.32545',
-        'lon': '4.2565',
-        'housenumbers': {
-            '1 bis': {
-                'lat': '48.325451',
-                'lon': '2.25651',
-                'key': 'myvalue',
-                'thisone': 'no',
-                'one': 'two',
-            }
-        }
-    }
-    index_document(doc)
-    index = DB.hgetall('d|xxxx')
-    assert index[b'h|1bis'] == b'1 bis|48.325451|2.25651|myvalue|two'
 
 
 def test_allow_list_values():
@@ -291,19 +266,7 @@ def test_null_value_should_not_be_index(config):
         'city': ''
     }
     index_document(doc)
-    assert 'city' not in DB.hgetall('d|xxxx')
-
-
-def test_field_with_only_non_alphanumeric_chars_is_not_indexed():
-    doc = {
-        'id': 'xxxx',
-        'lat': '49.32545',
-        'lon': '4.2565',
-        'name': 'Lilas',
-        'city': '//'
-    }
-    index_document(doc)
-    assert 'city' not in DB.hgetall('d|xxxx')
+    assert 'city' not in get_document('d|xxxx')
 
 
 def test_create_edge_ngrams(config):

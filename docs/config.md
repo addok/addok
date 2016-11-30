@@ -167,6 +167,17 @@ Default score for the relation token to document.
 
     DEFAULT_BOOST = 1.0
 
+#### DOCUMENT_SERIALIZER (path)
+Path to the serializer to be used for storing documents. Must have `loads` and
+`dumps` methods.
+
+    DOCUMENT_SERIALIZER = 'addok.helpers.serializers.ZlibSerializer'
+
+For a faster option (but using more RAM), use `marshal` instead.
+
+    DOCUMENT_SERIALIZER = 'marshal'
+
+
 #### GEOHASH_PRECISION (int)
 Size of the geohash. The bigger the setting, the smaller the hash.
 See [Geohash on Wikipedia](http://en.wikipedia.org/wiki/Geohash).

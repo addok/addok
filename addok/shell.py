@@ -15,7 +15,7 @@ from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, white, yellow)
-from .helpers.index import VALUE_SEPARATOR, token_frequency
+from .helpers.index import token_frequency, get_document
 from .helpers import scripts
 from .helpers.search import preprocess_query
 from .helpers.text import compare_ngrams
@@ -265,8 +265,8 @@ class Cmd(cmd.Cmd):
         type_ = DB.type(key).decode()
         if type_ == 'set':
             out = DB.smembers(key)
-        elif type_ == 'hash':
-            out = DB.hgetall(key)
+        elif type_ == 'string':
+            out = DB.get(key)
         else:
             out = 'Unsupported type {}'.format(type_)
         print('type:', magenta(type_))
@@ -355,26 +355,19 @@ class Cmd(cmd.Cmd):
         doc = doc_by_id(_id)
         if not doc:
             return self.error('id "{}" not found'.format(_id))
-        housenumbers = {}
         for key, value in doc.items():
-            key = key.decode()
-            value = value.decode()
-            if key.startswith('h|'):
-                housenumbers[key] = value
-            else:
-                print('{} {}'.format(white(key),
-                                     magenta(', '.join(
-                                             value.split(VALUE_SEPARATOR)))))
-        if housenumbers:
-            def sorter(item):
-                k, v = item
+            if key == config.HOUSENUMBERS_FIELD:
+                continue
+            print('{} {}'.format(white(key), magenta(value)))
+        if doc.get('housenumbers'):
+            def sorter(v):
                 try:
-                    return int(re.match(r'^\d+', v).group())
+                    return int(re.match(r'^\d+', v['raw']).group())
                 except AttributeError:
                     return -1
-            housenumbers = sorted(housenumbers.items(), key=sorter)
-            housenumbers = ['{}: {}'.format(k[2:], v) for k, v in housenumbers]
-            print(white('housenumbers'), magenta(', '.join(housenumbers)))
+            housenumbers = sorted(doc['housenumbers'].values(), key=sorter)
+            print(white('housenumbers'),
+                  magenta(', '.join(v['raw'] for v in housenumbers)))
 
     def do_FREQUENCY(self, word):
         """Return word frequency in index.
@@ -513,7 +506,7 @@ def register_command(subparsers):
 
 
 def doc_by_id(_id):
-    return DB.hgetall(keys.document_key(_id))
+    return get_document(keys.document_key(_id))
 
 
 def indexed_string(s):
