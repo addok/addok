@@ -21,6 +21,9 @@ Start by [installing it](install.md).
 
 The code is published via [Github](https://github.com/addok/addok/).
 
+Curious about the internals, check this
+[presentation](https://speakerdeck.com/yohanboniface/addok-presentation).
+
 ## Licence
 
 Addok is released under the WTFPL Licence.
