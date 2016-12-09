@@ -258,6 +258,9 @@ class BaseCSV(View):
         delimiter = self.request.form.get('delimiter')
         if delimiter:
             dialect.delimiter = delimiter
+        quote = self.request.form.get('quote')
+        if quote:
+            dialect.quotechar = quote
 
         # See https://github.com/etalab/addok/issues/90#event-353675239
         # and http://bugs.python.org/issue2078:
