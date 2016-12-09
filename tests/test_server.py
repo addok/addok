@@ -156,6 +156,16 @@ def test_csv_endpoint_with_not_enough_content(client, factory):
     data = resp.data.decode()
     assert '80688' in data
 
+def test_csv_endpoint_with_pipe_as_quote(client, factory):
+    factory(name='rue', postcode='80688', type='city')
+    content = ('q\n'
+               '|rue|')
+    resp = client.post(
+        '/csv/', data={'data': (io.BytesIO(content.encode()), 'file.csv'),
+                       'quote': '|'})
+    data = resp.data.decode()
+    assert 'rue' in data
+
 
 def test_csv_endpoint_with_not_enough_content_but_delimiter(client, factory):
     factory(name='rue', postcode='80688', type='city')

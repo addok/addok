@@ -108,6 +108,7 @@ Batch geocode a csv file.
 - **encoding** (optional): encoding of the file (you can also specify a `charset` in the
   file mimetype), such as 'utf-8' or 'iso-8859-1'
 - **delimiter** (optional): CSV delimiter
+- **quote** (optional): CSV quote
 - every filter that has been declared in the [config](config.md) is available as
   parameter, and you must give the column name to use as value; for example, if you want
   to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
@@ -132,6 +133,7 @@ Batch reverse geocode a csv file.
 - **encoding** (optional): encoding of the file (you can also specify a `charset` in the
   file mimetype), such as 'utf-8' or 'iso-8859-1'
 - **delimiter** (optional): CSV delimiter
+- **quote** (optional): CSV quote
 - every filter that has been declared in the [config](config.md) is available as
   parameter, and you must give the column name to use as value; for example, if you want
   to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
