@@ -339,7 +339,10 @@ class Cmd(cmd.Cmd):
         if housenumbers:
             def sorter(item):
                 k, v = item
-                return int(re.match(r'\d+', v.split('|')[0]).group())
+                try:
+                    return int(re.match(r'\d+', v).group())
+                except TypeError:
+                    return v
             housenumbers = sorted(housenumbers.items(), key=sorter)
             housenumbers = ['{}: {}'.format(k[2:], v) for k, v in housenumbers]
             print(white('housenumbers'), magenta(', '.join(housenumbers)))
