@@ -133,8 +133,7 @@ class Cmd(cmd.Cmd):
             option = option.replace(key, '')
         return string.strip(), option.strip(' =') if option else option
 
-    def _search(self, query, verbose=False, bucket=False):
-        start = time.time()
+    def _search(self, query, verbose=False, bucket=False, count=1):
         limit = 10
         autocomplete = True
         lat = None
@@ -159,10 +158,12 @@ class Cmd(cmd.Cmd):
                     filters[name.lower()] = value.strip()
         helper = Search(limit=limit, verbose=verbose,
                         autocomplete=autocomplete)
-        results = helper(query, lat=lat, lon=lon, **filters)
+        start = time.time()
+        for i in range(0, count):
+            results = helper(query, lat=lat, lon=lon, **filters)
         if bucket:  # Means we want all the bucket
             results = helper._sorted_bucket
-        duration = round((time.time() - start) * 1000, 1)
+        duration = round((time.time() - start) * 1000 / count, 1)
         if verbose:
             helper.report()
 
@@ -178,8 +179,9 @@ class Cmd(cmd.Cmd):
                                         blue(result.id),
                                         blue(format_scores(result))))
         formatter = red if duration > 50 else green
-        print('{} / {}'.format(formatter("{} ms".format(duration)),
-                               cyan('{} results'.format(len(results)))))
+        print('{} — {} — {}'.format(formatter("{} ms".format(duration)),
+                                    magenta("{} run(s)".format(count)),
+                                    cyan('{} results'.format(len(results)))))
 
     def do_QUIT(self, *args):
         """Quit this shell. Also ctrl-C or Ctrl-D."""
@@ -200,6 +202,15 @@ class Cmd(cmd.Cmd):
         limit elements:
         BUCKET rue des Lilas"""
         self._search(query, bucket=True)
+
+    def do_BENCH(self, query):
+        """Run a search many times to benchmark it.
+        BENCH [100] rue des Lilas"""
+        try:
+            count = int(re.match(r'^(\d+).*', query).group(1))
+        except AttributeError:
+            count = 100
+        self._search(query, count=count)
 
     def do_INTERSECT(self, words):
         """Do a raw intersect between tokens (default limit 100).
