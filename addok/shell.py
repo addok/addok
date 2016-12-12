@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import geohash
+from progressist import Formatter
 
 from . import hooks
 from .db import DB
@@ -217,6 +218,23 @@ class Cmd(cmd.Cmd):
             print('{} {} {}'.format(white(r), blue(r.id), cyan(score)))
         duration = round((time.time() - start) * 1000, 1)
         print(magenta("({} in {} ms)".format(len(results), duration)))
+
+    def do_DBSTATS(self, patterns=None):
+        """Print DB memory usage.
+        DBSTATS [pattern pattern pattern]
+        DBSTATS d|* w|*
+        Warning: this can takes a lot of time in big DB."""
+        if patterns:
+            patterns = patterns.split()
+        else:
+            patterns = ['*', 'w|*', 'd|*', 'f|*', 'g|*', 'p|*']
+        formatter = Formatter()
+        print(formatter.format('{:<7} | {}', 'pattern', 'size'))
+        for pattern in patterns:
+            total = 0
+            for k in DB.scan_iter(pattern):
+                total += DB.debug_object(k)['serializedlength']
+            print(white(formatter.format('{:<7} | {:B}', pattern, total)))
 
     def do_DBINFO(self, *args):
         """Print some useful infos from Redis DB."""
