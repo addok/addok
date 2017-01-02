@@ -26,8 +26,8 @@ def _clean_query(q):
     q = re.sub(r'\bcs ?[\d]*', '', q, flags=re.IGNORECASE)
     q = re.sub('\d{,2}(e|[eè]me) ([eé]tage)', '', q, flags=re.IGNORECASE)
     q = re.sub(' {2,}', ' ', q, flags=re.IGNORECASE)
-    q = re.sub('[ -]s/[ -]', ' sur ', q, flags=re.IGNORECASE)
     q = re.sub('[ -]s/s[ -]', ' sous ', q, flags=re.IGNORECASE)
+    q = re.sub('[ -]s/[ -]?', ' sur ', q, flags=re.IGNORECASE)
     q = q.strip()
     return q
 clean_query = yielder(_clean_query)
