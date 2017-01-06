@@ -263,6 +263,16 @@ def test_housenumber_type_can_be_filtered(factory):
     assert street_without_housenumber['id'] not in ids
 
 
+def test_filter_indexes_multiple_values(factory):
+    city = factory(name="Paris", type=["city", "municipality"])
+    results = search("paris", type="city")
+    ids = [r.id for r in results]
+    assert city['id'] in ids
+    results = search("paris", type="municipality")
+    ids = [r.id for r in results]
+    assert city['id'] in ids
+
+
 def test_housenumber_are_not_computed_if_another_type_is_asked(factory):
     factory(name="rue de Bamako", type="street",
             housenumbers={'11': {'lat': '48.3254', 'lon': '2.256'}})

@@ -190,11 +190,14 @@ def housenumbers_deindexer(db, key, doc, tokens, **kwargs):
 
 def filters_indexer(pipe, key, doc, tokens, **kwargs):
     for name in config.FILTERS:
-        value = doc.get(name)
-        if value:
-            # We need a SortedSet because it will be used in intersect with
-            # tokens SortedSets.
-            pipe.sadd(keys.filter_key(name, value), key)
+        values = doc.get(name)
+        if values:
+            if not isinstance(values, (list, tuple)):
+                values = [values]
+            for value in values:
+                # We need a SortedSet because it will be used in intersect with
+                # tokens SortedSets.
+                pipe.sadd(keys.filter_key(name, value), key)
     # Special case for housenumber type, because it's not a real type
     if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
        and doc.get(config.HOUSENUMBERS_FIELD):
@@ -203,10 +206,11 @@ def filters_indexer(pipe, key, doc, tokens, **kwargs):
 
 def filters_deindexer(db, key, doc, tokens, **kwargs):
     for name in config.FILTERS:
-        # Doc is raw from DB, so it has byte keys.
-        value = doc.get(name)
-        if value:
-            # Doc is raw from DB, so it has byte values.
-            db.srem(keys.filter_key(name, value), key)
+        values = doc.get(name)
+        if values:
+            if not isinstance(values, (list, tuple)):
+                values = [values]
+            for value in values:
+                db.srem(keys.filter_key(name, value), key)
     if "type" in config.FILTERS:
         db.srem(keys.filter_key("type", "housenumber"), key)
