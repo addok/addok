@@ -49,12 +49,8 @@ def housenumbers_pairs_indexer(pipe, key, doc, tokens, **kwargs):
 
 
 def housenumbers_pairs_deindexer(db, key, doc, tokens, **kwargs):
-    for field, value in doc.items():
-        field = field.decode()
-        if not field.startswith('h|'):
-            continue
-        number, lat, lon, *extra = value.decode().split('|')
-        hn = field[2:]
+    housenumbers = doc.get('housenumbers', {})
+    for hn, data in housenumbers.items():
         for token in tokens:
             k = '|'.join(['didx', hn, token])
             commons = db.zinterstore(k, [keys.token_key(hn),

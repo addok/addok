@@ -52,7 +52,7 @@ def index_tokens(pipe, tokens, key, **kwargs):
 
 
 def deindex_field(key, string):
-    els = list(preprocess(string.decode()))
+    els = list(preprocess(string))
     for s in els:
         deindex_token(key, s)
     return els
@@ -82,12 +82,26 @@ def index_document(doc, **kwargs):
 
 def deindex_document(id_, **kwargs):
     key = keys.document_key(id_)
-    doc = DB.hgetall(key)
+    doc = get_document(key)
     if not doc:
         return
     tokens = []
     for indexer in config.DEINDEXERS:
         indexer(DB, key, doc, tokens, **kwargs)
+
+
+def get_document(key):
+    raw = DB.get(key)
+    if raw:
+        return config.DOCUMENT_SERIALIZER.loads(raw)
+
+
+def get_documents(*keys):
+    pipe = DB.pipeline(transaction=False)
+    for key in keys:
+        pipe.get(key)
+    for raw in pipe.execute():
+        yield config.DOCUMENT_SERIALIZER.loads(raw)
 
 
 def index_geohash(pipe, key, lat, lon):
@@ -121,10 +135,7 @@ def fields_indexer(pipe, key, doc, tokens, **kwargs):
             if callable(boost):
                 boost = boost(doc)
             boost = boost + importance
-            if isinstance(values, (list, tuple)):
-                # We can't save a list as redis hash value.
-                doc[name] = VALUE_SEPARATOR.join(values)
-            else:
+            if not isinstance(values, (list, tuple)):
                 values = [values]
             for value in values:
                 extract_tokens(tokens, str(value), boost=boost)
@@ -134,7 +145,9 @@ def fields_indexer(pipe, key, doc, tokens, **kwargs):
 def fields_deindexer(db, key, doc, tokens, **kwargs):
     for field in config.FIELDS:
         name = field['key']
-        values = doc.get(name.encode())
+        if name == config.HOUSENUMBERS_FIELD:
+            continue
+        values = doc.get(name)
         if values:
             if not isinstance(values, (list, tuple)):
                 values = [values]
@@ -144,41 +157,35 @@ def fields_deindexer(db, key, doc, tokens, **kwargs):
 
 def document_indexer(pipe, key, doc, tokens, **kwargs):
     index_geohash(pipe, key, doc['lat'], doc['lon'])
-    pipe.hmset(key, doc)
+    doc = dict((k, v) for k, v in doc.items() if v not in ['', None])
+    pipe.set(key, config.DOCUMENT_SERIALIZER.dumps(doc))
 
 
 def document_deindexer(db, key, doc, tokens, **kwargs):
     db.delete(key)
-    deindex_geohash(key, doc[b'lat'], doc[b'lon'])
+    deindex_geohash(key, doc['lat'], doc['lon'])
 
 
 def housenumbers_indexer(pipe, key, doc, tokens, **kwargs):
     housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
     if not housenumbers:
         return
-    del doc['housenumbers']
+    doc['housenumbers'] = {}
     to_index = {}
-    for number, point in housenumbers.items():
-        vals = [number, point['lat'], point['lon']]
-        for field in config.HOUSENUMBERS_PAYLOAD_FIELDS:
-            vals.append(point.get(field, ''))
-        val = '|'.join(map(str, vals))
+    for number, data in housenumbers.items():
         for hn in preprocess_housenumber(number.replace(' ', '')):
-            doc[keys.housenumber_field_key(hn)] = val
             to_index[hn] = config.DEFAULT_BOOST
-        index_geohash(pipe, key, point['lat'], point['lon'])
+            data['raw'] = number
+            doc['housenumbers'][str(hn)] = data.copy()
+        index_geohash(pipe, key, data['lat'], data['lon'])
     index_tokens(pipe, to_index, key, **kwargs)
 
 
 def housenumbers_deindexer(db, key, doc, tokens, **kwargs):
-    for field, value in doc.items():
-        field = field.decode()
-        if not field.startswith('h|'):
-            continue
-        number, lat, lon, *extra = value.decode().split('|')
-        hn = field[2:]
-        deindex_geohash(key, lat, lon)
-        deindex_token(key, hn)
+    housenumbers = doc.get('housenumbers', {})
+    for token, data in housenumbers.items():
+        deindex_geohash(key, data['lat'], data['lon'])
+        deindex_token(key, token)
 
 
 def filters_indexer(pipe, key, doc, tokens, **kwargs):
@@ -197,9 +204,9 @@ def filters_indexer(pipe, key, doc, tokens, **kwargs):
 def filters_deindexer(db, key, doc, tokens, **kwargs):
     for name in config.FILTERS:
         # Doc is raw from DB, so it has byte keys.
-        value = doc.get(name.encode())
+        value = doc.get(name)
         if value:
             # Doc is raw from DB, so it has byte values.
-            db.srem(keys.filter_key(name, value.decode()), key)
+            db.srem(keys.filter_key(name, value), key)
     if "type" in config.FILTERS:
         db.srem(keys.filter_key("type", "housenumber"), key)

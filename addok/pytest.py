@@ -55,7 +55,7 @@ class DummyDoc(dict):
 
     def index(self):
         from addok.helpers.index import index_document
-        index_document(self)
+        index_document(self.copy())
 
 
 @pytest.fixture

@@ -6,10 +6,6 @@ def document_key(s):
     return 'd|{}'.format(s)
 
 
-def housenumber_field_key(s):
-    return 'h|{}'.format(s)
-
-
 def geohash_key(s):
     return 'g|{}'.format(s)
 

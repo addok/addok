@@ -81,6 +81,8 @@ DEINDEXERS = [
     'addok.helpers.index.housenumbers_deindexer',
     'addok.helpers.index.document_deindexer',
 ]
+# Any object like instance having `loads` and `dumps` methods.
+DOCUMENT_SERIALIZER = 'addok.helpers.serializers.ZlibSerializer'
 
 # Fields to be indexed
 # If you want a housenumbers field but need to name it differently, just add
