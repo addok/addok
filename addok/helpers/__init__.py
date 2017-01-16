@@ -121,13 +121,11 @@ def parallelize(func, iterable, chunk_size=1000, **bar_kwargs):
 
     def chunkize():
         chunk = []
-        count = 0
-        for i in iterable:
-            if not i:
+        for i, item in enumerate(iterable):
+            if not item:
                 continue
-            count += 1
-            chunk.append(i)
-            if count % chunk_size == 0:
+            chunk.append(item)
+            if not i % chunk_size:
                 yield chunk
                 chunk = []
         if chunk:
