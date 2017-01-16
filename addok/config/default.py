@@ -46,6 +46,7 @@ HOUSENUMBER_PROCESSORS = []
 BATCH_PROCESSORS = [
     'addok.batch.to_json',
 ]
+BATCH_CHUNK_SIZE = 1000
 RESULTS_COLLECTORS = [
     'addok.helpers.collectors.only_commons',
     'addok.helpers.collectors.bucket_with_meaningful',
