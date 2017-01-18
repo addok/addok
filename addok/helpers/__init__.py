@@ -1,8 +1,8 @@
-from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
 import os
+from multiprocessing import Pool
 
 from progressist import ProgressBar
 
@@ -119,20 +119,18 @@ class Bar(ProgressBar):
 def parallelize(func, iterable, chunk_size=1000, **bar_kwargs):
     bar = Bar(**bar_kwargs)
 
-    def chunkize():
+    with Pool(processes=os.cpu_count() * 2) as pool:
+        bar(step=0)
         chunk = []
         for i, item in enumerate(iterable):
             if not item:
                 continue
             chunk.append(item)
             if not i % chunk_size:
-                yield chunk
+                pool.apply_async(func, [chunk])
+                bar(step=chunk_size)
                 chunk = []
         if chunk:
-            yield chunk
-
-    with ProcessPoolExecutor(max_workers=os.cpu_count() * 2) as executor:
-        bar(step=0)
-        for r in executor.map(func, chunkize()):
-            bar(step=len(r))
+            pool.apply_async(func, [chunk])
+            bar(step=len(chunk))
         bar.finish()
