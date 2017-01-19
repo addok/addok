@@ -493,7 +493,8 @@ def pyinvoke(args=None):
         from IPython import start_ipython
     except ImportError:
         print(red('Import is not installed. Type "pip install ipython"'))
-    start_ipython(argv=[], user_ns={'DB': DB, 'config': config})
+    else:
+        start_ipython(argv=[], user_ns={'DB': DB, 'config': config})
 
 
 def register_command(subparsers):
