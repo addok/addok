@@ -295,13 +295,10 @@ def test_create_edge_ngrams(config):
     assert not DB.exists('n|pa')
     assert not DB.exists('n|par')
     assert not DB.exists('n|pari')
-
-    def callback(*args):
-        assert DB.exists('n|li')
-        assert DB.exists('n|lil')
-        assert DB.exists('n|pa')
-        assert DB.exists('n|par')
-        assert not DB.exists('n|28')
-        assert len(DB.keys()) == 14
-
-    create_edge_ngrams(callback=callback)
+    create_edge_ngrams()
+    assert DB.exists('n|li')
+    assert DB.exists('n|lil')
+    assert DB.exists('n|pa')
+    assert DB.exists('n|par')
+    assert not DB.exists('n|28')
+    assert len(DB.keys()) == 14

@@ -112,9 +112,9 @@ def index_ngram_keys(keys):
     return keys
 
 
-def create_edge_ngrams(callback=None, *args):
-    parallelize(index_ngram_keys, DB.scan_iter(match='w|*'), callback=callback,
-                prefix="Computing ngrams", throttle=1000)
+def create_edge_ngrams(*args):
+    parallelize(index_ngram_keys, DB.scan_iter(match='w|*'), chunk_size=10000,
+                throttle=1000)
 
 
 def register_command(subparsers):

@@ -116,21 +116,25 @@ class Bar(ProgressBar):
     template = '{prefix} {animation} Done: {done} | Elapsed: {elapsed}'
 
 
-def parallelize(func, iterable, callback=None, chunk_size=1000, **bar_kwargs):
-    bar = Bar(**bar_kwargs)
+def parallelize(func, iterable, chunk_size, **bar_kwargs):
+    bar = Bar(prefix='Dispatching tasks…', **bar_kwargs)
 
     with Pool(processes=os.cpu_count() * 2) as pool:
-        bar(step=0)
         chunk = []
+        results = []
         for i, item in enumerate(iterable):
             if not item:
                 continue
             chunk.append(item)
             if i and not i % chunk_size:
-                pool.apply_async(func, [chunk])
+                results.append(pool.apply_async(func, [chunk]))
                 bar(step=chunk_size)
                 chunk = []
         if chunk:
-            pool.apply_async(func, [chunk], callback=callback)
+            results.append(pool.apply_async(func, [chunk]))
             bar(step=len(chunk))
+        bar.done = 0
+        bar.prefix = 'Executing tasks…'
+        for r in results:
+            bar(step=len(r.get()))
         bar.finish()

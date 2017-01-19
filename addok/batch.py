@@ -76,5 +76,5 @@ def process_documents(docs):
 
 def batch(iterable):
     parallelize(process_documents, iterable,
-                chunk_size=config.BATCH_CHUNK_SIZE, prefix='Importing…',
+                chunk_size=config.BATCH_CHUNK_SIZE,
                 throttle=timedelta(seconds=1))
