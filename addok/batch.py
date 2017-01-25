@@ -7,7 +7,8 @@ import redis
 
 from addok.config import config
 from addok.db import DB
-from addok.helpers import iter_pipe, parallelize, yielder
+from addok.ds import get_document
+from addok.helpers import iter_pipe, keys, parallelize, yielder
 from addok.helpers.index import deindex_document, index_document
 
 
@@ -61,9 +62,12 @@ def to_json(row):
 
 def process_documents(docs):
     pipe = DB.pipeline(transaction=False)
-    for doc in docs:
+    for doc in iter_pipe(docs, config.DOCUMENT_PROCESSORS):
         if doc.get('_action') in ['delete', 'update']:
-            deindex_document(doc['id'])
+            key = keys.document_key(doc['id']).encode()
+            known_doc = get_document(key)
+            if known_doc:
+                deindex_document(known_doc)
         if doc.get('_action') in ['index', 'update', None]:
             index_document(pipe, doc)
     try:

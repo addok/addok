@@ -22,3 +22,6 @@ dist/
 scripts/*
 htmlcov/*
 prof/
+local*.py
+*.rdb
+*.db

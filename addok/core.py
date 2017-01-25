@@ -5,10 +5,10 @@ import geohash
 
 from .config import config
 from .helpers import keys, scripts
-from .helpers.index import get_document, get_documents
 from .helpers.text import ascii
 
 from .db import DB
+from .ds import get_document, get_documents
 
 
 def compute_geohash_key(geoh, with_neighbors=True):

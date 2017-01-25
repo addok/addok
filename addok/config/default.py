@@ -46,6 +46,10 @@ HOUSENUMBER_PROCESSORS = []
 BATCH_PROCESSORS = [
     'addok.batch.to_json',
 ]
+DOCUMENT_PROCESSORS = [
+    'addok.helpers.index.prepare_housenumbers',
+    'addok.ds.store_documents',
+]
 BATCH_CHUNK_SIZE = 1000
 RESULTS_COLLECTORS = [
     'addok.helpers.collectors.only_commons',
@@ -84,6 +88,8 @@ DEINDEXERS = [
 ]
 # Any object like instance having `loads` and `dumps` methods.
 DOCUMENT_SERIALIZER = 'addok.helpers.serializers.ZlibSerializer'
+
+DOCUMENT_STORE = 'addok.ds.RedisStore'
 
 # Fields to be indexed
 # If you want a housenumbers field but need to name it differently, just add

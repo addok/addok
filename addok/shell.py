@@ -11,11 +11,12 @@ from progressist import Formatter
 
 from . import hooks
 from .db import DB
+from .ds import get_document
 from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, white, yellow)
-from .helpers.index import token_frequency, get_document
+from .helpers.index import token_frequency
 from .helpers import scripts
 from .helpers.search import preprocess_query
 from .helpers.text import compare_ngrams
@@ -507,7 +508,7 @@ def register_command(subparsers):
 
 
 def doc_by_id(_id):
-    return get_document(keys.document_key(_id))
+    return get_document(keys.document_key(_id).encode())
 
 
 def indexed_string(s):

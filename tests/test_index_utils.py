@@ -1,7 +1,7 @@
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
-from addok.helpers.index import get_document
 from addok.batch import process_documents
 from addok.db import DB
+from addok.ds import get_document
 
 
 def index_document(doc):
@@ -263,19 +263,7 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
         'city': 'Cergy'
     }
     index_document(doc)
-    assert not DB.exists('d|xxxx')
-
-
-def test_null_value_should_not_be_index(config):
-    doc = {
-        'id': 'xxxx',
-        'lat': '49.32545',
-        'lon': '4.2565',
-        'name': 'Port-Cergy',
-        'city': ''
-    }
-    index_document(doc)
-    assert 'city' not in get_document('d|xxxx')
+    assert not DB.exists('w|cergy')
 
 
 def test_create_edge_ngrams(config):

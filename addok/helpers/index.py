@@ -3,7 +3,7 @@ import geohash
 from addok.config import config
 from addok.db import DB
 
-from . import iter_pipe, keys
+from . import iter_pipe, keys, yielder
 
 VALUE_SEPARATOR = '|~|'
 
@@ -73,28 +73,11 @@ def index_document(pipe, doc, **kwargs):
             return  # Do not index.
 
 
-def deindex_document(id_, **kwargs):
-    key = keys.document_key(id_)
-    doc = get_document(key)
-    if not doc:
-        return
+def deindex_document(doc, **kwargs):
+    key = keys.document_key(doc['id'])
     tokens = []
     for indexer in config.DEINDEXERS:
         indexer(DB, key, doc, tokens, **kwargs)
-
-
-def get_document(key):
-    raw = DB.get(key)
-    if raw:
-        return config.DOCUMENT_SERIALIZER.loads(raw)
-
-
-def get_documents(*keys):
-    pipe = DB.pipeline(transaction=False)
-    for key in keys:
-        pipe.get(key)
-    for raw in pipe.execute():
-        yield config.DOCUMENT_SERIALIZER.loads(raw)
 
 
 def index_geohash(pipe, key, lat, lon):
@@ -150,8 +133,6 @@ def fields_deindexer(db, key, doc, tokens, **kwargs):
 
 def document_indexer(pipe, key, doc, tokens, **kwargs):
     index_geohash(pipe, key, doc['lat'], doc['lon'])
-    doc = dict((k, v) for k, v in doc.items() if v not in ['', None])
-    pipe.set(key, config.DOCUMENT_SERIALIZER.dumps(doc))
 
 
 def document_deindexer(db, key, doc, tokens, **kwargs):
@@ -160,16 +141,11 @@ def document_deindexer(db, key, doc, tokens, **kwargs):
 
 
 def housenumbers_indexer(pipe, key, doc, tokens, **kwargs):
-    housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
-    if not housenumbers:
-        return
-    doc['housenumbers'] = {}
+    housenumbers = doc.get('housenumbers', {})
     to_index = {}
     for number, data in housenumbers.items():
         for hn in preprocess_housenumber(number.replace(' ', '')):
             to_index[hn] = config.DEFAULT_BOOST
-            data['raw'] = number
-            doc['housenumbers'][str(hn)] = data.copy()
         index_geohash(pipe, key, data['lat'], data['lon'])
     index_tokens(pipe, to_index, key, **kwargs)
 
@@ -207,3 +183,17 @@ def filters_deindexer(db, key, doc, tokens, **kwargs):
                 db.srem(keys.filter_key(name, value), key)
     if "type" in config.FILTERS:
         db.srem(keys.filter_key("type", "housenumber"), key)
+
+
+@yielder
+def prepare_housenumbers(doc):
+    # We need to have the housenumbers tokenized in the document, to match
+    # from user query (see results.match_housenumber).
+    housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
+    if housenumbers:
+        doc['housenumbers'] = {}
+        for number, data in housenumbers.items():
+            for hn in preprocess_housenumber(number.replace(' ', '')):
+                data['raw'] = number
+                doc['housenumbers'][str(hn)] = data.copy()
+    return doc
