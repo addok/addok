@@ -1,8 +1,12 @@
 import json
 import os.path
 import sys
+from datetime import timedelta
+
+import redis
 
 from addok.config import config
+from addok.db import DB
 from addok.helpers import iter_pipe, parallelize, yielder
 from addok.helpers.index import deindex_document, index_document
 
@@ -55,13 +59,22 @@ def to_json(row):
         return None
 
 
-def process(doc):
-    if doc.get('_action') in ['delete', 'update']:
-        deindex_document(doc['id'])
-    if doc.get('_action') in ['index', 'update', None]:
-        index_document(doc)
+def process_documents(docs):
+    pipe = DB.pipeline(transaction=False)
+    for doc in docs:
+        if doc.get('_action') in ['delete', 'update']:
+            deindex_document(doc['id'])
+        if doc.get('_action') in ['index', 'update', None]:
+            index_document(pipe, doc)
+    try:
+        pipe.execute()
+    except redis.RedisError as e:
+        msg = 'Error while importing document:\n{}\n{}'.format(doc, str(e))
+        raise ValueError(msg)
+    return docs
 
 
 def batch(iterable):
-    parallelize(process, iterable, prefix='Importing…', chunk_size=20000,
-                throttle=500)
+    parallelize(process_documents, iterable,
+                chunk_size=config.BATCH_CHUNK_SIZE,
+                throttle=timedelta(seconds=1))

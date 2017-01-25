@@ -1,8 +1,8 @@
-from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
 import os
+from multiprocessing import Pool
 
 from progressist import ProgressBar
 
@@ -116,21 +116,25 @@ class Bar(ProgressBar):
     template = '{prefix} {animation} Done: {done} | Elapsed: {elapsed}'
 
 
-def parallelize(func, iterable, chunk_size=10000, **bar_kwargs):
-    bar = Bar(**bar_kwargs)
-    with ProcessPoolExecutor(max_workers=os.cpu_count() * 2) as executor:
-        count = 0
+def parallelize(func, iterable, chunk_size, **bar_kwargs):
+    bar = Bar(prefix='Dispatching tasks…', **bar_kwargs)
+
+    with Pool(processes=os.cpu_count() * 2) as pool:
         chunk = []
-        for item in iterable:
+        results = []
+        for i, item in enumerate(iterable):
             if not item:
                 continue
             chunk.append(item)
-            count += 1
-            if count % chunk_size == 0:
-                for r in executor.map(func, chunk):
-                    bar()
+            if i and not i % chunk_size:
+                results.append(pool.apply_async(func, [chunk]))
+                bar(step=chunk_size)
                 chunk = []
         if chunk:
-            for r in executor.map(func, chunk):
-                bar()
+            results.append(pool.apply_async(func, [chunk]))
+            bar(step=len(chunk))
+        bar.done = 0
+        bar.prefix = 'Executing tasks…'
+        for r in results:
+            bar(step=len(r.get()))
         bar.finish()

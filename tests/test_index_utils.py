@@ -1,6 +1,15 @@
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
-from addok.helpers.index import deindex_document, index_document, get_document
+from addok.helpers.index import get_document
+from addok.batch import process_documents
 from addok.db import DB
+
+
+def index_document(doc):
+    process_documents([doc])
+
+
+def deindex_document(id_):
+    process_documents([{'id': id_, '_action': 'delete'}])
 
 
 def count_keys():

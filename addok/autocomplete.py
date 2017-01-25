@@ -1,3 +1,5 @@
+import redis
+
 from addok.config import config
 from addok.helpers import keys as dbkeys
 from addok.helpers import magenta, parallelize, white
@@ -94,17 +96,25 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
             helper.add_to_bucket(keys + extra_keys)
 
 
-def index_ngram_key(key):
-    key = key.decode()
-    _, token = key.split('|')
-    if token.isdigit():
-        return
-    index_edge_ngrams(DB, token)
+def index_ngram_keys(keys):
+    pipe = DB.pipeline(transaction=False)
+    for key in keys:
+        key = key.decode()
+        _, token = key.split('|')
+        if token.isdigit():
+            continue
+        index_edge_ngrams(pipe, token)
+    try:
+        pipe.execute()
+    except redis.RedisError as e:
+        msg = 'Error while generating ngrams:\n{}'.format(str(e))
+        raise ValueError(msg)
+    return keys
 
 
 def create_edge_ngrams(*args):
-    parallelize(index_ngram_key, DB.scan_iter(match='w|*'),
-                prefix="Computing ngrams", throttle=1000)
+    parallelize(index_ngram_keys, DB.scan_iter(match='w|*'), chunk_size=10000,
+                throttle=1000)
 
 
 def register_command(subparsers):
