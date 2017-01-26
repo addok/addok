@@ -221,9 +221,9 @@ class Search(BaseHelper):
         self.debug('Computing results')
         ids = [i for i in self.bucket if i not in self.results]
         if ids:
-            docs = get_documents(*ids)
+            documents = get_documents(*ids)
             self.debug('Done getting results data')
-            for _id, doc in zip(ids, docs):
+            for _id, doc in documents:
                 result = Result(doc)
                 for processor in config.SEARCH_RESULT_PROCESSORS:
                     processor(self, result)

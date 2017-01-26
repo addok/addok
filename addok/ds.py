@@ -5,13 +5,13 @@ from addok.helpers import keys
 
 class RedisStore:
 
-    def get(self, *keys):
+    def fetch(self, *keys):
         pipe = DB.pipeline(transaction=False)
         for key in keys:
             pipe.get(key)
-        for doc in pipe.execute():
+        for key, doc in zip(keys, pipe.execute()):
             if doc is not None:
-                yield doc
+                yield key, doc
 
     def add(self, *docs):
         pipe = DB.pipeline(transaction=False)
@@ -58,11 +58,12 @@ def store_documents(docs):
 
 
 def get_document(key):
-    raw = list(DS.get(key))
-    if raw:
-        return config.DOCUMENT_SERIALIZER.loads(raw[0])
+    results = DS.fetch(key)
+    if results:
+        _, doc = next(results)
+        return config.DOCUMENT_SERIALIZER.loads(doc)
 
 
 def get_documents(*keys):
-    for raw in DS.get(*keys):
-        yield config.DOCUMENT_SERIALIZER.loads(raw)
+    for id_, blob in DS.fetch(*keys):
+        yield id_, config.DOCUMENT_SERIALIZER.loads(blob)
