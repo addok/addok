@@ -49,6 +49,7 @@ BATCH_PROCESSORS = [
 DOCUMENT_PROCESSORS = [
     'addok.helpers.index.prepare_housenumbers',
     'addok.ds.store_documents',
+    'addok.helpers.index.index_documents',
 ]
 BATCH_CHUNK_SIZE = 1000
 RESULTS_COLLECTORS = [

@@ -1,7 +1,9 @@
 import geohash
+import redis
 
 from addok.config import config
 from addok.db import DB
+from addok.ds import get_document
 
 from . import iter_pipe, keys, yielder
 
@@ -60,6 +62,24 @@ def deindex_field(key, string):
 def deindex_token(key, token):
     tkey = keys.token_key(token)
     DB.zrem(tkey, key)
+
+
+def index_documents(docs):
+    pipe = DB.pipeline(transaction=False)
+    for doc in docs:
+        if doc.get('_action') in ['delete', 'update']:
+            key = keys.document_key(doc['id']).encode()
+            known_doc = get_document(key)
+            if known_doc:
+                deindex_document(known_doc)
+        if doc.get('_action') in ['index', 'update', None]:
+            index_document(pipe, doc)
+        yield doc
+    try:
+        pipe.execute()
+    except redis.RedisError as e:
+        msg = 'Error while importing document:\n{}\n{}'.format(doc, str(e))
+        raise ValueError(msg)
 
 
 def index_document(pipe, doc, **kwargs):
