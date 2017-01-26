@@ -59,9 +59,11 @@ def store_documents(docs):
 
 def get_document(key):
     results = DS.fetch(key)
-    if results:
+    try:
         _, doc = next(results)
-        return config.DOCUMENT_SERIALIZER.loads(doc)
+    except StopIteration:
+        return None
+    return config.DOCUMENT_SERIALIZER.loads(doc)
 
 
 def get_documents(*keys):
