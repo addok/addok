@@ -7,7 +7,7 @@ You need sudo grants on this server, and it must be connected to Internet.
 
 ## Install system dependencies
 
-    sudo apt install redis-server python3.4 python3.4-dev python-virtualenv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt install redis-server python3.5 python3.5-dev python-virtualenv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
 
 
 ## Create a Unix user
@@ -15,12 +15,16 @@ You need sudo grants on this server, and it must be connected to Internet.
 Here we use the name `addok`, but this name is up to you. Remember to change it
 on the various commands and configuration files if you go with your own.
 
-    sudo useradd -N addok -m
+    useradd -N addok -m -d /srv/addok/
+
+## Create config folder
+
+    mkdir /etc/addok/
+    chown addok /etc/addok
 
 ## Login as this new user
 
     sudo -u addok -i
-    cd /home/addok
 
 From now on, until we say differently, the commands are run as `addok` user.
 
@@ -53,7 +57,6 @@ tracker](https://github.com/addok/addok/issues) to ask for help.
 
 ## Create a local configuration file
 
-    mkdir /etc/addok/
     nano /etc/addok/addok.conf
 
 And paste this configuration:
@@ -134,7 +137,7 @@ But now let's configure a real HTTP server.
 
 ### uWSGI
 
-Create a file named `/home/addok/uwsgi_params`, with this content
+Create a file named `/srv/addok/uwsgi_params`, with this content
 (without making any change on it):
 
 ```
@@ -158,7 +161,7 @@ uwsgi_param  SERVER_NAME        $server_name;
 
 Then create a configuration file for uWSGI:
 
-    nano /home/addok/uwsgi.ini
+    nano /srv/addok/uwsgi.ini
 
 And paste this content. Double check paths and user name in case you
 have customized some of them during this tutorial. If you followed all the bits of the
@@ -170,11 +173,11 @@ uid = addok
 gid = users
 # Python related settings
 # the base directory (full path)
-chdir           = /home/addok/
+chdir           = /srv/addok/
 # Addok's wsgi module
-module          = addok.http
+module          = addok.http.wsgi
 # the virtualenv (full path)
-home            = /home/addok/venv
+home            = /srv/addok/venv
 
 # process-related settings
 # master
@@ -182,10 +185,10 @@ master          = true
 # maximum number of worker processes
 processes       = 4
 # the socket (use the full path to be safe
-socket          = /home/addok/uwsgi.sock
+socket          = /srv/addok/uwsgi.sock
 # ... with appropriate permissions - may be needed
 chmod-socket    = 666
-stats           = /home/addok/stats.sock
+stats           = /srv/addok/stats.sock
 # clear environment on exit
 vacuum          = true
 plugins         = python3
@@ -196,14 +199,14 @@ plugins         = python3
 
 Create a new file:
 
-    nano /home/addok/nginx.conf
+    nano /srv/addok/nginx.conf
 
 with this content:
 
 ```
 # the upstream component nginx needs to connect to
 upstream addok {
-    server unix:///home/addok/uwsgi.sock;
+    server unix:///srv/addok/uwsgi.sock;
 }
 
 # configuration of the server
@@ -223,7 +226,7 @@ server {
     # Finally, send all non-media requests to the Django server.
     location / {
         uwsgi_pass  addok;
-        include     /home/addok/uwsgi_params;
+        include     /srv/addok/uwsgi_params;
     }
 }
 ```
@@ -238,11 +241,11 @@ You should be logged in as your normal user, which is sudoer.
 
 - Activate the Nginx configuration file:
 
-        sudo ln -s /home/addok/nginx.conf /etc/nginx/sites-enabled/addok
+        sudo ln -s /srv/addok/nginx.conf /etc/nginx/sites-enabled/addok
 
 - Activate the uWSGI configuration file:
 
-        sudo ln -s /home/addok/uwsgi.ini /etc/uwsgi/apps-enabled/addok.ini
+        sudo ln -s /srv/addok/uwsgi.ini /etc/uwsgi/apps-enabled/addok.ini
 
 - Restart both services:
 
