@@ -5,11 +5,11 @@ from addok.ds import get_document
 
 
 def index_document(doc):
-    process_documents([doc])
+    process_documents(doc)
 
 
 def deindex_document(id_):
-    process_documents([{'id': id_, '_action': 'delete'}])
+    process_documents({'id': id_, '_action': 'delete'})
 
 
 def count_keys():

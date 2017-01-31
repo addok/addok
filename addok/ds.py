@@ -45,6 +45,8 @@ def store_documents(docs):
     to_add = []
     to_remove = []
     for doc in docs:
+        if not doc:
+            continue
         key = keys.document_key(doc['id'])
         if doc.get('_action') in ['delete', 'update']:
             to_remove.append(key)

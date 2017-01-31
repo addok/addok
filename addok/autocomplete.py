@@ -96,7 +96,7 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
             helper.add_to_bucket(keys + extra_keys)
 
 
-def index_ngram_keys(keys):
+def index_ngram_keys(*keys):
     pipe = DB.pipeline(transaction=False)
     for key in keys:
         key = key.decode()

@@ -67,6 +67,8 @@ def deindex_token(key, token):
 def index_documents(docs):
     pipe = DB.pipeline(transaction=False)
     for doc in docs:
+        if not doc:
+            continue
         if doc.get('_action') in ['delete', 'update']:
             key = keys.document_key(doc['id']).encode()
             known_doc = get_document(key)
@@ -209,6 +211,8 @@ def filters_deindexer(db, key, doc, tokens, **kwargs):
 def prepare_housenumbers(doc):
     # We need to have the housenumbers tokenized in the document, to match
     # from user query (see results.match_housenumber).
+    if not doc:
+        return
     housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
     if housenumbers:
         doc['housenumbers'] = {}

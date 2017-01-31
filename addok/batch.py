@@ -55,7 +55,7 @@ def to_json(row):
         return None
 
 
-def process_documents(docs):
+def process_documents(*docs):
     return list(iter_pipe(docs, config.DOCUMENT_PROCESSORS))
 
 

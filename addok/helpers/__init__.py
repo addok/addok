@@ -2,7 +2,7 @@ from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
 import os
-from multiprocessing import Pool
+from multiprocessing.pool import RUN, IMapUnorderedIterator, Pool
 
 from progressist import ProgressBar
 
@@ -116,25 +116,38 @@ class Bar(ProgressBar):
     template = '{prefix} {animation} Done: {done} | Elapsed: {elapsed}'
 
 
-def parallelize(func, iterable, chunk_size, **bar_kwargs):
-    bar = Bar(prefix='Dispatching tasks…', **bar_kwargs)
+class ChunkedPool(Pool):
 
-    with Pool(processes=os.cpu_count() * 2) as pool:
-        chunk = []
-        results = []
-        for i, item in enumerate(iterable):
-            if not item:
-                continue
-            chunk.append(item)
-            if i and not i % chunk_size:
-                results.append(pool.apply_async(func, [chunk]))
-                bar(step=chunk_size)
-                chunk = []
-        if chunk:
-            results.append(pool.apply_async(func, [chunk]))
+    def imap_unordered(self, func, iterable, chunksize):
+        """Customized version of imap_unordered.
+
+        Directly send chunks to func, instead of iterating in each process and
+        sending one by one.
+
+        Original:
+        https://hg.python.org/cpython/file/tip/Lib/multiprocessing/pool.py#l271
+
+        Other tried options:
+        - map_async: makes a list(iterable), so it loads all the data for each
+          process into RAM
+        - apply_async: needs manual chunking
+        """
+        assert self._state == RUN
+        task_batches = Pool._get_tasks(func, iterable, chunksize)
+        result = IMapUnorderedIterator(self._cache)
+        tasks = ((result._job, i, func, chunk, {})
+                 for i, (_, chunk) in enumerate(task_batches))
+        self._taskqueue.put((tasks, result._set_length))
+        return result
+
+
+def parallelize(func, iterable, chunk_size, **bar_kwargs):
+    bar = Bar(prefix='Processing…', **bar_kwargs)
+    # Do not use too much processes here, since they are consuming RAM; let one
+    # process free for Redis.
+    processes = os.cpu_count() - 1
+
+    with ChunkedPool(processes=processes) as pool:
+        for chunk in pool.imap_unordered(func, iterable, chunk_size):
             bar(step=len(chunk))
-        bar.done = 0
-        bar.prefix = 'Executing tasks…'
-        for r in results:
-            bar(step=len(r.get()))
         bar.finish()
