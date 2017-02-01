@@ -77,9 +77,9 @@ RESULTS_FORMATTERS = [
     'addok.helpers.formatters.geojson',
 ]
 INDEXERS = [
+    'addok.helpers.index.housenumbers_indexer',
     'addok.helpers.index.fields_indexer',
     'addok.helpers.index.filters_indexer',
-    'addok.helpers.index.housenumbers_indexer',
     'addok.helpers.index.document_indexer',
 ]
 DEINDEXERS = [
