@@ -33,6 +33,14 @@ following values:
 - `delete`: will deindex document; only key `id` is required then
 
 
+#### Configuring Redis
+
+By default, the import will perform a BGSAVE command only at the end of the
+process. To speed up the import, you can configure Redis not to save on disk
+by itself (default configuration) by commenting all the `save FOO` lines.
+
+On Linux, the default configuration file path is `/etc/redis/redis.conf`.
+
 #### Command line
 To run the actual import:
 
