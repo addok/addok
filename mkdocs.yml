@@ -8,6 +8,7 @@ pages:
 - HTTP API: api.md
 - Shell: shell.md
 - Tutorial: tutorial.md
+- FAQ: faq.md
 theme: readthedocs
 repo_url: https://github.com/etalab/addok
 site_description: Search engine for address. Only address.
