@@ -150,11 +150,19 @@ Path to the synonym file. Synonyms file are in the format `av, ave => avenue`.
 
 Those are internal settings. Change them with caution.
 
-#### BUCKET_LIMIT (int)
+#### BUCKET_MIN (int)
+The min number of items addok will try to fetch from Redis before scoring and
+sorting them. Note that **this is not the number of returned results**.
+This may impact performances a lot.
+
+    BUCKET_MIN = 10
+
+#### BUCKET_MAX (int)
 The max number of items addok will try to fetch from Redis before scoring and
 sorting them. Note that **this is not the number of returned results**.
+This may impact performances a lot.
 
-    BUCKET_LIMIT = 1000
+    BUCKET_MAX = 100
 
 #### COMMON_THRESHOLD (int)
 Above this treshold, terms are considered commons, and thus with less importance

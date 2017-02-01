@@ -48,15 +48,15 @@ def bucket_with_meaningful(helper):
                 break  # We want only one more.
     helper.keys = [t.db_key for t in helper.meaningful]
     if helper.bucket_empty:
-        helper.new_bucket(helper.keys, helper.SMALL_BUCKET_LIMIT)
+        helper.new_bucket(helper.keys, config.BUCKET_MIN)
         if (not helper.autocomplete and helper.has_cream() and
-                helper.cream < helper.SMALL_BUCKET_LIMIT):
+                helper.cream < config.BUCKET_MIN):
             # Do not check cream before computing autocomplete when
             # autocomplete is on.
             # If we have too much cream, do not consider our bucket is good.
             helper.debug('Cream found. Returning.')
             return True
-        if len(helper.bucket) == helper.SMALL_BUCKET_LIMIT:
+        if len(helper.bucket) == config.BUCKET_MIN:
             # Do not rerun if bucket with limit 10 has returned less
             # than 10 results.
             helper.new_bucket(helper.keys)

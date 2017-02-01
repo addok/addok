@@ -131,7 +131,6 @@ class BaseHelper(object):
 
 class Search(BaseHelper):
 
-    SMALL_BUCKET_LIMIT = 10
     MAX_MEANINGFUL = 10
 
     def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True,
@@ -192,7 +191,7 @@ class Search(BaseHelper):
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
-            limit = config.BUCKET_LIMIT
+            limit = config.BUCKET_MAX
         ids = []
         if keys:
             if self.filters:
@@ -206,7 +205,7 @@ class Search(BaseHelper):
     def add_to_bucket(self, keys, limit=None):
         self.debug('Adding to bucket with keys %s', keys)
         self.matched_keys.update([k for k in keys if k.startswith('w|')])
-        limit = limit or (config.BUCKET_LIMIT - len(self.bucket))
+        limit = limit or (config.BUCKET_MAX - len(self.bucket))
         self.bucket.update(self.intersect(keys, limit))
         self.debug('%s ids in bucket so far', len(self.bucket))
 
@@ -232,11 +231,11 @@ class Search(BaseHelper):
     @property
     def bucket_full(self):
         l = len(self.bucket)
-        return l >= self.wanted and l < config.BUCKET_LIMIT
+        return l >= self.wanted and l < config.BUCKET_MAX
 
     @property
     def bucket_overflow(self):
-        return len(self.bucket) >= config.BUCKET_LIMIT
+        return len(self.bucket) >= config.BUCKET_MAX
 
     @property
     def bucket_dry(self):
@@ -254,7 +253,7 @@ class Search(BaseHelper):
     def has_cream(self):
         if (self.bucket_empty
            or self.bucket_overflow
-           or len(self.bucket) > self.SMALL_BUCKET_LIMIT):
+           or len(self.bucket) > config.BUCKET_MIN):
             return False
         self.debug('Checking cream.')
         self.convert()

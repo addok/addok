@@ -7,8 +7,9 @@ REDIS = {
     'db': os.environ.get('REDIS_DB') or 0,
 }
 
-# Max number of results to be retrieved from db and scored.
-BUCKET_LIMIT = 100
+# Min/max number of results to be retrieved from db and scored.
+BUCKET_MIN = 10
+BUCKET_MAX = 100
 
 # Above this treshold, terms are considered commons.
 COMMON_THRESHOLD = 10000
