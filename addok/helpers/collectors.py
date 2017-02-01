@@ -32,7 +32,7 @@ def only_commons(helper):
                         helper.add_to_bucket(keys)
                         return
                 helper.debug('manual scan on "%s"', first)
-                ids = scripts.manual_scan(keys=keys, args=[helper.min])
+                ids = scripts.manual_scan(keys=keys, args=[helper.wanted])
                 helper.bucket.update(ids)
                 helper.debug('%s results after scan', len(helper.bucket))
 
@@ -78,7 +78,7 @@ def reduce_with_other_commons(helper):
 def ensure_geohash_results_are_included_if_center_is_given(helper):
     if helper.bucket_overflow and helper.geohash_key:
         helper.debug('Bucket overflow and center, force nearby look up')
-        helper.add_to_bucket(helper.keys + [helper.geohash_key], helper.limit)
+        helper.add_to_bucket(helper.keys + [helper.geohash_key], helper.wanted)
 
 
 def extend_results_reducing_tokens(helper):

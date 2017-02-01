@@ -139,8 +139,7 @@ class Search(BaseHelper):
         super().__init__(verbose=verbose)
         self.match_all = match_all
         self.fuzzy = fuzzy
-        self.limit = limit
-        self.min = self.limit
+        self.wanted = limit
         self.autocomplete = autocomplete
         self.pid = os.getpid()  # Unique id for tmp values in redis.
 
@@ -189,7 +188,7 @@ class Search(BaseHelper):
         self.convert()
         self._sorted_bucket = list(self.results.values())
         self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
-        return self._sorted_bucket[:self.limit]
+        return self._sorted_bucket[:self.wanted]
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
@@ -233,7 +232,7 @@ class Search(BaseHelper):
     @property
     def bucket_full(self):
         l = len(self.bucket)
-        return l >= self.min and l < config.BUCKET_LIMIT
+        return l >= self.wanted and l < config.BUCKET_LIMIT
 
     @property
     def bucket_overflow(self):
@@ -241,7 +240,7 @@ class Search(BaseHelper):
 
     @property
     def bucket_dry(self):
-        return len(self.bucket) < self.min
+        return len(self.bucket) < self.wanted
 
     @property
     def bucket_empty(self):
@@ -273,7 +272,7 @@ class Reverse(BaseHelper):
         self.lon = lon
         self.keys = set([])
         self.results = []
-        self.limit = limit
+        self.wanted = limit
         self.fetched = []
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
         self.filters = [keys.filter_key(k, v) for k, v in filters.items()]
@@ -316,7 +315,7 @@ class Reverse(BaseHelper):
             self.results.append(result)
             self.debug(result, result.distance, result.score)
         self.results.sort(key=lambda r: r.score, reverse=True)
-        return self.results[:self.limit]
+        return self.results[:self.wanted]
 
 
 def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=False,
