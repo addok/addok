@@ -390,9 +390,9 @@ class Cmd(cmd.Cmd):
         if not doc:
             return self.error('id "{}" not found'.format(_id))
         for field in config.FIELDS:
-            key = field['key'].encode()
+            key = field['key']
             if key in doc:
-                self._print_field_index_details(doc[key].decode(), _id)
+                self._print_field_index_details(doc[key], _id)
 
     def do_BESTSCORE(self, word):
         """Return document linked to word with higher score.
