@@ -36,5 +36,5 @@ def select_tokens(helper):
     helper.common.sort(key=lambda x: x.frequency)
     helper.meaningful.sort(key=lambda x: x.frequency)
     # Sanity limit.
-    helper.common.extend(helper.meaningful[helper.MAX_MEANINGUL:])
-    helper.meaningful = helper.meaningful[:helper.MAX_MEANINGUL]
+    helper.common.extend(helper.meaningful[helper.MAX_MEANINGFUL:])
+    helper.meaningful = helper.meaningful[:helper.MAX_MEANINGFUL]
