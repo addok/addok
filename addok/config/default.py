@@ -79,13 +79,18 @@ RESULTS_FORMATTERS = [
 INDEXERS = [
     'addok.helpers.index.housenumbers_indexer',
     'addok.helpers.index.fields_indexer',
+    # Both pairs indexers must be after `fields_indexer`.
+    'addok.pairs.pairs_indexer',
+    'addok.pairs.housenumbers_pairs_indexer',
     'addok.helpers.index.filters_indexer',
     'addok.helpers.index.document_indexer',
 ]
 DEINDEXERS = [
-    'addok.helpers.index.fields_deindexer',
-    'addok.helpers.index.filters_deindexer',
     'addok.helpers.index.housenumbers_deindexer',
+    'addok.helpers.index.fields_deindexer',
+    'addok.pairs.pairs_deindexer',
+    'addok.pairs.housenumbers_pairs_deindexer',
+    'addok.helpers.index.filters_deindexer',
     'addok.helpers.index.document_deindexer',
 ]
 # Any object like instance having `loads` and `dumps` methods.
