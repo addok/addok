@@ -89,7 +89,7 @@ def index_document(pipe, doc, **kwargs):
     tokens = {}
     for indexer in config.INDEXERS:
         try:
-            indexer(pipe, key, doc, tokens, **kwargs)
+            indexer.index(pipe, key, doc, tokens, **kwargs)
         except ValueError as e:
             print(e)
             return  # Do not index.
@@ -98,8 +98,8 @@ def index_document(pipe, doc, **kwargs):
 def deindex_document(doc, **kwargs):
     key = keys.document_key(doc['id'])
     tokens = []
-    for indexer in config.DEINDEXERS:
-        indexer(DB, key, doc, tokens, **kwargs)
+    for indexer in config.INDEXERS:
+        indexer.deindex(DB, key, doc, tokens, **kwargs)
 
 
 def index_geohash(pipe, key, lat, lon):
@@ -118,93 +118,103 @@ def deindex_geohash(key, lat, lon):
     DB.srem(geok, key)
 
 
-def fields_indexer(pipe, key, doc, tokens, **kwargs):
-    importance = float(doc.get('importance', 0.0)) * config.IMPORTANCE_WEIGHT
-    for field in config.FIELDS:
-        name = field['key']
-        values = doc.get(name)
-        if not values:
-            if not field.get('null', True):
-                # A mandatory field is null.
-                raise ValueError('{} must not be null'.format(name))
-            continue
-        if name != config.HOUSENUMBERS_FIELD:
-            boost = field.get('boost', config.DEFAULT_BOOST)
-            if callable(boost):
-                boost = boost(doc)
-            boost = boost + importance
-            if not isinstance(values, (list, tuple)):
-                values = [values]
-            for value in values:
-                extract_tokens(tokens, str(value), boost=boost)
-    index_tokens(pipe, tokens, key, **kwargs)
+class FieldsIndexer:
+
+    @staticmethod
+    def index(pipe, key, doc, tokens, **kwargs):
+        importance = (float(doc.get('importance', 0.0))
+                      * config.IMPORTANCE_WEIGHT)
+        for field in config.FIELDS:
+            name = field['key']
+            values = doc.get(name)
+            if not values:
+                if not field.get('null', True):
+                    # A mandatory field is null.
+                    raise ValueError('{} must not be null'.format(name))
+                continue
+            if name != config.HOUSENUMBERS_FIELD:
+                boost = field.get('boost', config.DEFAULT_BOOST)
+                if callable(boost):
+                    boost = boost(doc)
+                boost = boost + importance
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                for value in values:
+                    extract_tokens(tokens, str(value), boost=boost)
+        index_tokens(pipe, tokens, key, **kwargs)
+
+    @staticmethod
+    def deindex(db, key, doc, tokens, **kwargs):
+        for field in config.FIELDS:
+            name = field['key']
+            if name == config.HOUSENUMBERS_FIELD:
+                continue
+            values = doc.get(name)
+            if values:
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                for value in values:
+                    tokens.extend(deindex_field(key, value))
 
 
-def fields_deindexer(db, key, doc, tokens, **kwargs):
-    for field in config.FIELDS:
-        name = field['key']
-        if name == config.HOUSENUMBERS_FIELD:
-            continue
-        values = doc.get(name)
-        if values:
-            if not isinstance(values, (list, tuple)):
-                values = [values]
-            for value in values:
-                tokens.extend(deindex_field(key, value))
+class GeohashIndexer:
+
+    @staticmethod
+    def index(pipe, key, doc, tokens, **kwargs):
+        index_geohash(pipe, key, doc['lat'], doc['lon'])
+
+    @staticmethod
+    def deindex(db, key, doc, tokens, **kwargs):
+        deindex_geohash(key, doc['lat'], doc['lon'])
 
 
-def document_indexer(pipe, key, doc, tokens, **kwargs):
-    index_geohash(pipe, key, doc['lat'], doc['lon'])
+class HousenumbersIndexer:
+
+    @staticmethod
+    def index(pipe, key, doc, tokens, **kwargs):
+        housenumbers = doc.get('housenumbers', {})
+        to_index = {}
+        for number, data in housenumbers.items():
+            for hn in preprocess_housenumber(number.replace(' ', '')):
+                to_index[hn] = config.DEFAULT_BOOST
+            index_geohash(pipe, key, data['lat'], data['lon'])
+        index_tokens(pipe, to_index, key, **kwargs)
+
+    @staticmethod
+    def deindex(db, key, doc, tokens, **kwargs):
+        housenumbers = doc.get('housenumbers', {})
+        for token, data in housenumbers.items():
+            deindex_geohash(key, data['lat'], data['lon'])
+            deindex_token(key, token)
 
 
-def document_deindexer(db, key, doc, tokens, **kwargs):
-    db.delete(key)
-    deindex_geohash(key, doc['lat'], doc['lon'])
+class FiltersIndexer:
 
+    @staticmethod
+    def index(pipe, key, doc, tokens, **kwargs):
+        for name in config.FILTERS:
+            values = doc.get(name)
+            if values:
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                for value in values:
+                    pipe.sadd(keys.filter_key(name, value), key)
+        # Special case for housenumber type, because it's not a real type
+        if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
+           and doc.get(config.HOUSENUMBERS_FIELD):
+            pipe.sadd(keys.filter_key("type", "housenumber"), key)
 
-def housenumbers_indexer(pipe, key, doc, tokens, **kwargs):
-    housenumbers = doc.get('housenumbers', {})
-    to_index = {}
-    for number, data in housenumbers.items():
-        for hn in preprocess_housenumber(number.replace(' ', '')):
-            to_index[hn] = config.DEFAULT_BOOST
-        index_geohash(pipe, key, data['lat'], data['lon'])
-    index_tokens(pipe, to_index, key, **kwargs)
-
-
-def housenumbers_deindexer(db, key, doc, tokens, **kwargs):
-    housenumbers = doc.get('housenumbers', {})
-    for token, data in housenumbers.items():
-        deindex_geohash(key, data['lat'], data['lon'])
-        deindex_token(key, token)
-
-
-def filters_indexer(pipe, key, doc, tokens, **kwargs):
-    for name in config.FILTERS:
-        values = doc.get(name)
-        if values:
-            if not isinstance(values, (list, tuple)):
-                values = [values]
-            for value in values:
-                # We need a SortedSet because it will be used in intersect with
-                # tokens SortedSets.
-                pipe.sadd(keys.filter_key(name, value), key)
-    # Special case for housenumber type, because it's not a real type
-    if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
-       and doc.get(config.HOUSENUMBERS_FIELD):
-        pipe.sadd(keys.filter_key("type", "housenumber"), key)
-
-
-def filters_deindexer(db, key, doc, tokens, **kwargs):
-    for name in config.FILTERS:
-        values = doc.get(name)
-        if values:
-            if not isinstance(values, (list, tuple)):
-                values = [values]
-            for value in values:
-                db.srem(keys.filter_key(name, value), key)
-    if "type" in config.FILTERS:
-        db.srem(keys.filter_key("type", "housenumber"), key)
+    @staticmethod
+    def deindex(db, key, doc, tokens, **kwargs):
+        for name in config.FILTERS:
+            values = doc.get(name)
+            if values:
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                for value in values:
+                    db.srem(keys.filter_key(name, value), key)
+        if "type" in config.FILTERS:
+            db.srem(keys.filter_key("type", "housenumber"), key)
 
 
 @yielder

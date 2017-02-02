@@ -77,21 +77,15 @@ RESULTS_FORMATTERS = [
     'addok.helpers.formatters.geojson',
 ]
 INDEXERS = [
-    'addok.helpers.index.housenumbers_indexer',
-    'addok.helpers.index.fields_indexer',
-    # Both pairs indexers must be after `fields_indexer`.
-    'addok.pairs.pairs_indexer',
-    'addok.pairs.housenumbers_pairs_indexer',
-    'addok.helpers.index.filters_indexer',
-    'addok.helpers.index.document_indexer',
-]
-DEINDEXERS = [
-    'addok.helpers.index.housenumbers_deindexer',
-    'addok.helpers.index.fields_deindexer',
-    'addok.pairs.pairs_deindexer',
-    'addok.pairs.housenumbers_pairs_deindexer',
-    'addok.helpers.index.filters_deindexer',
-    'addok.helpers.index.document_deindexer',
+    'addok.helpers.index.HousenumbersIndexer',
+    'addok.helpers.index.FieldsIndexer',
+    # Both pairs indexers must be after `FieldsIndexer`.
+    'addok.pairs.PairsIndexer',
+    'addok.pairs.HousenumbersPairsIndexer',
+    # Edge ngram indexer must be after `FieldsIndexer`.
+    'addok.autocomplete.EdgeNgramIndexer',
+    'addok.helpers.index.FiltersIndexer',
+    'addok.helpers.index.GeohashIndexer',
 ]
 # Any object like instance having `loads` and `dumps` methods.
 DOCUMENT_SERIALIZER = 'addok.helpers.serializers.ZlibSerializer'

@@ -24,18 +24,21 @@ def deindex_edge_ngrams(token):
         DB.srem(edge_ngram_key(ngram), token)
 
 
-def edge_ngram_indexer(pipe, key, doc, tokens, **kwargs):
-    if config.INDEX_EDGE_NGRAMS:  # Allow to disable for mass indexing.
-        for token in tokens.keys():
-            index_edge_ngrams(pipe, token)
+class EdgeNgramIndexer:
 
+    @staticmethod
+    def index(pipe, key, doc, tokens, **kwargs):
+        if config.INDEX_EDGE_NGRAMS:  # Allow to disable for mass indexing.
+            for token in tokens.keys():
+                index_edge_ngrams(pipe, token)
 
-def edge_ngram_deindexer(db, key, doc, tokens, **kwargs):
-    if config.INDEX_EDGE_NGRAMS:
-        for token in tokens:
-            tkey = dbkeys.token_key(token)
-            if not DB.exists(tkey):
-                deindex_edge_ngrams(token)
+    @staticmethod
+    def deindex(db, key, doc, tokens, **kwargs):
+        if config.INDEX_EDGE_NGRAMS:
+            for token in tokens:
+                tkey = dbkeys.token_key(token)
+                if not DB.exists(tkey):
+                    deindex_edge_ngrams(token)
 
 
 def only_commons_but_geohash_try_autocomplete_collector(helper):
@@ -133,14 +136,6 @@ def configure(config):
     if target in config.RESULTS_COLLECTORS:
         idx = config.RESULTS_COLLECTORS.index(target)
         config.RESULTS_COLLECTORS.insert(idx, autocomplete_meaningful_collector)  # noqa
-    target = 'addok.helpers.index.fields_indexer'
-    if target in config.INDEXERS:
-        idx = config.INDEXERS.index(target)
-        config.INDEXERS.insert(idx + 1, edge_ngram_indexer)
-    target = 'addok.helpers.index.fields_deindexer'
-    if target in config.DEINDEXERS:
-        idx = config.DEINDEXERS.index(target)
-        config.DEINDEXERS.insert(idx + 1, edge_ngram_deindexer)
 
 
 def do_autocomplete(self, s):
