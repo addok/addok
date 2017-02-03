@@ -43,7 +43,6 @@ SEARCH_PREPROCESSORS = [
     'addok.helpers.search.select_tokens',
     'addok.helpers.search.set_should_match_threshold',
 ]
-HOUSENUMBER_PROCESSORS = []
 BATCH_PROCESSORS = [
     'addok.batch.to_json',
 ]

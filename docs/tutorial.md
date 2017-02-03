@@ -68,11 +68,6 @@ QUERY_PROCESSORS = [
     "addok_france.glue_ordinal",
     "addok_france.fold_ordinal",
 ]
-HOUSENUMBER_PROCESSORS = [
-    "addok_france.remove_leading_zeros",
-    "addok_france.glue_ordinal",
-    "addok_france.fold_ordinal",
-]
 SEARCH_RESULT_PROCESSORS = [
     "addok.helpers.results.match_housenumber",
     "addok_france.make_labels",
@@ -84,6 +79,8 @@ SEARCH_RESULT_PROCESSORS = [
 PROCESSORS = [
     "addok.helpers.text.tokenize",
     "addok.helpers.text.normalize",
+    "addok_france.glue_ordinal",
+    "addok_france.fold_ordinal",
     "addok.helpers.text.synonymize",
     "addok_fr.phonemicize",
 ]
