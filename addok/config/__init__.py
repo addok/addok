@@ -14,14 +14,6 @@ class Config(dict):
     def __init__(self):
         self._post_load_func = []
         self.loaded = False
-        self.paths_lists = [
-            'QUERY_PROCESSORS', 'RESULTS_COLLECTORS',
-            'SEARCH_RESULT_PROCESSORS', 'REVERSE_RESULT_PROCESSORS',
-            'PROCESSORS', 'INDEXERS', 'BATCH_PROCESSORS',
-            'SEARCH_PREPROCESSORS', 'RESULTS_FORMATTERS',
-            'DOCUMENT_PROCESSORS'
-        ]
-        self.paths = ['DOCUMENT_SERIALIZER', 'DOCUMENT_STORE']
         self.plugins = [
             'addok.shell',
             'addok.http.base',
@@ -105,20 +97,22 @@ class Config(dict):
             func()
 
     def resolve(self):
-        for key in self.paths_lists:
-            self.resolve_paths(key)
-        for key in self.paths:
-            self.resolve_path(key)
+        # Two-pass process given that you cannot iterate over a dict
+        # and enrich it at the same time.
+        for path_key in [key for key in self if '_PATH' in key]:
+            if path_key.endswith('_PATHS'):
+                self.resolve_paths(path_key)
+            elif path_key.endswith('_PATH'):
+                self.resolve_path(path_key)
 
     def resolve_path(self, key):
         from addok.helpers import import_by_path
-        self[key] = import_by_path(self[key])
+        self[key[:-len('_PATH')]] = import_by_path(self[key])
 
     def resolve_paths(self, key):
         from addok.helpers import import_by_path
-        attr = self[key]
-        for idx, path in enumerate(attr):
-            attr[idx] = import_by_path(path)
+        self[key[:-len('_PATHS')]] = [import_by_path(path)
+                                      for path in self[key]]
 
 
 config = Config()

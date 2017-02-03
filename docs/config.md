@@ -147,23 +147,24 @@ endpoint or the `csv` one.
 
     LOG_NOT_FOUND = False
 
-#### PROCESSORS (iterable of python paths)
+
+#### PROCESSORS_PATHS (iterable of python paths)
 Define the various functions to preprocess the text, before indexing and
 searching. It's an `iterable` of python paths. Some functions are built in
 (mainly for French at this time, but you can point to any python function that
 is on the pythonpath).
 
-    PROCESSORS = [
+    PROCESSORS_PATHS = [
         'addok.textutils.default.pipeline.tokenize',
         'addok.textutils.default.pipeline.normalize',
         'addok.textutils.default.pipeline.synonymize',
         'addok.textutils.fr.phonemicize',
     ]
 
-#### QUERY_PROCESSORS (iterable of python paths)
+#### QUERY_PROCESSORS_PATHS (iterable of python paths)
 Additional processors that are run only at query time.
 
-    QUERY_PROCESSORS = (
+    QUERY_PROCESSORS_PATHS = (
         'addok.textutils.fr_FR.extract_address',
         'addok.textutils.fr_FR.clean_query',
         'addok.textutils.fr_FR.glue_ordinal',
@@ -203,15 +204,15 @@ Default score for the relation token to document.
 
     DEFAULT_BOOST = 1.0
 
-#### DOCUMENT_SERIALIZER (path)
+#### DOCUMENT_SERIALIZER_PATH (path)
 Path to the serializer to be used for storing documents. Must have `loads` and
 `dumps` methods.
 
-    DOCUMENT_SERIALIZER = 'addok.helpers.serializers.ZlibSerializer'
+    DOCUMENT_SERIALIZER_PATH = 'addok.helpers.serializers.ZlibSerializer'
 
 For a faster option (but using more RAM), use `marshal` instead.
 
-    DOCUMENT_SERIALIZER = 'marshal'
+    DOCUMENT_SERIALIZER_PATH = 'marshal'
 
 
 #### GEOHASH_PRECISION (int)

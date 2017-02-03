@@ -99,9 +99,10 @@ def try_fuzzy(helper, tokens, include_common=True):
 
 def configure(config):
     target = 'addok.helpers.collectors.extend_results_reducing_tokens'
-    if target in config.RESULTS_COLLECTORS:
-        idx = config.RESULTS_COLLECTORS.index(target)
-        config.RESULTS_COLLECTORS.insert(idx, 'addok.fuzzy.fuzzy_collector')
+    if target in config.RESULTS_COLLECTORS_PATHS:
+        idx = config.RESULTS_COLLECTORS_PATHS.index(target)
+        config.RESULTS_COLLECTORS_PATHS.insert(
+            idx, 'addok.fuzzy.fuzzy_collector')
 
 
 def do_fuzzy(self, word):
