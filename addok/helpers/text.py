@@ -14,14 +14,16 @@ PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 class Token(str):
 
-    __slots__ = ('position', 'is_last', 'db_key', 'raw', '_frequency', '_key')
+    __slots__ = ('position', 'is_last', 'db_key', 'raw', '_frequency', '_key',
+                 'kind')
 
-    def __new__(cls, value, position=0, is_last=False, raw=None):
+    def __new__(cls, value, position=0, is_last=False, raw=None, kind=None):
         obj = str.__new__(cls, value)
         obj.position = position
         obj.is_last = is_last
         obj.db_key = None
         obj.raw = raw or value  # Allow to keep raw on update.
+        obj.kind = kind
         return obj
 
     def __repr__(self):
@@ -29,7 +31,7 @@ class Token(str):
 
     def update(self, value, **kwargs):
         default = dict(position=self.position, is_last=self.is_last,
-                       raw=self.raw)
+                       raw=self.raw, kind=self.kind)
         default.update(kwargs)
         token = Token(value=value, **default)
         return token
