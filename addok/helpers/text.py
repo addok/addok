@@ -14,6 +14,8 @@ PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 class Token(str):
 
+    __slots__ = ('position', 'is_last', 'db_key', 'raw', '_frequency', '_key')
+
     def __new__(cls, value, position=0, is_last=False, raw=None):
         obj = str.__new__(cls, value)
         obj.position = position
