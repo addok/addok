@@ -80,14 +80,6 @@ def test_should_give_priority_to_housenumber_if_match(housenumber):
     assert results[0].type == 'housenumber'
 
 
-def test_should_not_return_housenumber_if_number_is_also_in_name(housenumber):
-    housenumber.update(name='rue du 11 Novembre')
-    results = search('rue du 11 novembre')
-    assert not results[0].housenumber
-    results = search('11 rue du 11 novembre')
-    assert results[0].housenumber == '11'
-
-
 def test_return_housenumber_if_number_included_in_bigger_one(factory):
     factory(name='rue 1814',
             housenumbers={'8': {'lat': '48.3254', 'lon': '2.256'}})

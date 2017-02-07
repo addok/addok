@@ -29,15 +29,9 @@ def match_housenumber(helper, result):
 def _match_housenumber(helper, result, tokens):
     if not helper.check_housenumber:
         return
-    name_tokens = result.name.split()
     for token in sorted(tokens, key=lambda t: t.position):
         if token in result.housenumbers:
             data = result.housenumbers[str(token)]
-            if data['raw'] in name_tokens and tokens.count(token) != 2:
-                # Consider that user is not requesting a housenumber if
-                # token is also in name (ex. rue du 8 mai), unless this
-                # token is twice in the query (8 rue du 8 mai).
-                continue
             result.housenumber = data.pop('raw')
             result.type = 'housenumber'
             result._cache.update(data)
