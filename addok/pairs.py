@@ -1,7 +1,7 @@
 from addok.config import config
 from addok.db import DB
 from addok.helpers import keys, magenta, white
-from addok.helpers.index import preprocess_housenumber
+from addok.helpers.index import preprocess
 from addok.helpers.search import preprocess_query
 
 
@@ -48,7 +48,7 @@ class HousenumbersPairsIndexer:
         if not housenumbers:
             return
         for number in housenumbers.keys():
-            for hn in preprocess_housenumber(number.replace(' ', '')):
+            for hn in preprocess(number):
                 # Pair every document term to each housenumber, but do not pair
                 # housenumbers together.
                 pipe.sadd(pair_key(hn), *tokens.keys())

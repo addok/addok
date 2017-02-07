@@ -9,24 +9,12 @@ from . import iter_pipe, keys, yielder
 
 VALUE_SEPARATOR = '|~|'
 
-HOUSENUMBER_PROCESSORS = []
-
 
 def preprocess(s):
     if s not in _CACHE:
         _CACHE[s] = list(iter_pipe(s, config.PROCESSORS))
     return _CACHE[s]
 _CACHE = {}
-
-
-def preprocess_housenumber(s):
-    if not HOUSENUMBER_PROCESSORS:
-        HOUSENUMBER_PROCESSORS.extend(config.HOUSENUMBER_PROCESSORS)
-        HOUSENUMBER_PROCESSORS.extend(config.PROCESSORS)
-    if s not in _HOUSENUMBER_CACHE:
-        _HOUSENUMBER_CACHE[s] = list(iter_pipe(s, HOUSENUMBER_PROCESSORS))
-    return _HOUSENUMBER_CACHE[s]
-_HOUSENUMBER_CACHE = {}
 
 
 def token_key_frequency(key):
@@ -175,7 +163,7 @@ class HousenumbersIndexer:
         housenumbers = doc.get('housenumbers', {})
         to_index = {}
         for number, data in housenumbers.items():
-            for hn in preprocess_housenumber(number.replace(' ', '')):
+            for hn in preprocess(number):
                 to_index[hn] = config.DEFAULT_BOOST
             index_geohash(pipe, key, data['lat'], data['lon'])
         index_tokens(pipe, to_index, key, **kwargs)
@@ -227,7 +215,7 @@ def prepare_housenumbers(doc):
     if housenumbers:
         doc['housenumbers'] = {}
         for number, data in housenumbers.items():
-            for hn in preprocess_housenumber(number.replace(' ', '')):
+            for hn in preprocess(number):
                 data['raw'] = number
                 doc['housenumbers'][str(hn)] = data.copy()
     return doc

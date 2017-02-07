@@ -112,13 +112,6 @@ endpoint or the `csv` one.
 
     LOG_NOT_FOUND = False
 
-#### HOUSENUMBER_PROCESSORS (iterable of python paths)
-Additional processors that are run only for housenumbers.
-
-    HOUSENUMBER_PROCESSORS = [
-        'addok.textutils.fr_FR.glue_ordinal',
-    ]
-
 #### PROCESSORS (iterable of python paths)
 Define the various functions to preprocess the text, before indexing and
 searching. It's an `iterable` of python paths. Some functions are built in
