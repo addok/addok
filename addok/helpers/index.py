@@ -163,8 +163,7 @@ class HousenumbersIndexer:
         housenumbers = doc.get('housenumbers', {})
         to_index = {}
         for number, data in housenumbers.items():
-            for hn in preprocess(number):
-                to_index[hn] = config.DEFAULT_BOOST
+            to_index[number] = config.DEFAULT_BOOST
             index_geohash(pipe, key, data['lat'], data['lon'])
         index_tokens(pipe, to_index, key, **kwargs)
 
