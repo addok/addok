@@ -79,7 +79,8 @@ SEARCH_RESULT_PROCESSORS = [
 PROCESSORS = [
     "addok.helpers.text.tokenize",
     "addok.helpers.text.normalize",
-    "addok_france.preprocess_housenumber",
+    "addok_france.glue_ordinal",
+    "addok_france.fold_ordinal",
     "addok_france.flag_housenumber",
     "addok.helpers.text.synonymize",
     "addok_fr.phonemicize",
