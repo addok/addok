@@ -103,6 +103,8 @@ synonymize = yielder(_synonymize)
 class ascii(str):
     """Just like a str, but ascii folded and cached."""
 
+    __slots__ = ['_cache', '_raw']
+
     def __new__(cls, value):
         try:
             cache = value._cache
