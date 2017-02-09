@@ -1,12 +1,13 @@
 import re
 from pathlib import Path
 
+from ngram import NGram
+from unidecode import unidecode
+
 from addok.config import config
 from addok.db import DB
 from addok.helpers import keys, yielder
 from addok.helpers.index import token_frequency
-from ngram import NGram
-from unidecode import unidecode
 
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
@@ -79,7 +80,7 @@ SYNONYMS = {}
 def load_synonyms():
     path = config.SYNONYMS_PATH
     if not path:
-        path = config.RESOURCES_ROOT / 'synonyms' / config.SYNONYMS_FILENAME
+        return
     with Path(path).open() as f:
         for line in f:
             if line.startswith('#'):
