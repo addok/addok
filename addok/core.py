@@ -27,7 +27,7 @@ def compute_geohash_key(geoh, with_neighbors=True):
     return key
 
 
-class Result(object):
+class Result:
 
     def __init__(self, _id):
         self.housenumber = None
@@ -110,7 +110,7 @@ class Result(object):
         return Result(keys.document_key(_id))
 
 
-class BaseHelper(object):
+class BaseHelper:
 
     def __init__(self, verbose):
         self._start = time.time()
