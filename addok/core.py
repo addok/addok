@@ -35,14 +35,14 @@ class Result:
         self.load(_id)
         self.labels = []
 
-    def load(self, _id):
+    def load(self, doc_or_id):
         self._cache = {}
-        if isinstance(_id, dict):
-            doc = _id
+        if isinstance(doc_or_id, dict):
+            doc = doc_or_id
         else:
-            doc = get_document(_id)
+            doc = get_document(doc_or_id)
         if not doc:
-            raise ValueError('id "{}" not found'.format(_id[2:]))
+            raise ValueError('id "{}" not found'.format(doc_or_id[2:]))
         self._doc = doc
 
     def __getattr__(self, key):
