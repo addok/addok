@@ -1,13 +1,12 @@
 import redis
-
 from addok.config import config
+from addok.db import DB
 from addok.helpers import keys as dbkeys
 from addok.helpers import magenta, parallelize, white
 from addok.helpers.index import token_key_frequency
 from addok.helpers.search import preprocess_query
 from addok.helpers.text import compute_edge_ngrams
 from addok.pairs import pair_key
-from addok.db import DB
 
 
 def edge_ngram_key(s):
