@@ -152,7 +152,7 @@ def alphanumerize(text):
 
 
 def compute_edge_ngrams(token, min=None):
-    """Compute edge ngram of token from min. Does not includes token itself."""
+    """Compute edge ngram of token from min. Does not include token itself."""
     if min is None:
         min = config.MIN_EDGE_NGRAMS
     token = token[:config.MAX_EDGE_NGRAMS + 1]
