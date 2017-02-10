@@ -25,6 +25,9 @@ class RedisStore:
             pipe.delete(key)
         pipe.execute()
 
+    def flushdb(self):
+        _DB.flushdb()
+
 
 class DSProxy:
     instance = None

@@ -4,6 +4,8 @@ import sys
 from datetime import timedelta
 
 from addok.config import config
+from addok.db import DB
+from addok.ds import DS
 from addok.helpers import iter_pipe, parallelize, yielder
 
 
@@ -15,11 +17,25 @@ def run(args):
         process_stdin(sys.stdin)
 
 
+def reset(args):
+    if args.force or input('Type "yes" to delete ALL data: ') == 'yes':
+        DB.flushdb()
+        DS.flushdb()
+        print('All data has been deleted.')
+    else:
+        print('Nothing has been deleted.')
+
+
 def register_command(subparsers):
     parser = subparsers.add_parser('batch', help='Batch import documents')
     parser.add_argument('filepath', nargs='*',
                         help='Path to file to process')
     parser.set_defaults(func=run)
+    parser = subparsers.add_parser('reset',
+                                   help='Delete ALL indexes and documents')
+    parser.add_argument('--force', help='Do not ask for confirm',
+                        action='store_true')
+    parser.set_defaults(func=reset)
 
 
 def preprocess_batch(d):
