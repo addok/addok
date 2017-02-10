@@ -8,27 +8,34 @@ import falcon
 from addok.config import config
 from addok.core import Result, reverse, search
 
-if config.LOG_NOT_FOUND:
-    notfound_logger = logging.getLogger('notfound')
-    notfound_logger.setLevel(logging.DEBUG)
-    filename = Path(config.LOG_DIR).joinpath('notfound.log')
-    handler = logging.handlers.TimedRotatingFileHandler(str(filename),
-                                                        when='midnight')
-    notfound_logger.addHandler(handler)
+notfound_logger = None
+query_logger = None
+
+
+@config.on_load
+def on_load():
+    if config.LOG_NOT_FOUND:
+        global notfound_logger
+        notfound_logger = logging.getLogger('notfound')
+        notfound_logger.setLevel(logging.DEBUG)
+        filename = Path(config.LOG_DIR).joinpath('notfound.log')
+        handler = logging.handlers.TimedRotatingFileHandler(str(filename),
+                                                            when='midnight')
+        notfound_logger.addHandler(handler)
+
+    if config.LOG_QUERIES:
+        global query_logger
+        query_logger = logging.getLogger('queries')
+        query_logger.setLevel(logging.DEBUG)
+        filename = Path(config.LOG_DIR).joinpath('queries.log')
+        handler = logging.handlers.TimedRotatingFileHandler(str(filename),
+                                                            when='midnight')
+        query_logger.addHandler(handler)
 
 
 def log_notfound(query):
     if config.LOG_NOT_FOUND:
         notfound_logger.debug(query)
-
-
-if config.LOG_QUERIES:
-    query_logger = logging.getLogger('queries')
-    query_logger.setLevel(logging.DEBUG)
-    filename = Path(config.LOG_DIR).joinpath('queries.log')
-    handler = logging.handlers.TimedRotatingFileHandler(str(filename),
-                                                        when='midnight')
-    query_logger.addHandler(handler)
 
 
 def log_query(query, results):
