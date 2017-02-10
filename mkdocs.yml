@@ -3,6 +3,7 @@ pages:
 - index.md
 - Installation: install.md
 - Configuration: config.md
+- Tuning Redis: redis.md
 - Plugins: plugins.md
 - Import: import.md
 - HTTP API: api.md

@@ -4,7 +4,6 @@ import sys
 from datetime import timedelta
 
 from addok.config import config
-from addok.db import DB
 from addok.helpers import iter_pipe, parallelize, yielder
 
 
@@ -14,7 +13,6 @@ def run(args):
             process_file(path)
     elif not sys.stdin.isatty():  # Any better way to check for stdin?
         process_stdin(sys.stdin)
-    DB.bgsave()
 
 
 def register_command(subparsers):
