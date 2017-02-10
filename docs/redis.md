@@ -8,7 +8,7 @@ See also the [configuration reference](https://redis.io/topics/config).
 
 On Linux, the default configuration file path is `/etc/redis/redis.conf`.
 
-# Persistence
+## Persistence
 
 To be able to stop and start Redis without needing a new import, it's important
 to let Redis persist the data on disk.
@@ -30,7 +30,7 @@ This is the perfect setting for running Addok. But remember that the configurati
 if for the Redis instance, so if you have other services than Addok using it,
 you may configure it your way.
 
-# Import
+## Import
 
 When importing data, you need to persist it, so a restart of Redis will reload it.
 
@@ -46,3 +46,9 @@ You can either:
 - issue a `redis-cli save`, which is synchronous: this will block Redis for one
   or two minutes (depending on the data you imported), but there is no extra
   memory usage
+
+
+## Security
+
+Before going live, make sure to have a look at
+[the security page](https://redis.io/topics/security).
