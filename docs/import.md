@@ -41,6 +41,8 @@ by itself (default configuration) by commenting all the `save FOO` lines.
 
 On Linux, the default configuration file path is `/etc/redis/redis.conf`.
 
+More tips on configuring Redis on the [official doc](https://redis.io/topics/admin).
+
 #### Command line
 To run the actual import:
 
