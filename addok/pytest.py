@@ -13,19 +13,23 @@ def pytest_configure():
     os.environ['ADDOK_CONFIG_MODULE'] = ''
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    config.REDIS['db'] = 15
+    config.REDIS['indexes']['db'] = 14
+    config.REDIS['documents']['db'] = 15
     config.load()
 
 
 def pytest_runtest_setup(item):
-    from addok.db import DB
-    assert DB.connection_pool.connection_kwargs['db'] == 15
+    from addok import db, ds
+    assert db.DB.connection_pool.connection_kwargs['db'] == 14
+    assert ds._DB.connection_pool.connection_kwargs['db'] == 15
 
 
 def pytest_runtest_teardown(item, nextitem):
-    from addok.db import DB
-    assert DB.connection_pool.connection_kwargs['db'] == 15
-    DB.flushdb()
+    from addok import db, ds
+    assert db.DB.connection_pool.connection_kwargs['db'] == 14
+    assert ds._DB.connection_pool.connection_kwargs['db'] == 15
+    db.DB.flushdb()
+    ds._DB.flushdb()
 
 
 def pytest_addoption(parser):

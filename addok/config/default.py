@@ -4,7 +4,12 @@ from pathlib import Path
 REDIS = {
     'host': os.environ.get('REDIS_HOST') or 'localhost',
     'port': os.environ.get('REDIS_PORT') or 6379,
-    'db': os.environ.get('REDIS_DB') or 0,
+    'indexes': {
+        'db': os.environ.get('REDIS_DB_INDEXES') or 0,
+    },
+    'documents': {
+        'db': os.environ.get('REDIS_DB_DOCUMENTS') or 1,
+    }
 }
 
 # Min/max number of results to be retrieved from db and scored.

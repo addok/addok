@@ -2,7 +2,7 @@ import redis
 from addok.config import config
 
 
-class DBRedis:
+class RedisProxy:
     instance = None
     Error = redis.RedisError
 
@@ -12,9 +12,12 @@ class DBRedis:
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
-DB = DBRedis()
+
+DB = RedisProxy()
 
 
 @config.on_load
 def connect():
-    DB.connect(**config.REDIS)
+    params = config.REDIS.copy()
+    params.update(config.REDIS.get('indexes', {}))
+    DB.connect(host=params['host'], port=params['port'], db=params['db'])

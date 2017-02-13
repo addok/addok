@@ -1,7 +1,7 @@
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
 from addok.batch import process_documents
 from addok.db import DB
-from addok.ds import get_document
+from addok import ds
 
 
 def index_document(doc):
@@ -15,7 +15,7 @@ def deindex_document(id_):
 def count_keys():
     """Helper method to return the number of keys in the test database."""
     try:
-        return DB.info()['db15']['keys']
+        return DB.info()['db14']['keys']
     except KeyError:
         return 0
 
@@ -48,8 +48,8 @@ DOC = {
 
 def test_index_document():
     index_document(DOC.copy())
-    assert DB.exists('d|xxxx')
-    assert DB.type('d|xxxx') == b'string'
+    assert ds._DB.exists('d|xxxx')
+    assert ds._DB.type('d|xxxx') == b'string'
     assert DB.exists('w|rue')
     assert b'd|xxxx' in DB.zrange('w|rue', 0, -1)
     assert DB.exists('w|des')
@@ -80,13 +80,14 @@ def test_index_document():
     assert b'd|xxxx' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
     assert b'd|xxxx' in DB.smembers('f|type|housenumber')
-    assert len(DB.keys()) == 20
+    assert len(DB.keys()) == 19
+    assert len(ds._DB.keys()) == 1
 
 
 def test_deindex_document_should_deindex():
     index_document(DOC.copy())
     deindex_document(DOC['id'])
-    assert not DB.exists('d|xxxx')
+    assert not ds._DB.exists('d|xxxx')
     assert not DB.exists('w|de')
     assert not DB.exists('w|lilas')
     assert not DB.exists('w|1')  # Housenumber.
@@ -102,6 +103,7 @@ def test_deindex_document_should_deindex():
     assert not DB.exists('n|andres')
     assert not DB.exists('f|type|street')
     assert len(DB.keys()) == 0
+    assert len(ds._DB.keys()) == 0
 
 
 def test_deindex_document_should_not_affect_other_docs():
@@ -122,7 +124,7 @@ def test_deindex_document_should_not_affect_other_docs():
     index_document(DOC.copy())
     index_document(DOC2)
     deindex_document(DOC['id'])
-    assert not DB.exists('d|xxxx')
+    assert not ds._DB.exists('d|xxxx')
     assert b'd|xxxx' not in DB.zrange('w|rue', 0, -1)
     assert b'd|xxxx' not in DB.zrange('w|des', 0, -1)
     assert b'd|xxxx' not in DB.zrange('w|lilas', 0, -1)
@@ -156,7 +158,8 @@ def test_deindex_document_should_not_affect_other_docs():
     assert b'd|xxxx2' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
     assert b'd|xxxx2' in DB.smembers('f|type|housenumber')
-    assert len(DB.keys()) == 19
+    assert len(DB.keys()) == 18
+    assert len(ds._DB.keys()) == 1
 
 
 def test_allow_list_values():
@@ -184,7 +187,7 @@ def test_deindex_document_should_deindex_list_values():
     }
     index_document(doc)
     deindex_document(doc['id'])
-    assert not DB.exists('d|xxxx')
+    assert not ds._DB.exists('d|xxxx')
     assert not DB.exists('w|vernou')
     assert not DB.exists('w|celle')
     assert len(DB.keys()) == 0
@@ -208,7 +211,7 @@ def test_should_be_possible_to_define_fields_from_config(config):
         'thisone': 'is not indexed',
     }
     index_document(doc)
-    assert DB.exists('d|xxxx')
+    assert ds._DB.exists('d|xxxx')
     assert DB.exists('w|lilas')
     assert DB.exists('w|rue')
     assert not DB.exists('w|indexed')
@@ -227,7 +230,7 @@ def test_should_be_possible_to_override_boost_from_config(config):
         'city': 'Cergy'
     }
     index_document(doc)
-    assert DB.exists('d|xxxx')
+    assert ds._DB.exists('d|xxxx')
     assert DB.zscore('w|lilas', 'd|xxxx') == 5
     assert DB.zscore('w|cergy', 'd|xxxx') == 1
 
@@ -245,7 +248,7 @@ def test_should_be_possible_to_override_boost_with_callable(config):
         'city': 'Cergy'
     }
     index_document(doc)
-    assert DB.exists('d|xxxx')
+    assert ds._DB.exists('d|xxxx')
     assert DB.zscore('w|lilas', 'd|xxxx') == 5
     assert DB.zscore('w|cergy', 'd|xxxx') == 1
 
@@ -289,4 +292,5 @@ def test_create_edge_ngrams(config):
     assert DB.exists('n|pa')
     assert DB.exists('n|par')
     assert not DB.exists('n|28')
-    assert len(DB.keys()) == 14
+    assert len(DB.keys()) == 13
+    assert len(ds._DB.keys()) == 1
