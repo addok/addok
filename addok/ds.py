@@ -13,7 +13,7 @@ class RedisStore:
             if doc is not None:
                 yield key, doc
 
-    def add(self, *docs):
+    def upsert(self, *docs):
         pipe = _DB.pipeline(transaction=False)
         for key, blob in docs:
             pipe.set(key, blob)
@@ -48,7 +48,7 @@ def on_load():
 
 
 def store_documents(docs):
-    to_add = []
+    to_upsert = []
     to_remove = []
     for doc in docs:
         if not doc:
@@ -57,12 +57,12 @@ def store_documents(docs):
         if doc.get('_action') in ['delete', 'update']:
             to_remove.append(key)
         if doc.get('_action') in ['index', 'update', None]:
-            to_add.append((key, config.DOCUMENT_SERIALIZER.dumps(doc)))
+            to_upsert.append((key, config.DOCUMENT_SERIALIZER.dumps(doc)))
         yield doc
     if to_remove:
         DS.remove(*to_remove)
-    if to_add:
-        DS.add(*to_add)
+    if to_upsert:
+        DS.upsert(*to_upsert)
 
 
 def get_document(key):
