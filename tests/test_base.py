@@ -1,8 +1,9 @@
-from addok.db import DB
+from addok import db, ds
 
 
 def test_connection_port_is_not_default_one():
-    assert DB.connection_pool.connection_kwargs['db'] == 15
+    assert db.DB.connection_pool.connection_kwargs['db'] == 14
+    assert ds._DB.connection_pool.connection_kwargs['db'] == 15
 
 
 def test_config_on_load_is_called_on_config_load():

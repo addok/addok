@@ -1,12 +1,12 @@
 from addok.config import config
-from addok.db import DB
+from addok.db import RedisProxy
 from addok.helpers import keys
 
 
 class RedisStore:
 
     def fetch(self, *keys):
-        pipe = DB.pipeline(transaction=False)
+        pipe = _DB.pipeline(transaction=False)
         for key in keys:
             pipe.get(key)
         for key, doc in zip(keys, pipe.execute()):
@@ -14,13 +14,13 @@ class RedisStore:
                 yield key, doc
 
     def add(self, *docs):
-        pipe = DB.pipeline(transaction=False)
+        pipe = _DB.pipeline(transaction=False)
         for key, blob in docs:
             pipe.set(key, blob)
         pipe.execute()
 
     def remove(self, *keys):
-        pipe = DB.pipeline(transaction=False)
+        pipe = _DB.pipeline(transaction=False)
         for key in keys:
             pipe.delete(key)
         pipe.execute()
@@ -33,12 +33,18 @@ class DSProxy:
         return getattr(self.instance, name)
 
 
+_DB = RedisProxy()
 DS = DSProxy()
 
 
 @config.on_load
 def on_load():
     DS.instance = config.DOCUMENT_STORE()
+    # Do not create connection if not using this store class.
+    if config.DOCUMENT_STORE == RedisStore:
+        params = config.REDIS.copy()
+        params.update(config.REDIS.get('documents', {}))
+        _DB.connect(host=params['host'], port=params['port'], db=params['db'])
 
 
 def store_documents(docs):
