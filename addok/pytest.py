@@ -7,29 +7,33 @@ import pytest
 def pytest_configure():
     # Do not import files from the top of the module, otherwise they will
     # not taken into account by the coverage.
-    from addok.config import config
-    config.__class__.TESTING = True
+    from addok.config import config as addok_config
+    addok_config.__class__.TESTING = True
     # Be sure not to load local config during tests.
     os.environ['ADDOK_CONFIG_MODULE'] = ''
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    config.REDIS['indexes']['db'] = 14
-    config.REDIS['documents']['db'] = 15
-    config.load()
+    addok_config.REDIS['indexes']['db'] = 14
+    addok_config.REDIS['documents']['db'] = 15
+    addok_config.load()
 
 
 def pytest_runtest_setup(item):
     from addok import db, ds
+    from addok.config import config as addok_config
     assert db.DB.connection_pool.connection_kwargs['db'] == 14
-    assert ds._DB.connection_pool.connection_kwargs['db'] == 15
+    if addok_config.DOCUMENT_STORE == ds.RedisStore:
+        assert ds._DB.connection_pool.connection_kwargs['db'] == 15
 
 
 def pytest_runtest_teardown(item, nextitem):
     from addok import db, ds
+    from addok.config import config as addok_config
     assert db.DB.connection_pool.connection_kwargs['db'] == 14
-    assert ds._DB.connection_pool.connection_kwargs['db'] == 15
     db.DB.flushdb()
-    ds._DB.flushdb()
+    if addok_config.DOCUMENT_STORE == ds.RedisStore:
+        assert ds._DB.connection_pool.connection_kwargs['db'] == 15
+        ds._DB.flushdb()
 
 
 def pytest_addoption(parser):
