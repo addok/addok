@@ -1,5 +1,6 @@
-from addok.batch import process_documents
+from addok.batch import process_documents, reset
 from addok.core import search
+from addok.db import DB
 
 
 def test_process_should_index_by_default(factory):
@@ -24,3 +25,29 @@ def test_process_should_update_if_action_is_given(factory):
     process_documents(doc.copy())
     assert search("avenue")
     assert not search("rue")
+
+
+def test_reset(factory, monkeypatch):
+
+    class Args:
+        force = False
+
+    factory(name="rue de l'avoine")
+    assert DB.keys()
+    monkeypatch.setitem(__builtins__, 'input', lambda *args, **kwargs: 'no')
+    reset(Args())
+    assert DB.keys()
+    monkeypatch.setitem(__builtins__, 'input', lambda *args, **kwargs: 'yes')
+    reset(Args())
+    assert not DB.keys()
+
+
+def test_force_reset(factory):
+
+    class Args:
+        force = True
+
+    factory(name="rue de l'avoine")
+    assert DB.keys()
+    reset(Args())
+    assert not DB.keys()
