@@ -14,14 +14,6 @@ class Config(dict):
     def __init__(self):
         self._post_load_func = []
         self.loaded = False
-        self.paths_lists = [
-            'QUERY_PROCESSORS', 'RESULTS_COLLECTORS',
-            'SEARCH_RESULT_PROCESSORS', 'REVERSE_RESULT_PROCESSORS',
-            'PROCESSORS', 'INDEXERS', 'BATCH_PROCESSORS',
-            'SEARCH_PREPROCESSORS', 'RESULTS_FORMATTERS',
-            'DOCUMENT_PROCESSORS'
-        ]
-        self.paths = ['DOCUMENT_SERIALIZER', 'DOCUMENT_STORE']
         self.plugins = [
             'addok.shell',
             'addok.http.base',
@@ -105,20 +97,20 @@ class Config(dict):
             func()
 
     def resolve(self):
-        for key in self.paths_lists:
-            self.resolve_paths(key)
-        for key in self.paths:
-            self.resolve_path(key)
+        for key in list(self.keys()):
+            if key.endswith('_PYPATHS'):
+                self.resolve_paths(key)
+            elif key.endswith('_PYPATH'):
+                self.resolve_path(key)
 
     def resolve_path(self, key):
         from addok.helpers import import_by_path
-        self[key] = import_by_path(self[key])
+        self[key[:-len('_PYPATH')]] = import_by_path(self[key])
 
     def resolve_paths(self, key):
         from addok.helpers import import_by_path
-        attr = self[key]
-        for idx, path in enumerate(attr):
-            attr[idx] = import_by_path(path)
+        self[key[:-len('_PYPATHS')]] = [import_by_path(path)
+                                        for path in self[key]]
 
 
 config = Config()
