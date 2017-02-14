@@ -97,22 +97,20 @@ class Config(dict):
             func()
 
     def resolve(self):
-        # Two-pass process given that you cannot iterate over a dict
-        # and enrich it at the same time.
-        for path_key in [key for key in self if '_PATH' in key]:
-            if path_key.endswith('_PATHS'):
-                self.resolve_paths(path_key)
-            elif path_key.endswith('_PATH'):
-                self.resolve_path(path_key)
+        for key in list(self.keys()):
+            if key.endswith('_PYPATHS'):
+                self.resolve_paths(key)
+            elif key.endswith('_PYPATH'):
+                self.resolve_path(key)
 
     def resolve_path(self, key):
         from addok.helpers import import_by_path
-        self[key[:-len('_PATH')]] = import_by_path(self[key])
+        self[key[:-len('_PYPATH')]] = import_by_path(self[key])
 
     def resolve_paths(self, key):
         from addok.helpers import import_by_path
-        self[key[:-len('_PATHS')]] = [import_by_path(path)
-                                      for path in self[key]]
+        self[key[:-len('_PYPATHS')]] = [import_by_path(path)
+                                        for path in self[key]]
 
 
 config = Config()

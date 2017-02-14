@@ -1,6 +1,5 @@
 import string
 
-from addok.config import config
 from addok.db import DB
 from addok.helpers import keys as dbkeys
 from addok.helpers import blue, white
@@ -99,9 +98,9 @@ def try_fuzzy(helper, tokens, include_common=True):
 
 def configure(config):
     target = 'addok.helpers.collectors.extend_results_reducing_tokens'
-    if target in config.RESULTS_COLLECTORS_PATHS:
-        idx = config.RESULTS_COLLECTORS_PATHS.index(target)
-        config.RESULTS_COLLECTORS_PATHS.insert(
+    if target in config.RESULTS_COLLECTORS_PYPATHS:
+        idx = config.RESULTS_COLLECTORS_PYPATHS.index(target)
+        config.RESULTS_COLLECTORS_PYPATHS.insert(
             idx, 'addok.fuzzy.fuzzy_collector')
 
 

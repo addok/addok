@@ -147,24 +147,23 @@ endpoint or the `csv` one.
 
     LOG_NOT_FOUND = False
 
-
-#### PROCESSORS_PATHS (iterable of python paths)
+#### PROCESSORS_PYPATHS (iterable of python paths)
 Define the various functions to preprocess the text, before indexing and
 searching. It's an `iterable` of python paths. Some functions are built in
 (mainly for French at this time, but you can point to any python function that
 is on the pythonpath).
 
-    PROCESSORS_PATHS = [
+    PROCESSORS_PYPATHS = [
         'addok.textutils.default.pipeline.tokenize',
         'addok.textutils.default.pipeline.normalize',
         'addok.textutils.default.pipeline.synonymize',
         'addok.textutils.fr.phonemicize',
     ]
 
-#### QUERY_PROCESSORS_PATHS (iterable of python paths)
+#### QUERY_PROCESSORS_PYPATHS (iterable of python paths)
 Additional processors that are run only at query time.
 
-    QUERY_PROCESSORS_PATHS = (
+    QUERY_PROCESSORS_PYPATHS = (
         'addok.textutils.fr_FR.extract_address',
         'addok.textutils.fr_FR.clean_query',
         'addok.textutils.fr_FR.glue_ordinal',
@@ -173,7 +172,7 @@ Additional processors that are run only at query time.
 #### SYNONYMS_PATH (path)
 Path to the synonym file. Synonyms file are in the format `av, ave => avenue`.
 
-    SYNONYMS_PATH = RESOURCES_ROOT.joinpath('synonyms').joinpath('fr.txt')
+    SYNONYMS_PATH = '/path/to/synonyms.txt'
 
 ## Advanced settings
 
@@ -204,15 +203,15 @@ Default score for the relation token to document.
 
     DEFAULT_BOOST = 1.0
 
-#### DOCUMENT_SERIALIZER_PATH (path)
+#### DOCUMENT_SERIALIZER_PYPATH (path)
 Path to the serializer to be used for storing documents. Must have `loads` and
 `dumps` methods.
 
-    DOCUMENT_SERIALIZER_PATH = 'addok.helpers.serializers.ZlibSerializer'
+    DOCUMENT_SERIALIZER_PYPATH = 'addok.helpers.serializers.ZlibSerializer'
 
 For a faster option (but using more RAM), use `marshal` instead.
 
-    DOCUMENT_SERIALIZER_PATH = 'marshal'
+    DOCUMENT_SERIALIZER_PYPATH = 'marshal'
 
 
 #### GEOHASH_PRECISION (int)

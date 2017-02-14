@@ -125,16 +125,16 @@ def register_command(subparsers):
 
 
 def configure(config):
-    config.RESULTS_COLLECTORS_PATHS.insert(0, only_commons_but_geohash_try_autocomplete_collector)  # noqa
+    config.RESULTS_COLLECTORS_PYPATHS.insert(0, only_commons_but_geohash_try_autocomplete_collector)  # noqa
     target = 'addok.helpers.collectors.only_commons'
-    if target in config.RESULTS_COLLECTORS_PATHS:
-        idx = config.RESULTS_COLLECTORS_PATHS.index(target)
-        config.RESULTS_COLLECTORS_PATHS.insert(idx + 1, only_commons_try_autocomplete_collector)  # noqa
-        config.RESULTS_COLLECTORS_PATHS.insert(idx + 1, no_meaningful_but_common_try_autocomplete_collector)  # noqa
+    if target in config.RESULTS_COLLECTORS_PYPATHS:
+        idx = config.RESULTS_COLLECTORS_PYPATHS.index(target)
+        config.RESULTS_COLLECTORS_PYPATHS.insert(idx + 1, only_commons_try_autocomplete_collector)  # noqa
+        config.RESULTS_COLLECTORS_PYPATHS.insert(idx + 1, no_meaningful_but_common_try_autocomplete_collector)  # noqa
     target = 'addok.helpers.collectors.extend_results_reducing_tokens'
-    if target in config.RESULTS_COLLECTORS_PATHS:
-        idx = config.RESULTS_COLLECTORS_PATHS.index(target)
-        config.RESULTS_COLLECTORS_PATHS.insert(idx, autocomplete_meaningful_collector)  # noqa
+    if target in config.RESULTS_COLLECTORS_PYPATHS:
+        idx = config.RESULTS_COLLECTORS_PYPATHS.index(target)
+        config.RESULTS_COLLECTORS_PYPATHS.insert(idx, autocomplete_meaningful_collector)  # noqa
 
 
 def do_autocomplete(self, s):
