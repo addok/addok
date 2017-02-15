@@ -39,11 +39,12 @@ you will need to run again this last line.
 
 ## Install addok and plugins
 
-    pip install git+https://github.com/addok/addok
-    pip install git+https://github.com/addok/addok-fr
-    pip install git+https://github.com/addok/addok-france
+    pip install addok
+    pip install addok-fr
+    pip install addok-france
 
-Note: if you want batch CSV support on the HTTP API, also install the plugin `addok-csv`.
+Note: if you want batch CSV support on the HTTP API, also install the plugin
+`addok-csv`.
 
 Check that thet installation is successful so far by running this command:
 

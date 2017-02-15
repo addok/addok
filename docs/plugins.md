@@ -7,7 +7,7 @@ Each plugin may have its own installation process, but usually it takes two step
 - install a python package, for example: `pip install addok-france`
 - adapt the local configuration to the plugin needs
 
-Have a look at the specific plugin home page to have more details.
+Have a look at the given plugin home page to have more details.
 
 
 ## Known plugins
@@ -20,14 +20,15 @@ Have a look at the specific plugin home page to have more details.
   geocoding of CSV files)
 - [addok-psql](https://github.com/addok/addok-psql): import from PosgreSQL database into Addok.
 - [addok-trigrams](https://github.com/addok/addok-trigrams): alternative index algorithm based on trigrams.
+- [addok-sqlite-store](https://github.com/addok/addok-sqlite-store): store documents into SQLite.
 
-## Writting a plugin
+## Writing a plugin
 
 As usual, best way to learn is to look at the code: look at the other plugins for inspiration.
 
 ### Anatomy of a plugin
 
-An Addok plugin in simply a python module:
+An Addok plugin is simply a python module:
 
 - it must be installed in the PYTHONPATH for addok to be able to import it
 - it should have the `addok.ext` entry point in case it needs to use the API
