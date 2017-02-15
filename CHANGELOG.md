@@ -1,3 +1,40 @@
+## 1.0.0-rc.1
+
+The 1.0.0 has been a big rewrite, with main features:
+
+- split in [plugins](http://addok.readthedocs.io/en/latest/plugins/)
+- allow for external storage of documents (in SQLite, PostgreSQL, etc.)
+- use LUA scripting for performances
+- less RAM consumption
+- replaced Flask by Falcon for performances
+
+It contains many breaking changes. Best option when possible is to restart
+from scratch (see the [tutorial](http://addok.readthedocs.io/en/latest/tutorial/))
+and reindex everything.
+
+### Breaking changes
+
+- `PROCESSORS`, `INDEXERS`, etc. have been renamed to `PROCESSORS_PYPATHS`,
+  `INDEXERS_PYPATHS`, etc.
+- `HOUSENUMBERS_PROCESSORS` have been removed
+- config must now be loaded by `from addok.config import config`
+- removed `DEINDEXERS`, now `INDEXERS` must point to python classes having both
+  `index` and `deindex` methods
+- endpoints API changed
+- by default, documents are now stored in a separate Redis database
+
+### Minor changes
+
+- index multi values in filters
+- add a "reset" command to reset all data (indexes and documents)
+- added `quote` parameter for CSV endpoints (now in addok-csv plugin)
+- addok now tries to read config from `/etc/addok/addok.conf` as fallback
+- `SMALL_BUCKET_LIMIT` is now a setting
+
+Also check the new [FAQ](http://addok.readthedocs.io/en/latest/faq/) section
+in the documentation.
+
+
 ## 0.5.0
 - Expose housenumber parent name in result geojson
 - add support for housenumber payload ([#134](https://github.com/etalab/addok/issues/134))
