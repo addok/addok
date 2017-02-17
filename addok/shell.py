@@ -33,7 +33,7 @@ class Cmd(cmd.Cmd):
              magenta('Type HELP or ? to list commands.\n') +
              magenta('Type QUIT or ctrl-C or ctrl-D to quit.\n'))
     prompt = '> '
-    HISTORY_FILE = '.cli_history'
+    HISTORY_FILE = '.addok_shell_history'
 
     def __init__(self):
         self._init_history_file()
@@ -49,11 +49,15 @@ class Cmd(cmd.Cmd):
             atexit.register(self.save_history)
 
     def save_history(self):
-        readline.write_history_file(self.history_file)
+        try:
+            readline.write_history_file(self.history_file)
+        except FileNotFoundError:
+            print(red('Unable to write history file to '
+                      '{}.'.format(self.history_file)))
 
     @property
     def history_file(self):
-        return str(Path(config.LOG_DIR).joinpath(self.HISTORY_FILE))
+        return str(Path.home() / self.HISTORY_FILE)
 
     def error(self, message):
         print(red(message))
