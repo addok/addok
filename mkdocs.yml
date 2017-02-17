@@ -9,6 +9,7 @@ pages:
 - HTTP API: api.md
 - Shell: shell.md
 - Tutorial: tutorial.md
+- Concepts: concepts.md
 - FAQ: faq.md
 - Changelog: changelog.md
 theme: readthedocs

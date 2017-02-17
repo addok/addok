@@ -15,14 +15,11 @@ Addok works with Redis as backend.
 - it's extendable by plugins
 - it's open source
 
-Start by [installing it](install.md).
+Start by [installing it](install.md) and understand underlying [concepts](concepts.md).
 
 ## Show me the code
 
 The code is published via [Github](https://github.com/addok/addok/).
-
-Curious about the internals, check this
-[presentation](https://speakerdeck.com/yohanboniface/addok-presentation).
 
 ## Licence
 

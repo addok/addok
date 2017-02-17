@@ -80,6 +80,10 @@ This setting defaults to the root folder of the addok package.
 
 A bunch of settings you may want to change to fit your custom instance.
 
+Warning: you will see a lot of settings suffixed with PYPATH(S), those
+are expecting path(s) to Python callable. In case of a list, the order
+matters given that it is a chain of processors.
+
 #### ATTRIBUTION (string or dict)
 The attribution of the data that will be used in the API results. Can be a
 simple string, or a dict.

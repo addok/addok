@@ -27,7 +27,7 @@ Issue a full text search.
 
 #### Response format
 
-The response format follows the [GeoCodeJSON spec](https://github.com/yohanboniface/geocodejson-spec).
+The response format follows the [GeoCodeJSON spec](https://github.com/geocoders/geocodejson-spec).
 Here is an example:
 
 ```
