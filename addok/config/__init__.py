@@ -112,5 +112,13 @@ class Config(dict):
         self[key[:-len('_PYPATHS')]] = [import_by_path(path)
                                         for path in self[key]]
 
+    @property
+    def has_distinct_redis_db(self):
+        from addok.ds import RedisStore
+        return (self.DOCUMENT_STORE == RedisStore
+                and 'documents' in self.REDIS
+                and 'indexes' in self.REDIS
+                and self.REDIS['documents']['db']
+                != self.REDIS['indexes']['db'])
 
 config = Config()

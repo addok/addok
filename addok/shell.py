@@ -14,7 +14,7 @@ from . import hooks
 from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .db import DB
-from .ds import get_document
+from .ds import get_document, RedisStore, _DB
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, scripts, white, yellow)
 from .helpers.index import token_frequency
@@ -236,17 +236,29 @@ class Cmd(cmd.Cmd):
         DBSTATS [pattern pattern pattern]
         DBSTATS d|* w|*
         Warning: this can takes a lot of time in big DB."""
+        all_pattern = '*'
+        doc_pattern = 'd|*'
         if patterns:
             patterns = patterns.split()
         else:
-            patterns = ['*', 'w|*', 'd|*', 'f|*', 'g|*', 'p|*']
+            patterns = ['w|*', 'f|*', 'g|*', 'p|*', doc_pattern, all_pattern]
+
+        def compute_pattern_size(db, pattern):
+            total = 0
+            for k in db.scan_iter(pattern):
+                total += db.debug_object(k)['serializedlength']
+            return total
+
         formatter = Formatter()
         print(formatter.format('{:<7} | {}', 'pattern', 'size'))
         for pattern in patterns:
-            total = 0
-            for k in DB.scan_iter(pattern):
-                total += DB.debug_object(k)['serializedlength']
-            print(white(formatter.format('{:<7} | {:B}', pattern, total)))
+            size = compute_pattern_size(DB, pattern)
+            if config.has_distinct_redis_db:
+                if pattern == doc_pattern:
+                    size = compute_pattern_size(_DB, pattern)
+                elif pattern == all_pattern:
+                    size = size + compute_pattern_size(_DB, pattern)
+            print(white(formatter.format('{:<7} | {:B}', pattern, size)))
 
     def do_DBINFO(self, *args):
         """Print some useful infos from Redis DB."""
