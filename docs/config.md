@@ -11,7 +11,7 @@ available** for example.
 
 ## Registering your custom config file
 
-An Addok config file is simply a python file that define some keys. The default
+An Addok config file is simply a Python file that define some keys. The default
 location is `/etc/addok/addok.conf`. But it can be anywhere else in your system,
 and you need to define an environment variable that points to it if you want
 a special location:
@@ -88,6 +88,28 @@ simple string, or a dict.
     # Or
     ATTRIBUTION = {source: attribution, source2: attribution2}
 
+#### BATCH_CHUNK_SIZE (int)
+Number of documents to be processed together by each worker during import.
+
+    BATCH_CHUNK_SIZE = 1000
+
+
+#### BATCH_FILE_LOADER_PYPATH (Python path)
+Python path to a callable which will be responsible of loading file on
+import and return an iterable.
+
+    BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
+
+#### BATCH_PROCESSORS_PYPATHS (iterable of Python paths)
+All methods called during the batch process.
+
+    BATCH_PROCESSORS_PYPATHS = [
+        'addok.batch.to_json',
+        'addok.helpers.index.prepare_housenumbers',
+        'addok.ds.store_documents',
+        'addok.helpers.index.index_documents',
+    ]
+
 #### EXTRA_FIELDS (list of dicts)
 Sometimes you just want to extend [default fields](#fields-list-of-dicts).
 
@@ -147,10 +169,10 @@ endpoint or the `csv` one.
 
     LOG_NOT_FOUND = False
 
-#### PROCESSORS_PYPATHS (iterable of python paths)
+#### PROCESSORS_PYPATHS (iterable of Python paths)
 Define the various functions to preprocess the text, before indexing and
-searching. It's an `iterable` of python paths. Some functions are built in
-(mainly for French at this time, but you can point to any python function that
+searching. It's an `iterable` of Python paths. Some functions are built in
+(mainly for French at this time, but you can point to any Python function that
 is on the pythonpath).
 
     PROCESSORS_PYPATHS = [
@@ -160,7 +182,7 @@ is on the pythonpath).
         'addok.textutils.fr.phonemicize',
     ]
 
-#### QUERY_PROCESSORS_PYPATHS (iterable of python paths)
+#### QUERY_PROCESSORS_PYPATHS (iterable of Python paths)
 Additional processors that are run only at query time.
 
     QUERY_PROCESSORS_PYPATHS = (
@@ -203,7 +225,7 @@ Default score for the relation token to document.
 
     DEFAULT_BOOST = 1.0
 
-#### DOCUMENT_SERIALIZER_PYPATH (path)
+#### DOCUMENT_SERIALIZER_PYPATH (Python path)
 Path to the serializer to be used for storing documents. Must have `loads` and
 `dumps` methods.
 

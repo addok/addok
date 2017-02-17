@@ -1,3 +1,9 @@
+## 1.0.0-dev
+
+- remove `DOCUMENT_PROCESSORS_PYPATHS` in favor of `BATCH_PROCESSORS_PYPATHS`
+  (not in use before 1.0.0-rc.1)
+- add `BATCH_FILE_LOADER_PYPATH` to specify a custom file loader (e.g. msgpack)
+
 ## 1.0.0-rc.1
 
 The 1.0.0 has been a big rewrite, with main features:

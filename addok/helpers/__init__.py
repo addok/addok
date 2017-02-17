@@ -7,6 +7,19 @@ from multiprocessing.pool import RUN, IMapUnorderedIterator, Pool
 from progressist import ProgressBar
 
 
+def load_file(filepath):
+    with open(filepath) as f:
+        for line in f:
+            yield line
+
+
+def load_msgpack_file(filepath):
+    import msgpack  # We don't want to make it a required dependency.
+    with open(filepath, mode='rb') as f:
+        for line in msgpack.Unpacker(f, encoding='utf-8'):
+            yield line
+
+
 def iter_pipe(pipe, processors):
     """Allow for iterators to return either an item or an iterator of items."""
     if isinstance(pipe, str):

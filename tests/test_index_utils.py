@@ -1,3 +1,5 @@
+import json
+
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
 from addok.batch import process_documents
 from addok.db import DB
@@ -5,11 +7,11 @@ from addok import ds
 
 
 def index_document(doc):
-    process_documents(doc)
+    process_documents(json.dumps(doc))
 
 
 def deindex_document(id_):
-    process_documents({'id': id_, '_action': 'delete'})
+    process_documents(json.dumps({'id': id_, '_action': 'delete'}))
 
 
 def count_keys():

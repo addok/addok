@@ -38,29 +38,19 @@ def register_command(subparsers):
     parser.set_defaults(func=reset)
 
 
-def preprocess_batch(d):
-    config.INDEX_EDGE_NGRAMS = False  # Run command "ngrams" instead.
-    return iter_pipe(d, config.BATCH_PROCESSORS)
-
-
 def process_file(filepath):
     print('Import from file', filepath)
     _, ext = os.path.splitext(filepath)
     if not os.path.exists(filepath):
         sys.stderr.write('File not found: {}'.format(filepath))
         sys.exit(1)
-    if ext == '.msgpack':
-        import msgpack  # We don't want to make it a required dependency.
-        with open(filepath, mode='rb') as f:
-            batch(preprocess_batch(msgpack.Unpacker(f, encoding='utf-8')))
-    else:
-        with open(filepath) as f:
-            batch(preprocess_batch(f))
+    config.INDEX_EDGE_NGRAMS = False  # Run command "ngrams" instead.
+    batch(config.BATCH_FILE_LOADER(filepath))
 
 
 def process_stdin(stdin):
     print('Import from stdin')
-    batch(preprocess_batch(stdin))
+    batch(stdin)
 
 
 @yielder
@@ -72,7 +62,7 @@ def to_json(row):
 
 
 def process_documents(*docs):
-    return list(iter_pipe(docs, config.DOCUMENT_PROCESSORS))
+    return list(iter_pipe(docs, config.BATCH_PROCESSORS))
 
 
 def batch(iterable):

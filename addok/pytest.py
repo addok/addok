@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 
@@ -63,7 +64,7 @@ class DummyDoc(dict):
 
     def index(self):
         from addok.batch import process_documents
-        process_documents(self.copy())
+        process_documents(json.dumps(self.copy()))
 
 
 @pytest.fixture

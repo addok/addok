@@ -48,12 +48,11 @@ SEARCH_PREPROCESSORS_PYPATHS = [
 ]
 BATCH_PROCESSORS_PYPATHS = [
     'addok.batch.to_json',
-]
-DOCUMENT_PROCESSORS_PYPATHS = [
     'addok.helpers.index.prepare_housenumbers',
     'addok.ds.store_documents',
     'addok.helpers.index.index_documents',
 ]
+BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
 BATCH_CHUNK_SIZE = 1000
 RESULTS_COLLECTORS_PYPATHS = [
     'addok.helpers.collectors.only_commons',
