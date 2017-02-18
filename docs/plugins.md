@@ -104,3 +104,32 @@ Register command for Addok CLI.
 #### register_shell_command(cmd):
 
 Register command for Addok shell.
+
+
+## Writing a store plugin
+
+Document stores are particular plugins given they must follow a strict API.
+Again, check out existing stores (especially
+[SQLite](https://github.com/addok/addok-sqlite-store)) for inspiration.
+
+It has to be a class with 4 methods:
+
+### fetch(self, *keys)
+
+Must yield a key and the associated document for each passed keys.
+
+### upsert(self, *docs)
+
+Must up(date or ins)ert documents passed as parameters.
+
+### remove(self, *keys)
+
+Must remove documents related to passed keys.
+
+#### flushdb(self)
+
+Must remove all documents from the database.
+Only in use by the `reset` command.
+
+Once your store plugin is compliant, do not forget to update the
+[DOCUMENT_STORE_PYPATH](config.md) setting to test it.
