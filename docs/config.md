@@ -114,6 +114,11 @@ All methods called during the batch process.
         'addok.helpers.index.index_documents',
     ]
 
+#### DOCUMENT_STORE_PYPATH (Python path)
+Python path to a store class for saving documents using another database
+engine and save memory.
+Check out the dedicated documentation on the [plugins](plugins.md) page.
+
 #### EXTRA_FIELDS (list of dicts)
 Sometimes you just want to extend [default fields](#fields-list-of-dicts).
 
