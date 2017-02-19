@@ -19,18 +19,26 @@ def on_load():
         notfound_logger = logging.getLogger('notfound')
         notfound_logger.setLevel(logging.DEBUG)
         filename = Path(config.LOG_DIR).joinpath('notfound.log')
-        handler = logging.handlers.TimedRotatingFileHandler(str(filename),
-                                                            when='midnight')
-        notfound_logger.addHandler(handler)
+        try:
+            handler = logging.handlers.TimedRotatingFileHandler(
+                                                str(filename), when='midnight')
+        except FileNotFoundError:
+            print('Unable to write to {}'.format(filename))
+        else:
+            notfound_logger.addHandler(handler)
 
     if config.LOG_QUERIES:
         global query_logger
         query_logger = logging.getLogger('queries')
         query_logger.setLevel(logging.DEBUG)
         filename = Path(config.LOG_DIR).joinpath('queries.log')
-        handler = logging.handlers.TimedRotatingFileHandler(str(filename),
-                                                            when='midnight')
-        query_logger.addHandler(handler)
+        try:
+            handler = logging.handlers.TimedRotatingFileHandler(
+                                                str(filename), when='midnight')
+        except FileNotFoundError:
+            print('Unable to write to {}'.format(filename))
+        else:
+            query_logger.addHandler(handler)
 
 
 def log_notfound(query):
