@@ -41,7 +41,7 @@ You can either:
   more memory during the import.
 - issue a `redis-cli bgsave` after the import: this is the faster scenario,
   because Redis will be ready to use just after the import, `bgsave` being
-  aysnchronous. But this will use more or less the double memory when doing the
+  asynchronous. But this will use more or less the double memory when doing the
   `bgsave`, because Redis will create a subprocess;
 - issue a `redis-cli save`, which is synchronous: this will block Redis for one
   or two minutes (depending on the data you imported), but there is no extra
