@@ -7,7 +7,7 @@ But certainly your needs are different, and even if you deal with French address
 you may want to define **which fields are indexed** or **which filters are
 available** for example.
 
-*See algo [Redis Tuning](redis.md).*
+*See also [Redis Tuning](redis.md).*
 
 ## Registering your custom config file
 
