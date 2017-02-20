@@ -28,3 +28,17 @@ This is because when searching it tries to make its best to guess what the user
 is really looking for. At scoring time and by design, we only keep the
 original input to be sure that our guesses aren't too magical and far from
 the reality.
+
+## How is the score computed?
+
+Score is:
+
+- string distance on a 0-1 range scale
+- document importance on a 0-0.1 range scale
+- optionally geographical distance on a 0-0.1 range scale
+  (if a center has been given)
+
+Then scaled back to a 0-1 range scale.
+
+*Note: the score computation is considered an internal detail and may change
+anytime. It's only used for sorting.*
