@@ -283,7 +283,6 @@ def test_housenumber_are_not_computed_if_another_type_is_asked(factory):
 
 
 def test_housenumbers_payload_fields_are_exported(config, factory):
-    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['key']
     factory(name="rue de Paris", type="street", id="123",
             housenumbers={'1': {'lat': '48.32', 'lon': '2.25', 'key': 'abc'}})
     results = search("rue de paris")
@@ -293,7 +292,6 @@ def test_housenumbers_payload_fields_are_exported(config, factory):
 
 
 def test_id_is_overwritten_when_given_in_housenumber_payload(config, factory):
-    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['id']
     factory(name="rue de Paris", type="street", id="123",
             housenumbers={'1': {'lat': '48.325', 'lon': '2.256', 'id': 'abc'}})
     results = search("rue de paris")
@@ -303,7 +301,6 @@ def test_id_is_overwritten_when_given_in_housenumber_payload(config, factory):
 
 
 def test_postcode_is_overwritten_when_in_housenumber_payload(config, factory):
-    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['postcode']
     factory(name="rue de Paris", type="street", id="123", postcode="12345",
             housenumbers={'1': {'lat': '48.325', 'lon': '2.256',
                                 'postcode': '54321'}})
@@ -311,16 +308,6 @@ def test_postcode_is_overwritten_when_in_housenumber_payload(config, factory):
     assert results[0].postcode == '12345'
     results = search("1 rue de paris")
     assert results[0].postcode == '54321'
-
-
-def test_unknown_key_in_housenumber_payload_does_not_fail(config, factory):
-    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['xxxyyy']
-    factory(name="rue de Paris", type="street", id="123", postcode="12345",
-            housenumbers={'1': {'lat': '48.325', 'lon': '2.256'}})
-    results = search("rue de paris")
-    assert results[0].id == '123'
-    results = search("1 rue de paris")
-    assert results[0].id == '123'
 
 
 def test_from_id(factory):

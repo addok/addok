@@ -109,10 +109,6 @@ FIELDS = [
 # Sometimes you only want to add some fields keeping the default ones.
 EXTRA_FIELDS = []
 
-# If you want to store extra fields with each housenumber. Those fields will
-# not be searchable, but will be returned in the search result.
-HOUSENUMBERS_PAYLOAD_FIELDS = []
-
 # Weight of a document own importance:
 IMPORTANCE_WEIGHT = 0.1
 

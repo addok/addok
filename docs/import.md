@@ -17,7 +17,12 @@ The expected keys are the ones declared in the `FIELDS` attribute of your
 - **id** is expected
 - **lat** and **lon** are expected
 - **housenumbers** has a special format: `{number: {lat: yyy, lon: xxx}}` (optionally you can
-  add an `id` key for each housenumber entry)
+  add any custom attribute)
+
+Each value can be either a unique value or a list of values. In the latter case,
+the first value will be considered as the active one (for example to display the label),
+the optional other ones are considered as aliases.
+They will be indexed and searchable though.
 
 #### Example
 
