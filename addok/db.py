@@ -12,6 +12,13 @@ class RedisProxy:
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
+    def stats(self, patterns):
+        for pattern in patterns:
+            total = 0
+            for k in self.scan_iter(pattern):
+                total += self.debug_object(k)['serializedlength']
+            yield pattern, total
+
 
 DB = RedisProxy()
 

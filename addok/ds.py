@@ -28,6 +28,13 @@ class RedisStore:
     def flushdb(self):
         _DB.flushdb()
 
+    def stats(self, patterns):
+        for pattern in patterns:
+            total = 0
+            for k in _DB.scan_iter(pattern):
+                total += _DB.debug_object(k)['serializedlength']
+            yield pattern, total
+
 
 class DSProxy:
     instance = None

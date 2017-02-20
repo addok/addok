@@ -14,7 +14,7 @@ from . import hooks
 from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .db import DB
-from .ds import get_document, RedisStore, _DB
+from .ds import get_document, DS
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, scripts, white, yellow)
 from .helpers.index import token_frequency
@@ -236,29 +236,21 @@ class Cmd(cmd.Cmd):
         DBSTATS [pattern pattern pattern]
         DBSTATS d|* w|*
         Warning: this can takes a lot of time in big DB."""
-        all_pattern = '*'
-        doc_pattern = 'd|*'
         if patterns:
-            patterns = patterns.split()
+            indexes_patterns = documents_patterns = patterns.split()
         else:
-            patterns = ['w|*', 'f|*', 'g|*', 'p|*', doc_pattern, all_pattern]
-
-        def compute_pattern_size(db, pattern):
-            total = 0
-            for k in db.scan_iter(pattern):
-                total += db.debug_object(k)['serializedlength']
-            return total
+            indexes_patterns = ['w|*', 'f|*', 'g|*', 'p|*', '*']
+            documents_patterns = ['d|*', '*']
 
         formatter = Formatter()
-        print(formatter.format('{:<7} | {}', 'pattern', 'size'))
-        for pattern in patterns:
-            size = compute_pattern_size(DB, pattern)
-            if config.has_distinct_redis_db:
-                if pattern == doc_pattern:
-                    size = compute_pattern_size(_DB, pattern)
-                elif pattern == all_pattern:
-                    size = size + compute_pattern_size(_DB, pattern)
-            print(white(formatter.format('{:<7} | {:B}', pattern, size)))
+        print('Documents')
+        print(formatter.format('  {:<7} | {}', 'pattern', 'size'))
+        for pattern, size in DS.stats(documents_patterns):
+            print(white(formatter.format('  {:<7} | {:B}', pattern, size)))
+        print('Indexes')
+        print(formatter.format('  {:<7} | {}', 'pattern', 'size'))
+        for pattern, size in DB.stats(indexes_patterns):
+            print(white(formatter.format('  {:<7} | {:B}', pattern, size)))
 
     def do_DBINFO(self, *args):
         """Print some useful infos from Redis DB."""
