@@ -68,16 +68,13 @@ class Result:
 
     @property
     def keys(self):
-        to_filter = ['importance', 'housenumbers', 'lat', 'lon']
-        keys = ['housenumber']
-        keys.extend(self._doc.keys())
-        housenumber = getattr(self, 'housenumber', None)
-        if housenumber:
-            keys.extend(config.HOUSENUMBERS_PAYLOAD_FIELDS)
-        for key in keys:
-            if key.startswith(('_', 'h|')) or key in to_filter:
-                continue
-            yield key
+        keys = ['housenumber'] + list(self._doc.keys())
+        # housenumbers are too verbose for a given street.
+        yield from (key for key in keys if key != 'housenumbers')
+
+    def update(self, data):
+        self._doc.update(data)
+        self._cache.update(data)
 
     def format(self):
         result = self

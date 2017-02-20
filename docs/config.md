@@ -153,12 +153,6 @@ filter means bigger index.
 
     FILTERS = ["type", "postcode"]
 
-#### HOUSENUMBERS_PAYLOAD_FIELDS (list of keys)
-If you want to store extra fields with each payload. Those fields will not
-be searchable, but will be returned in the search result.
-
-    HOUSENUMBERS_PAYLOAD_FIELDS = ['key1', 'key2']
-
 #### LICENCE (string or dict)
 The licence of the data returned by the API. Can be a simple string, or a dict.
 

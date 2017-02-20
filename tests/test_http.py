@@ -125,7 +125,6 @@ def test_view_should_expose_config(config):
 
 
 def test_geojson_should_return_housenumber_payload(client, factory, config):
-    config.HOUSENUMBERS_PAYLOAD_FIELDS = ['key']
     factory(name="rue de Paris", type="street", id="123",
             housenumbers={'1': {'lat': '48.32', 'lon': '2.25', 'key': 'abc'}})
     resp = client.get('/search/', query_string={'q': 'rue de paris'})

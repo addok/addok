@@ -34,7 +34,7 @@ def _match_housenumber(helper, result, tokens):
             data = result.housenumbers[str(token)]
             result.housenumber = data.pop('raw')
             result.type = 'housenumber'
-            result._cache.update(data)
+            result.update(data)
             break
 
 
