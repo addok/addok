@@ -14,7 +14,7 @@ from . import hooks
 from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .db import DB
-from .ds import get_document, DS
+from .ds import get_document
 from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, scripts, white, yellow)
 from .helpers.index import token_frequency
