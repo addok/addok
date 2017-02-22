@@ -1,4 +1,5 @@
 import redis
+
 from addok.config import config
 from addok.db import DB
 from addok.helpers import keys as dbkeys

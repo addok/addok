@@ -1,10 +1,12 @@
+import os
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
-import os
 from multiprocessing.pool import RUN, IMapUnorderedIterator, Pool
 
 from progressist import ProgressBar
+
+from addok.config import config
 
 
 def load_file(filepath):
@@ -156,11 +158,7 @@ class ChunkedPool(Pool):
 
 def parallelize(func, iterable, chunk_size, **bar_kwargs):
     bar = Bar(prefix='Processing…', **bar_kwargs)
-    # Do not use too much processes here, since they are consuming RAM; let one
-    # process free for Redis.
-    processes = os.cpu_count() - 1
-
-    with ChunkedPool(processes=processes) as pool:
+    with ChunkedPool(processes=config.BATCH_WORKERS) as pool:
         for chunk in pool.imap_unordered(func, iterable, chunk_size):
             bar(step=len(chunk))
         bar.finish()

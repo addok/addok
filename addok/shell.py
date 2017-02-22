@@ -7,7 +7,6 @@ import time
 from pathlib import Path
 
 import geohash
-
 from progressist import Formatter
 
 from . import hooks
