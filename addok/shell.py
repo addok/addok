@@ -240,7 +240,8 @@ class Cmd(cmd.Cmd):
             'connected_clients']
         for key in keys:
             print('{}: {}'.format(white(key), blue(info[key])))
-        for db_index in range(15):
+        nb_of_redis_db = int(DB.config_get('databases')['databases'])
+        for db_index in range(nb_of_redis_db - 1):
             db_name = 'db{}'.format(db_index)
             if db_name in info:
                 label = white('nb keys (db {})'.format(db_index))
