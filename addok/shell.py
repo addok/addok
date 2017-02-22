@@ -231,27 +231,6 @@ class Cmd(cmd.Cmd):
         duration = round((time.time() - start) * 1000, 1)
         print(magenta("({} in {} ms)".format(len(results), duration)))
 
-    def do_DBSTATS(self, patterns=None):
-        """Print DB memory usage.
-        DBSTATS [pattern pattern pattern]
-        DBSTATS d|* w|*
-        Warning: this can takes a lot of time in big DB."""
-        if patterns:
-            indexes_patterns = documents_patterns = patterns.split()
-        else:
-            indexes_patterns = ['w|*', 'f|*', 'g|*', 'p|*', '*']
-            documents_patterns = ['d|*', '*']
-
-        formatter = Formatter()
-        print('Documents')
-        print(formatter.format('  {:<7} | {}', 'pattern', 'size'))
-        for pattern, size in DS.stats(documents_patterns):
-            print(white(formatter.format('  {:<7} | {:B}', pattern, size)))
-        print('Indexes')
-        print(formatter.format('  {:<7} | {}', 'pattern', 'size'))
-        for pattern, size in DB.stats(indexes_patterns):
-            print(white(formatter.format('  {:<7} | {:B}', pattern, size)))
-
     def do_DBINFO(self, *args):
         """Print some useful infos from Redis DB."""
         info = DB.info()
