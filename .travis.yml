@@ -4,9 +4,14 @@ python:
 sudo: false
 services:
 - redis-server
+branches:
+  only:
+    - master
 install:
+- pip install -U pip
+- pip install cython
+- 'pip install --no-binary :all: falcon'
 - python setup.py develop
-- pip install -r requirements.txt
 - pip install -r requirements-dev.txt
 - pip install python-coveralls
 script: py.test
