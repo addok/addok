@@ -234,23 +234,6 @@ class Cmd(cmd.Cmd):
         duration = round((time.time() - start) * 1000, 1)
         print(magenta("({} in {} ms)".format(len(results), duration)))
 
-    def do_DBSTATS(self, patterns=None):
-        """Print DB memory usage.
-        DBSTATS [pattern pattern pattern]
-        DBSTATS d|* w|*
-        Warning: this can takes a lot of time in big DB."""
-        if patterns:
-            patterns = patterns.split()
-        else:
-            patterns = ['*', 'w|*', 'd|*', 'f|*', 'g|*', 'p|*']
-        formatter = Formatter()
-        print(formatter.format('{:<7} | {}', 'pattern', 'size'))
-        for pattern in patterns:
-            total = 0
-            for k in DB.scan_iter(pattern):
-                total += DB.debug_object(k)['serializedlength']
-            print(white(formatter.format('{:<7} | {:B}', pattern, total)))
-
     def do_DBINFO(self, *args):
         """Print some useful infos from Redis DB."""
         info = DB.info()
@@ -260,8 +243,12 @@ class Cmd(cmd.Cmd):
             'connected_clients']
         for key in keys:
             print('{}: {}'.format(white(key), blue(info[key])))
-        if 'db0' in info:
-            print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
+        nb_of_redis_db = int(DB.config_get('databases')['databases'])
+        for db_index in range(nb_of_redis_db - 1):
+            db_name = 'db{}'.format(db_index)
+            if db_name in info:
+                label = white('nb keys (db {})'.format(db_index))
+                print('{}: {}'.format(label, blue(info[db_name]['keys'])))
 
     def do_DBKEY(self, key):
         """Print raw content of a DB key.
