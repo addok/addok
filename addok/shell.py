@@ -240,8 +240,11 @@ class Cmd(cmd.Cmd):
             'connected_clients']
         for key in keys:
             print('{}: {}'.format(white(key), blue(info[key])))
-        if 'db0' in info:
-            print('{}: {}'.format(white('nb keys'), blue(info['db0']['keys'])))
+        for db_index in range(15):
+            db_name = 'db{}'.format(db_index)
+            if db_name in info:
+                label = white('nb keys (db {})'.format(db_index))
+                print('{}: {}'.format(label, blue(info[db_name]['keys'])))
 
     def do_DBKEY(self, key):
         """Print raw content of a DB key.
