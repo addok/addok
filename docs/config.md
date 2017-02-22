@@ -114,6 +114,12 @@ All methods called during the batch process.
         'addok.helpers.index.index_documents',
     ]
 
+#### BATCH_WORKERS (int)
+Number of processes in use when parallelizing tasks such as batch imports or
+ngrams computing.
+
+    BATCH_WORKERS = os.cpu_count() - 1
+
 #### DOCUMENT_STORE_PYPATH (Python path)
 Python path to a store class for saving documents using another database
 engine and save memory.

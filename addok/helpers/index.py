@@ -1,6 +1,6 @@
 import geohash
-
 import redis
+
 from addok.config import config
 from addok.db import DB
 from addok.ds import get_document

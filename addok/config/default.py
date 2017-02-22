@@ -54,6 +54,9 @@ BATCH_PROCESSORS_PYPATHS = [
 ]
 BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
 BATCH_CHUNK_SIZE = 1000
+# During imports, workers are consuming RAM;
+# let one process free for Redis by default.
+BATCH_WORKERS = os.cpu_count() - 1
 RESULTS_COLLECTORS_PYPATHS = [
     'addok.helpers.collectors.only_commons',
     'addok.helpers.collectors.bucket_with_meaningful',
