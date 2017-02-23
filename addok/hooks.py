@@ -41,13 +41,13 @@ def block(name_or_module):
 
 
 @spec
-def register_api_endpoint(api):
+def register_http_endpoint(api):
     """Add new endpoints to Addok API."""
     pass
 
 
 @spec
-def register_api_middleware(middlewares):
+def register_http_middleware(middlewares):
     """Add new middlewares to Addok API."""
     pass
 

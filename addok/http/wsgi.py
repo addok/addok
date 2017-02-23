@@ -6,9 +6,10 @@ from .base import CorsMiddleware
 
 config.load()
 middlewares = [CorsMiddleware()]
-hooks.register_api_middleware(middlewares)
-application = falcon.API(middleware=middlewares)
-hooks.register_api_endpoint(application)
+hooks.register_http_middleware(middlewares)
+# The name `application` is expected by wsgi by default.
+application = api = falcon.API(middleware=middlewares)
+hooks.register_http_endpoint(api)
 
 
 def simple(args):
