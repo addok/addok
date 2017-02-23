@@ -138,7 +138,7 @@ def configure(config):
         config.RESULTS_COLLECTORS_PYPATHS.insert(idx, autocomplete_meaningful_collector)  # noqa
 
 
-def do_autocomplete(self, s):
+def do_AUTOCOMPLETE(cmd, s):
     """Shows autocomplete results for a given token."""
     s = list(preprocess_query(s))[0]
     keys = [k.decode() for k in DB.smembers(edge_ngram_key(s))]
@@ -147,4 +147,4 @@ def do_autocomplete(self, s):
 
 
 def register_shell_command(cmd):
-    cmd.register_command(do_autocomplete)
+    cmd.register_command(do_AUTOCOMPLETE)

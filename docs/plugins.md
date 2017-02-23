@@ -5,9 +5,9 @@
 Each plugin may have its own installation process, but usually it takes two steps:
 
 - install a python package, for example: `pip install addok-france`
-- adapt the local configuration to the plugin needs
+- adapt your local configuration to the plugin needs
 
-Have a look at the given plugin home page to have more details.
+Check each plugin home page to have specific documentation.
 
 
 ## Known plugins
@@ -36,8 +36,10 @@ An Addok plugin is simply a python module:
 
 ### addok.ext entry point
 
-Note: this is only needed if you want your plugin to be connected with the API endpoints. If the plugin
-only deal with configuration (for example adding a PROCESSOR), there is no needed for that.
+Note: this is only needed if you want to use hooks within your plugin.
+For example, if the plugin only deals with configuration
+(adding a PROCESSOR, changing the document store, etc), there is no need
+for that.
 
 Add this to your `setup.py`:
 
@@ -67,7 +69,7 @@ If you put the hooks in `hooks.py`, then your entrypoint should be:
     entry_points={'addok.ext': ['mysuperplugin=mysuperplugin.hooks']},
 ```
 
-### Plugins API
+### Plugins hooks
 
 If you have added an entry point to your plugin, addok will look for some hooks
 and call them if you have defined them.
@@ -77,33 +79,89 @@ Important: those hooks must be in the module defined in the entrypoint.
 
 #### preconfigure(config)
 
-Allow to path config object before user local config (for example to set defaults
-overridable then by the plugin user in their local config).
+Allow to modify config object before user local config is loaded (for example
+to set defaults overridable by the plugin user in their local config).
 
 
 #### configure(config)
 
-Allow to path config object after user local config.
+Allow to modify config object after user local config has been loaded.
 
 
-#### register_api_endpoint(api)
+#### register_http_endpoint(api)
 
-Add new endpoints to the HTTP API.
+Add new endpoints to the HTTP API. It uses [Falcon](http://falcon.readthedocs.io/)
+so each [view](http://falcon.readthedocs.io/en/stable/api/request_and_response.html)
+must comply to Falcon's contract:
 
+```python
+class MyFalconView:
 
-#### register_api_middleware(middlewares)
+    def on_get(self, req, resp, myparameter):
+        resp.body = do_something(myparameter)
+        resp.status = 200
+        resp.content_type = 'text/html'
 
-Add new middlewares to the HTTP API.
+def register_http_endpoint(api):
+    api.add_route('/path/{myparameter}', MyFalconView())
+```
 
+#### register_http_middleware(middlewares)
+
+Add new middlewares to the HTTP API. It uses [Falcon](http://falcon.readthedocs.io/)
+so each [middleware](http://falcon.readthedocs.io/en/stable/api/middleware.html)
+must comply to Falcon's contract:
+
+```python
+class MyFalconMiddleware:
+
+    def process_request(self, req, resp):
+        ...
+
+    def process_resource(self, req, resp, resource, params):
+        ...
+
+    def process_response(self, req, resp, resource, req_succeeded):
+        ...
+
+def register_http_middleware(middlewares):
+    middlewares.append(MyFalconMiddleware())
+```
 
 #### register_command(subparsers):
 
 Register command for Addok CLI.
 
+```python
+def my_callable(*args):
+    # `args` are parsed from command-line.
+    do_whatever_with(args)
+
+
+def register_command(subparsers):
+    parser = subparsers.add_parser('mycommand', help='Documentation.')
+    parser.set_defaults(func=my_callable)
+```
 
 #### register_shell_command(cmd):
 
-Register command for Addok shell.
+Register command for Addok shell. The command must start with `do_` to
+be registered as a command and the command must be uppercase.
+
+The first line of the command docstring will be displayed when using `HELP`
+in the shell and the whole docstring will be displayed when using
+`HELP WHATEVER`.
+
+```python
+def do_WHATEVER(cmd, remaining_string):
+    """Allow to use the `WHATEVER` command within the shell."""
+    # `cmd` is the Cmd instance.
+    # `remaining_string` is everything typed by the user after the
+    # command name.
+
+def register_shell_command(cmd):
+    cmd.register_command(do_WHATEVER)
+```
 
 
 ## Writing a store plugin

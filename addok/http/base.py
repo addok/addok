@@ -160,7 +160,7 @@ class Reverse(View):
         self.to_geojson(req, resp, results, filters=filters, limit=limit)
 
 
-def register_api_endpoint(api):
+def register_http_endpoint(api):
     api.add_route('/get/{doc_id}', Get())
     api.add_route('/search', Search())
     api.add_route('/reverse', Reverse())
