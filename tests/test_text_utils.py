@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from addok.fuzzy import make_fuzzy
@@ -84,11 +86,19 @@ def test_alphanumerize(input, output):
     ['bd', 'boulevard'],
     ['13e', 'treizieme'],
 ])
-def test_synonymize(input, output, monkeypatch):
+def test_synonymize(input, output, config):
     # Make sure we control synonyms.
-    SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
-    monkeypatch.setattr('addok.helpers.text.SYNONYMS', SYNONYMS)
+    config.SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
     assert _synonymize(Token(input)) == output
+
+
+def test_synonyms_file_is_loaded(config):
+    # See synonyms.txt
+    assert config.SYNONYMS == {
+        'cba': 'abc',
+        'xzy': 'xyz',
+        'zyx': 'xyz',
+    }
 
 
 def test_compute_edge_ngrams():

@@ -1,3 +1,8 @@
+from pathlib import Path
+import os
+
+import pytest
+
 from addok import db, ds
 
 
@@ -22,3 +27,29 @@ def test_config_on_load_is_called_on_config_load():
     # config should not reload if already loaded.
     config.load()
     assert not on_load.called
+
+
+def test_local_config_has_been_loaded(config):
+    # See addok/config/test.py
+    assert config.COMMON_THRESHOLD == 1000
+
+
+def test_config_does_not_fail_if_local_path_does_not_exist(capsys):
+    os.environ['ADDOK_CONFIG_MODULE'] = 'dummy/path.py'
+    from addok.config import Config
+    config = Config()
+    config.load()
+    out, err = capsys.readouterr()
+    assert 'No local config file found' in out
+    os.environ['ADDOK_CONFIG_MODULE'] = ''
+
+
+def test_config_load_exit_if_local_file_is_invalid():
+    path = str(Path(__file__).parent / 'invalid_config.py')
+    os.environ['ADDOK_CONFIG_MODULE'] = path
+    from addok.config import Config
+    config = Config()
+    with pytest.raises(SystemExit) as err:
+        config.load()
+        assert 'Unable to import' in err
+    os.environ['ADDOK_CONFIG_MODULE'] = ''

@@ -120,7 +120,7 @@ class BaseHelper:
         s = '[{}] {}'.format(str((time.time() - self._start) * 1000)[:5], s)
         self._debug.append(s)
 
-    def report(self):
+    def report(self):  # pragma: no cover
         for msg in self._debug:
             print(msg)
 

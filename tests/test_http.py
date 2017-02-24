@@ -57,6 +57,13 @@ def test_search_filters_can_be_combined(client, factory):
     assert feature['properties']['type'] == 'street'
 
 
+def test_centered_search_should_return_center(client, factory):
+    factory(name='rue de Paris', type="street")
+    resp = client.get('/search/',
+                      query_string={'q': 'paris', 'lat': '44', 'lon': '4'})
+    assert resp.json['center'] == [4, 44]
+
+
 def test_reverse_should_return_geojson(client, factory):
     factory(name='rue des avions', lat=44, lon=4)
     resp = client.get('/reverse/', query_string={'lat': '44', 'lon': '4'})
@@ -99,6 +106,13 @@ def test_reverse_should_have_cors_headers(client, factory):
     resp = client.get('/reverse/', query_string={'lat': '44', 'lng': '4'})
     assert resp.headers['Access-Control-Allow-Origin'] == '*'
     assert resp.headers['Access-Control-Allow-Headers'] == 'X-Requested-With'
+
+
+def test_reverse_without_lat_or_lng_should_return_400(client, factory):
+    resp = client.get('/reverse/', query_string={'lat': '44'})
+    assert resp.status_code == 400
+    resp = client.get('/reverse/', query_string={'lng': '4'})
+    assert resp.status_code == 400
 
 
 def test_get_endpoint(client, factory):
@@ -144,3 +158,4 @@ def test_geojson_should_keep_housenumber_parent_name(client, factory):
     resp = client.get('/search/', query_string={'q': '2 Le Vieux-Chêne'})
     assert resp.json['features'][0]['properties']['name'] == '2 Le Vieux-Chêne'
     assert resp.json['features'][0]['properties']['locality'] == 'Le Vieux-Chêne'
+

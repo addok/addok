@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 import uuid
 
 import pytest
@@ -10,8 +11,9 @@ def pytest_configure():
     # not taken into account by the coverage.
     from addok.config import config as addok_config
     addok_config.__class__.TESTING = True
-    # Be sure not to load local config during tests.
-    os.environ['ADDOK_CONFIG_MODULE'] = ''
+    # Force test config.
+    from addok import config as config_module
+    os.environ['ADDOK_CONFIG_MODULE'] = str(Path(config_module.__file__).parent / 'test.py')
     import logging
     logging.basicConfig(level=logging.DEBUG)
     addok_config.REDIS['indexes']['db'] = 14

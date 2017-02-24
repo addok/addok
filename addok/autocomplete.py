@@ -43,7 +43,7 @@ class EdgeNgramIndexer:
 
 def only_commons_but_geohash_try_autocomplete_collector(helper):
     if helper.geohash_key and len(helper.tokens) == len(helper.common):
-            autocomplete(helper, helper.tokens, use_geohash=True)
+        autocomplete(helper, helper.tokens, use_geohash=True)
 
 
 def only_commons_try_autocomplete_collector(helper):

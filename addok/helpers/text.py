@@ -73,14 +73,12 @@ def _normalize(s):
 normalize = yielder(_normalize)
 
 
-SYNONYMS = {}
-
-
 @config.on_load
 def load_synonyms():
+    config.SYNONYMS = {}
     path = config.SYNONYMS_PATH
     if not path:
-        return
+        return  # pragma: no cover
     with Path(path).open() as f:
         for line in f:
             if line.startswith('#'):
@@ -92,11 +90,11 @@ def load_synonyms():
                 synonym = synonym.strip()
                 if not synonym:
                     continue
-                SYNONYMS[synonym] = wanted
+                config.SYNONYMS[synonym] = wanted
 
 
 def _synonymize(t):
-    return t.update(SYNONYMS.get(t, t))
+    return t.update(config.SYNONYMS.get(t, t))
 synonymize = yielder(_synonymize)
 
 

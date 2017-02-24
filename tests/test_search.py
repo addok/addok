@@ -95,8 +95,8 @@ def test_should_do_autocomplete_on_last_term(street):
     assert not search('wambre avenue', autocomplete=True)
 
 
-def test_synonyms_should_be_replaced(street, monkeypatch):
-    monkeypatch.setattr('addok.helpers.text.SYNONYMS', {'bd': 'boulevard'})
+def test_synonyms_should_be_replaced(street, config):
+    config.SYNONYMS = {'bd': 'boulevard'}
     street.update(name='boulevard des Fleurs')
     assert search('bd')
 
@@ -175,6 +175,18 @@ def test_found_term_is_not_autocompleted_if_enough_results(factory,
     ids = [r.id for r in results]
     assert len(ids) == 2
     assert montagne['id'] not in ids
+
+
+def test_should_autocomplete_if_only_commons_but_geohash(factory, monkeypatch):
+    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 3)
+    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+    factory(name="rue des tilleuls")
+    factory(name="rue des chênes")
+    factory(name="rue des hètres")
+    factory(name="rue des aulnes")
+    factory(name="rue descartes", lon=2.2, lat=48.1)
+    results = search('rue des', autocomplete=True, lon=2.2, lat=48.1)
+    assert results[0].name == 'rue descartes'
 
 
 def test_closer_result_should_be_first_for_same_score(factory):
@@ -339,3 +351,7 @@ def test_should_keep_unchanged_name_as_default_label(factory):
     factory(name="Porte des Lilas")
     results = search("porte des lilas")
     str(results[0]) == "Porte des Lilas"
+
+
+def test_does_not_fail_without_usable_tokens(street):
+    assert not search('./.$*')

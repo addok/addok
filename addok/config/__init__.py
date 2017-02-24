@@ -32,7 +32,7 @@ class Config(dict):
         self.load_core_plugins()
         if not Config.TESTING:
             # We don't want to autoload installed plugin during tests.
-            hooks.load()
+            hooks.load()  # pragma: no cover
         hooks.preconfigure(self)
         self.load_local()
         hooks.configure(self)
@@ -67,7 +67,7 @@ class Config(dict):
         try:
             with open(path) as config_file:
                 exec(compile(config_file.read(), path, 'exec'), d.__dict__)
-        except IOError as e:
+        except (IOError, SyntaxError) as e:
             from addok.helpers import red
             print(red('Unable to import {} from '
                       'ADDOK_CONFIG_MODULE'.format(path)))
