@@ -1,3 +1,8 @@
+"""
+Exposes a pytest plugin so addok plugins do not need to recode all the test
+setup logic.
+"""
+
 import json
 import os
 from pathlib import Path
