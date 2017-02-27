@@ -56,9 +56,9 @@ def try_fuzzy(helper, tokens, include_common=True):
     allkeys = helper.keys[:]
     if include_common:
         # As we are in fuzzy, try to narrow as much as possible by adding
-        # unused commons tokens.
-        common = [t for t in helper.common if t.db_key not in helper.keys]
-        allkeys.extend([t.db_key for t in common])
+        # unused common tokens.
+        allkeys.extend([t.db_key for t in helper.common
+                        if t.db_key not in helper.keys])
     for try_one in tokens:
         if helper.bucket_full:
             break
@@ -67,10 +67,10 @@ def try_fuzzy(helper, tokens, include_common=True):
             keys.remove(try_one.db_key)
         if try_one.isdigit():
             continue
-        helper.debug('Going fuzzy with %s', try_one)
+        helper.debug('Going fuzzy with %s and %s', try_one, keys)
         neighbors = make_fuzzy(try_one, max=helper.fuzzy)
         if len(keys):
-            # Only retains tokens that have been seen in the index at least
+            # Only retain tokens that have been seen in the index at least
             # once with the other tokens.
             DB.sadd(helper.pid, *neighbors)
             interkeys = [pair_key(k[2:]) for k in keys]
@@ -89,11 +89,12 @@ def try_fuzzy(helper, tokens, include_common=True):
                 count = DB.zcard(key)
                 if count:
                     fuzzy_words.append(neighbor)
-        helper.debug('Found fuzzy candidates %s', fuzzy_words)
-        fuzzy_keys = [dbkeys.token_key(w) for w in fuzzy_words]
-        for key in fuzzy_keys:
-            if helper.bucket_dry:
-                helper.add_to_bucket(keys + [key])
+        if fuzzy_words:
+            helper.debug('Found fuzzy candidates %s', fuzzy_words)
+            fuzzy_keys = [dbkeys.token_key(w) for w in fuzzy_words]
+            for key in fuzzy_keys:
+                if helper.bucket_dry:
+                    helper.add_to_bucket(keys + [key])
 
 
 def configure(config):
