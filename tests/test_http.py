@@ -156,6 +156,16 @@ def test_geojson_should_keep_housenumber_parent_name(client, factory):
     assert resp.json['features'][0]['properties']['name'] == '1 rue de Paris'
     assert resp.json['features'][0]['properties']['street'] == 'rue de Paris'
     resp = client.get('/search/', query_string={'q': '2 Le Vieux-Chêne'})
-    assert resp.json['features'][0]['properties']['name'] == '2 Le Vieux-Chêne'
-    assert resp.json['features'][0]['properties']['locality'] == 'Le Vieux-Chêne'
+    props = resp.json['features'][0]['properties']
+    assert props['name'] == '2 Le Vieux-Chêne'
+    assert props['locality'] == 'Le Vieux-Chêne'
 
+
+def test_search_should_not_split_querystring_on_commas(client, factory):
+    factory(name='rue des avions',
+            housenumbers={'18': {'lat': '48.22', 'lon': '2.22'}})
+    # Pass query string as a string, not to let pytest-falcon urlencode it.
+    resp = client.get('/search/', query_string='q=18, rue des avions')
+    props = resp.json['features'][0]['properties']
+    assert props['label'] == '18 rue des avions'
+    assert resp.json['query'] == '18, rue des avions'

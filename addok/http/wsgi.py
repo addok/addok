@@ -9,6 +9,8 @@ middlewares = [CorsMiddleware()]
 hooks.register_http_middleware(middlewares)
 # The name `application` is expected by wsgi by default.
 application = api = falcon.API(middleware=middlewares)
+# Do not let Falcon split query string on commas.
+application.req_options.auto_parse_qs_csv = False
 hooks.register_http_endpoint(api)
 
 
