@@ -101,10 +101,10 @@ def test_synonyms_should_be_replaced(street, config):
     assert search('bd')
 
 
-def test_should_return_results_if_only_common_terms(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 2)
-    monkeypatch.setattr('addok.config.config.INTERSECT_LIMIT', 2)
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+def test_should_return_results_if_only_common_terms(factory, config):
+    config.COMMON_THRESHOLD = 2
+    config.INTERSECT_LIMIT = 2
+    config.BUCKET_MAX = 3
     street1 = factory(name="rue de la monnaie", city="Vitry")
     street2 = factory(name="rue de la monnaie", city="Paris")
     street3 = factory(name="rue de la monnaie", city="Condom")
@@ -117,9 +117,9 @@ def test_should_return_results_if_only_common_terms(factory, monkeypatch):
     assert street4['id'] not in ids
 
 
-def test_should_brute_force_if_common_terms_above_limit(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 2)
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+def test_should_brute_force_if_common_terms_above_limit(factory, config):
+    config.COMMON_THRESHOLD = 2
+    config.BUCKET_MAX = 3
     street1 = factory(name="rue de la monnaie", city="Vitry")
     street2 = factory(name="rue de la monnaie", city="Paris")
     street3 = factory(name="rue de la monnaie", city="Condom")
@@ -132,10 +132,10 @@ def test_should_brute_force_if_common_terms_above_limit(factory, monkeypatch):
     assert street4['id'] not in ids
 
 
-def test_should_use_filter_if_only_common_terms(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 2)
-    monkeypatch.setattr('addok.config.config.INTERSECT_LIMIT', 2)
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+def test_should_use_filter_if_only_common_terms(factory, config):
+    config.COMMON_THRESHOLD = 2
+    config.INTERSECT_LIMIT = 2
+    config.BUCKET_MAX = 3
     street1 = factory(name="rue de la monnaie", city="Vitry")
     street2 = factory(name="rue de la monnaie", city="Paris")
     street3 = factory(name="rue de la monnaie", city="Condom")
@@ -148,25 +148,24 @@ def test_should_use_filter_if_only_common_terms(factory, monkeypatch):
     assert street3['id'] not in ids
 
 
-def test_not_found_term_is_autocompleted(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 3)
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+def test_not_found_term_is_autocompleted(factory, config):
+    config.COMMON_THRESHOLD = 3
+    config.BUCKET_MAX = 3
     factory(name="rue de la monnaie", city="Vitry")
     assert search('rue de la mon')
 
 
-def test_found_term_is_autocompleted_if_missing_results(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 3)
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+def test_found_term_is_autocompleted_if_missing_results(factory, config):
+    config.COMMON_THRESHOLD = 3
+    config.BUCKET_MAX = 3
     factory(name="rue de la montagne", city="Vitry")
     factory(name="rue du mont", city="Vitry")
     assert len(search('rue mont', autocomplete=True)) == 2
 
 
-def test_found_term_is_not_autocompleted_if_enough_results(factory,
-                                                           monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 3)
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+def test_found_term_is_not_autocompleted_if_enough_results(factory, config):
+    config.COMMON_THRESHOLD = 3
+    config.BUCKET_MAX = 3
     montagne = factory(name="rue de la montagne", city="Vitry")
     factory(name="rue du mont", city="Vitry")
     factory(name="rue du mont", city="Paris")
@@ -177,9 +176,9 @@ def test_found_term_is_not_autocompleted_if_enough_results(factory,
     assert montagne['id'] not in ids
 
 
-def test_should_autocomplete_if_only_commons_but_geohash(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.COMMON_THRESHOLD', 3)
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
+def test_should_autocomplete_if_only_commons_but_geohash(factory, config):
+    config.COMMON_THRESHOLD = 3
+    config.BUCKET_MAX = 3
     factory(name="rue des tilleuls")
     factory(name="rue des chênes")
     factory(name="rue des hètres")
@@ -198,9 +197,9 @@ def test_closer_result_should_be_first_for_same_score(factory):
     assert results[0].id == expected['id']
 
 
-def test_nearby_should_be_included_even_in_overflow(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
-    monkeypatch.setattr('addok.config.config.BUCKET_MIN', 2)
+def test_nearby_should_be_included_even_in_overflow(factory, config):
+    config.BUCKET_MAX = 3
+    config.BUCKET_MIN = 2
     expected = factory(name='Le Bourg', lat=48.1, lon=2.2, importance=0.09)
     factory(name='Le Bourg', lat=-48.1, lon=-2.2, importance=0.1)
     factory(name='Le Bourg', lat=8.1, lon=42.2, importance=0.1)
@@ -211,9 +210,9 @@ def test_nearby_should_be_included_even_in_overflow(factory, monkeypatch):
     assert expected['id'] in ids
 
 
-def test_autocomplete_should_give_priority_to_nearby(factory, monkeypatch):
-    monkeypatch.setattr('addok.config.config.BUCKET_MAX', 3)
-    monkeypatch.setattr('addok.config.config.BUCKET_MIN', 2)
+def test_autocomplete_should_give_priority_to_nearby(factory, config):
+    config.BUCKET_MAX = 3
+    config.BUCKET_MIN = 2
     expected = factory(name='Le Bourg', lat=48.1, lon=2.2, importance=0.09)
     factory(name='Le Bourg', lat=-48.1, lon=-2.2, importance=0.1)
     factory(name='Le Bourg', lat=8.1, lon=42.2, importance=0.1)
