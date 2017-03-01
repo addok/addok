@@ -65,6 +65,8 @@ def test_index_document():
     assert b'lilas' in DB.smembers('p|andresy')
     assert b'andresy' in DB.smembers('p|lilas')
     assert DB.exists('p|1')
+    assert b'1' in DB.smembers('p|rue')
+    assert b'rue' in DB.smembers('p|1')
     assert DB.exists('g|u09dgm7')
     assert b'd|xxxx' in DB.smembers('g|u09dgm7')
     assert DB.exists('n|lil')

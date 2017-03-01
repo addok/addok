@@ -83,9 +83,8 @@ RESULTS_FORMATTERS_PYPATHS = [
 INDEXERS_PYPATHS = [
     'addok.helpers.index.HousenumbersIndexer',
     'addok.helpers.index.FieldsIndexer',
-    # Both pairs indexers must be after `FieldsIndexer`.
+    # Pairs indexer must be after `FieldsIndexer`.
     'addok.pairs.PairsIndexer',
-    'addok.pairs.HousenumbersPairsIndexer',
     # Edge ngram indexer must be after `FieldsIndexer`.
     'addok.autocomplete.EdgeNgramIndexer',
     'addok.helpers.index.FiltersIndexer',

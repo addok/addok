@@ -13,58 +13,39 @@ class PairsIndexer:
 
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
-        els = set(tokens.keys())  # Unique values.
-        for el in els:
-            values = set([])
-            for el2 in els:
-                if el != el2:
-                    values.add(el2)
-            if values:
-                pipe.sadd(pair_key(el), *values)
-
-    @staticmethod
-    def deindex(db, key, doc, tokens, **kwargs):
-        els = list(set(tokens))  # Unique values.
-        loop = 0
-        for el in els:
-            for el2 in els[loop:]:
-                if el != el2:
-                    key = '|'.join(['didx', el, el2])
-                    # Do we have other documents that share el and el2?
-                    commons = db.zinterstore(key, [keys.token_key(el),
-                                                   keys.token_key(el2)])
-                    db.delete(key)
-                    if not commons:
-                        db.srem(pair_key(el), el2)
-                        db.srem(pair_key(el2), el)
-            loop += 1
-
-
-class HousenumbersPairsIndexer:
-
-    @staticmethod
-    def index(pipe, key, doc, tokens, **kwargs):
+        tokens = list(set(tokens.keys()))  # Unique values.
+        housenumber_pairs = set()
         housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
-        if not housenumbers:
-            return
-        for number in housenumbers.keys():
-            for hn in preprocess(number):
-                # Pair every document term to each housenumber, but do not pair
-                # housenumbers together.
-                pipe.sadd(pair_key(hn), *tokens.keys())
+        if housenumbers:
+            for number in housenumbers.keys():
+                for token in preprocess(number):
+                    # Pair every document term to each housenumber, but do not
+                    # pair housenumbers together.
+                    pipe.sadd(pair_key(token), *tokens)
+                    housenumber_pairs.add(token)
+        for token in tokens:
+            pairs = set(t for t in tokens if t != token)
+            pairs.update(housenumber_pairs)
+            if pairs:
+                pipe.sadd(pair_key(token), *pairs)
 
     @staticmethod
     def deindex(db, key, doc, tokens, **kwargs):
         housenumbers = doc.get('housenumbers', {})
-        for hn, data in housenumbers.items():
-            for token in tokens:
-                k = '|'.join(['didx', hn, token])
-                commons = db.zinterstore(k, [keys.token_key(hn),
-                                             keys.token_key(token)])
-                db.delete(k)
-                if not commons:
-                    db.srem(pair_key(hn), token)
-                    db.srem(pair_key(token), hn)
+        tokens = list(set(tokens + list(housenumbers.keys())))  # Deduplicate.
+        loop = 0
+        for token in tokens:
+            for token2 in tokens[loop:]:
+                if token != token2:
+                    key = '|'.join(['didx', token, token2])
+                    # Do we have other documents that share token and token2?
+                    commons = db.zinterstore(key, [keys.token_key(token),
+                                                   keys.token_key(token2)])
+                    db.delete(key)
+                    if not commons:
+                        db.srem(pair_key(token), token2)
+                        db.srem(pair_key(token2), token)
+            loop += 1
 
 
 def pair(word):
