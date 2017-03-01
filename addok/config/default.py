@@ -63,6 +63,7 @@ RESULTS_COLLECTORS_PYPATHS = [
     'addok.helpers.collectors.reduce_with_other_commons',
     'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',  # noqa
     'addok.helpers.collectors.extend_results_reducing_tokens',
+    'addok.helpers.collectors.extend_results_extrapoling_relations',
 ]
 SEARCH_RESULT_PROCESSORS_PYPATHS = [
     'addok.helpers.results.match_housenumber',
