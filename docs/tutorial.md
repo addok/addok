@@ -46,7 +46,7 @@ you will need to run again this last line.
 Note: if you want batch CSV support on the HTTP API, also install the plugin
 `addok-csv`.
 
-Check that thet installation is successful so far by running this command:
+Check that the installation is successful so far by running this command:
 
     addok --help
 
