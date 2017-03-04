@@ -4,7 +4,7 @@ import json
 import logging
 import re
 import time
-from pathlib import Path
+import os
 
 import geohash
 from progressist import Formatter
@@ -56,7 +56,7 @@ class Cmd(cmd.Cmd):
 
     @property
     def history_file(self):
-        return str(Path.home() / self.HISTORY_FILE)
+        return str(os.path.expanduser('~')+'/'+self.HISTORY_FILE)
 
     def error(self, message):
         print(red(message))
