@@ -56,7 +56,7 @@ class Cmd(cmd.Cmd):
 
     @property
     def history_file(self):
-        return str(os.path.expanduser('~')+'/'+self.HISTORY_FILE)
+        return str(os.path.join(os.path.expanduser('~'),self.HISTORY_FILE))
 
     def error(self, message):
         print(red(message))
