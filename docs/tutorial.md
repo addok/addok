@@ -222,7 +222,6 @@ server {
     # max upload size
     client_max_body_size 5M;   # adjust to taste
 
-    # Finally, send all non-media requests to the Django server.
     location / {
         uwsgi_pass  addok;
         include     /srv/addok/uwsgi_params;
