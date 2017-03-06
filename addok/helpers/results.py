@@ -84,7 +84,7 @@ def score_by_ngram_distance(helper, result):
 
 
 def score_by_geo_distance(helper, result):
-    if not helper.lat or not helper.lon:
+    if helper.lat is None or helper.lon is None:
         return
     km = haversine_distance((float(result.lat), float(result.lon)),
                             (helper.lat, helper.lon))
