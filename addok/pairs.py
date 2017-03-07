@@ -33,19 +33,17 @@ class PairsIndexer:
     def deindex(db, key, doc, tokens, **kwargs):
         housenumbers = doc.get('housenumbers', {})
         tokens = list(set(tokens + list(housenumbers.keys())))  # Deduplicate.
-        loop = 0
-        for token in tokens:
-            for token2 in tokens[loop:]:
+        for i, token in enumerate(tokens):
+            for token2 in tokens[i:]:
                 if token != token2:
-                    key = '|'.join(['didx', token, token2])
+                    tmp_key = '|'.join(['didx', token, token2])
                     # Do we have other documents that share token and token2?
-                    commons = db.zinterstore(key, [keys.token_key(token),
-                                                   keys.token_key(token2)])
-                    db.delete(key)
+                    commons = db.zinterstore(tmp_key, [keys.token_key(token),
+                                                       keys.token_key(token2)])
+                    db.delete(tmp_key)
                     if not commons:
                         db.srem(pair_key(token), token2)
                         db.srem(pair_key(token2), token)
-            loop += 1
 
 
 def pair(word):
