@@ -1,6 +1,9 @@
+from collections import defaultdict
+
 from addok.config import config
 from addok.db import DB
 from addok.helpers import scripts
+from addok.pairs import pair_key
 
 
 def only_commons(helper):
@@ -102,3 +105,60 @@ def extend_results_reducing_tokens(helper):
             helper.add_to_bucket(keys)
             if helper.bucket_overflow:
                 break
+
+
+def extend_results_extrapoling_relations(helper):
+    """Try to extract the bigger group of interlinked tokens.
+
+    Should generally be used at last in the collectors chain.
+    """
+    if not helper.bucket_dry:
+        return  # No need.
+    tokens = set(helper.meaningful + helper.common)
+    for relation in _extract_manytomany_relations(tokens):
+        helper.add_to_bucket([t.db_key for t in relation])
+        if helper.bucket_overflow:
+            break
+
+
+def _extract_manytomany_relations(tokens):
+    o2m_relations = _compute_onetomany_relations(tokens)
+    m2m_relations = _extrapolate_manytomany_relations(o2m_relations)
+    return _deduplicate_sets(m2m_relations)
+
+
+def _compute_onetomany_relations(tokens):
+    relations = defaultdict(list)
+    for token in tokens:
+        for other in tokens:
+            if other == token:
+                continue
+            if (token in relations[other]
+                    or DB.sismember(pair_key(token), other)):
+                relations[token].append(other)
+    return relations
+
+
+def _extrapolate_manytomany_relations(o2m_relations):
+    m2m_relations = []
+    for origin, others in o2m_relations.items():
+        relation = [origin]
+        for token in others:
+            if all(token in o2m_relations[o] for o in relation):
+                relation.append(token)
+        # Commons tokens, given that they are "common", are more luckily to
+        # create false positives (but we kept them until now because if some
+        # other token is not related to some common token, that is a clear true
+        # negative).
+        relation = set([token for token in relation if not token.is_common])
+        if len(relation) > 1:
+            m2m_relations.append(relation)
+    return m2m_relations
+
+
+def _deduplicate_sets(sets):
+    unique = []
+    for set_ in sorted(sets, key=len, reverse=True):
+        if not any(set_.issubset(g) for g in unique):
+            unique.append(set_)
+    return unique
