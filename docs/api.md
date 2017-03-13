@@ -96,48 +96,6 @@ Parameters:
 Same response format as the `/search/` enpoint.
 
 
-### /search/csv/
-
-Batch geocode a csv file.
-
-#### Parameters
-
-- **data**: csv file to be processed
-- **columns**: define the columns of the csv to be concatenated to create the
-  search string (one column by `columns` parameter; default: all file columns are used)
-- **encoding** (optional): encoding of the file (you can also specify a `charset` in the
-  file mimetype), such as 'utf-8' or 'iso-8859-1'
-- **delimiter** (optional): CSV delimiter
-- every filter that has been declared in the [config](config.md) is available as
-  parameter, and you must give the column name to use as value; for example, if you want
-  to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
-  you will pass `postcode=code postal` and every row will be filtered according to the value of 'code postal'
-  column
-- `lat` and `lon` parameters, like filters, can be used to define columns names that contain latitude and longitude
-  values, for adding a preference center in the geocoding of each row
-
-#### Examples
-
-    http -f POST http://localhost:7878/search/csv/ columns='voie' columns='ville' data@path/to/file.csv
-    http -f POST http://localhost:7878/search/csv/ columns='rue' postcode='code postal' data@path/to/file.csv
-
-### /reverse/csv/
-
-Batch reverse geocode a csv file.
-
-#### Parameters
-
-- **data**: csv file to be processed; must contain columns `latitude` (or `lat`) and
-  `longitude` (or `lon` or `lng`)
-- **encoding** (optional): encoding of the file (you can also specify a `charset` in the
-  file mimetype), such as 'utf-8' or 'iso-8859-1'
-- **delimiter** (optional): CSV delimiter
-- every filter that has been declared in the [config](config.md) is available as
-  parameter, and you must give the column name to use as value; for example, if you want
-  to filter by 'postcode' and you have a column 'code postal' containing the post code of each row,
-  you will pass `postcode=code postal` and every row will be filtered according to the value of 'code postal'
-  column
-
 ### /get/&lt;doc_id&gt;/
 
 Get a document from its id.
