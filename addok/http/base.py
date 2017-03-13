@@ -171,8 +171,8 @@ def register_command(subparsers):
     parser.set_defaults(func=run)
     parser.add_argument('--host', default='127.0.0.1',
                         help='Host to expose the demo serve on')
-    parser.add_argument('--port', action='store_const', default=7878,
-                        const=int, help='Port to expose the demo server on')
+    parser.add_argument('--port', default='7878',
+                        help='Port to expose the demo server on')
 
 
 def run(args):
