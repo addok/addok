@@ -7,7 +7,6 @@ import time
 import os
 
 import geohash
-from progressist import Formatter
 
 from . import hooks
 from .config import config
