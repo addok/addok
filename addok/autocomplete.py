@@ -79,7 +79,6 @@ def autocomplete_meaningful_collector(helper):
 
 def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
     helper.debug('Autocompleting %s', helper.last_token)
-    # helper.last_token.autocomplete()
     keys = [t.db_key for t in tokens if not t.is_last]
     pair_keys = [pair_key(t) for t in tokens if not t.is_last]
     key = edge_ngram_key(helper.last_token)
