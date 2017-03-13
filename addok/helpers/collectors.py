@@ -40,7 +40,7 @@ def only_commons(helper):
 def bucket_with_meaningful(helper):
     if not helper.meaningful:
         return
-    if len(helper.meaningful) == 1 and helper.common:
+    if len(helper.meaningful) == 1 and helper.common and not helper.filters:
         # Avoid running with too less tokens while having commons terms.
         for token in helper.common:
             if token not in helper.meaningful:
