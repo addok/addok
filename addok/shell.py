@@ -484,7 +484,8 @@ def pyinvoke(args=None):
     except ImportError:
         print(red('Import is not installed. Type "pip install ipython"'))
     else:
-        start_ipython(argv=[], user_ns={'DB': DB, 'config': config})
+        start_ipython(argv=[], user_ns={'DB': DB, 'config': config,
+                                        'get_document': get_document})
 
 
 def register_command(subparsers):
