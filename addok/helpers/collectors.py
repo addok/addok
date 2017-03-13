@@ -119,6 +119,8 @@ def extend_results_extrapoling_relations(helper):
         helper.add_to_bucket([t.db_key for t in relation])
         if helper.bucket_overflow:
             break
+    else:
+        helper.debug('No relation extrapolated.')
 
 
 def _extract_manytomany_relations(tokens):
