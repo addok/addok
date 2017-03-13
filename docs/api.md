@@ -3,7 +3,7 @@
 Addok exposes an very minimal WSGI interface, you can run it with gunicorn
 for example:
 
-    gunicorn addok.server:app
+    gunicorn addok.http.wsgi
 
 For debug, you can run the simple Werkzeug server:
 
