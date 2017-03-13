@@ -214,7 +214,8 @@ def prepare_housenumbers(doc):
     if housenumbers:
         doc['housenumbers'] = {}
         for number, data in housenumbers.items():
-            for hn in preprocess(number):
-                data['raw'] = number
-                doc['housenumbers'][str(hn)] = data.copy()
+            # Housenumber may have multiple tokens (eg.: "dix huit").
+            token = ''.join(list(preprocess(number)))
+            data['raw'] = number
+            doc['housenumbers'][token] = data
     return doc
