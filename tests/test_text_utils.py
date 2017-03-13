@@ -1,9 +1,7 @@
-from pathlib import Path
-
 import pytest
 
 from addok.fuzzy import make_fuzzy
-from addok.helpers.text import (Token, _normalize, _synonymize, _tokenize,
+from addok.helpers.text import (Token, _normalize, synonymize, _tokenize,
                                 alphanumerize, ascii, compare_ngrams,
                                 compute_edge_ngrams, contains, equals,
                                 startswith)
@@ -83,13 +81,15 @@ def test_alphanumerize(input, output):
 
 
 @pytest.mark.parametrize('input,output', [
-    ['bd', 'boulevard'],
-    ['13e', 'treizieme'],
+    ['bd', ['boulevard']],
+    ['13e', ['treizieme']],
+    ['18e', ['dix', 'huitieme']],
 ])
 def test_synonymize(input, output, config):
     # Make sure we control synonyms.
-    config.SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme'}
-    assert _synonymize(Token(input)) == output
+    config.SYNONYMS = {'bd': 'boulevard', '13e': 'treizieme',
+                       '18e': 'dix huitieme'}
+    assert list(synonymize([Token(input)])) == output
 
 
 def test_synonyms_file_is_loaded(config):

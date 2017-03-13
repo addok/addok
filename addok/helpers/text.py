@@ -93,9 +93,10 @@ def load_synonyms():
                 config.SYNONYMS[synonym] = wanted
 
 
-def _synonymize(t):
-    return t.update(config.SYNONYMS.get(t, t))
-synonymize = yielder(_synonymize)
+def synonymize(tokens):
+    for token in tokens:
+        for subtoken in config.SYNONYMS.get(token, token).split():
+            yield token.update(subtoken)
 
 
 class ascii(str):
