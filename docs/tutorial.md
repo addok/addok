@@ -66,8 +66,6 @@ QUERY_PROCESSORS_PYPATHS = [
     "addok_france.extract_address",
     "addok_france.clean_query",
     "addok_france.remove_leading_zeros",
-    "addok_france.glue_ordinal",
-    "addok_france.fold_ordinal",
 ]
 SEARCH_RESULT_PROCESSORS_PYPATHS = [
     "addok_france.match_housenumber",
