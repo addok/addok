@@ -67,6 +67,8 @@ def test_index_document():
     assert DB.exists('p|1')
     assert b'1' in DB.smembers('p|rue')
     assert b'rue' in DB.smembers('p|1')
+    assert b'1' in DB.smembers('p|andresy')
+    assert b'andresy' in DB.smembers('p|1')
     assert DB.exists('g|u09dgm7')
     assert b'd|xxxx' in DB.smembers('g|u09dgm7')
     assert DB.exists('n|lil')
@@ -125,9 +127,16 @@ def test_deindex_document_should_not_affect_other_docs():
             }
         }
     }
-    index_document(DOC.copy())
+    DOC1 = json.loads(json.dumps(DOC))  # deepcopy.
+    # Add new housenumber so we can check it's deindexed.
+    DOC1['housenumbers']['2'] = {
+        'lat': '48.325459',
+        'lon': '2.25659'
+    }
+    index_document(DOC1)
     index_document(DOC2)
-    deindex_document(DOC['id'])
+    assert b'2' in DB.smembers('p|rue')
+    deindex_document(DOC1['id'])
     assert not ds._DB.exists('d|xxxx')
     assert b'd|xxxx' not in DB.zrange('w|rue', 0, -1)
     assert b'd|xxxx' not in DB.zrange('w|des', 0, -1)
@@ -138,6 +147,8 @@ def test_deindex_document_should_not_affect_other_docs():
     assert DB.exists('w|des')
     assert DB.exists('w|lilas')
     assert DB.exists('w|1')  # Housenumber.
+    assert b'andresy' not in DB.smembers('p|1')
+    assert b'2' not in DB.smembers('p|rue')
     assert DB.exists('p|rue')
     assert b'd|xxxx2' in DB.zrange('w|rue', 0, -1)
     assert b'd|xxxx2' in DB.zrange('w|des', 0, -1)
