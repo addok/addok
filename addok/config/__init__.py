@@ -2,8 +2,12 @@ import os
 import imp
 import importlib
 import sys
+try:
+    import pkg_resources
+except ImportError:  # pragma: no cover
+    pkg_resources = None
 
-from addok import hooks
+from addok import hooks, VERSION
 from . import default
 
 
@@ -38,8 +42,17 @@ class Config(dict):
         hooks.configure(self)
         self.resolve()
         self.post_process()
-        print('Addok loaded plugins: {}'.format(
-                                             ', '.join(hooks.plugins.keys())))
+        plugins = []
+        for name, plugin in hooks.plugins.items():  # pragma: no cover
+            if name.startswith('addok.'):
+                version = VERSION  # Core plugin.
+            elif pkg_resources:
+                version = pkg_resources.get_distribution(
+                                plugin.__package__).version
+            else:
+                version = '?'
+            plugins.append('{}=={}'.format(name, version))
+        print('Loaded plugins:\n{}'.format(', '.join(plugins)))
 
     def on_load(self, func):
         self._post_load_func.append(func)
