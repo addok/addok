@@ -158,7 +158,7 @@ class ChunkedPool(Pool):
 
 def parallelize(func, iterable, chunk_size, **bar_kwargs):
     bar = Bar(prefix='Processing…', **bar_kwargs)
-    with ChunkedPool(processes=config.BATCH_WORKERS) as pool:
+    with ChunkedPool(processes=config.IMPORT_WORKERS) as pool:
         for chunk in pool.imap_unordered(func, iterable, chunk_size):
             bar(step=len(chunk))
         bar.finish()
