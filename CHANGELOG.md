@@ -1,5 +1,10 @@
 ## 1.0.0-dev
 
+- rename the `batch` shell command to `load` and all `BATCH_*` settings
+  to `LOAD_*`.
+
+## 1.0.0-rc.2
+
 - remove `DOCUMENT_PROCESSORS_PYPATHS` in favor of `BATCH_PROCESSORS_PYPATHS`
   (not in use before 1.0.0-rc.1)
 - add `BATCH_FILE_LOADER_PYPATH` to specify a custom file loader (e.g. msgpack)

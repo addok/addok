@@ -21,7 +21,7 @@ class Config(dict):
         self.plugins = [
             'addok.shell',
             'addok.http.base',
-            'addok.batch',
+            'addok.load',
             'addok.pairs',
             'addok.fuzzy',
             'addok.autocomplete',

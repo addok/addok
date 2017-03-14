@@ -45,7 +45,7 @@ Make sure to check the [Redis tuning tips](redis.md).
 #### Command line
 To run the actual import:
 
-    addok batch path/to/file.sjson
+    addok load path/to/file.sjson
 
 Then you need to index ngrams:
 
@@ -57,9 +57,9 @@ Then you need to index ngrams:
 1. Download [BANO data](http://bano.openstreetmap.fr/data/full.sjson.gz) and
    uncompress it
 
-2. Run batch command:
+2. Run load command:
 
-        addok batch path/to/full.sjson
+        addok load path/to/full.sjson
 
 3. Index edge ngrams:
 
@@ -81,11 +81,11 @@ See [addok-psql](https://github.com/addok/addok-psql) plugin.
 
 `import` command can read from stdin, for example:
 
-    $ addok batch < ~/Data/geo/ban/communes-context.json
+    $ addok load < ~/Data/geo/ban/communes-context.json
 
 Or:
 
-    $ less ~/Data/geo/ban/communes-context.json | addok batch
+    $ less ~/Data/geo/ban/communes-context.json | addok load
 
 ## More options
 

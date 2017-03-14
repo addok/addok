@@ -46,17 +46,17 @@ SEARCH_PREPROCESSORS_PYPATHS = [
     'addok.helpers.search.select_tokens',
     'addok.helpers.search.set_should_match_threshold',
 ]
-BATCH_PROCESSORS_PYPATHS = [
-    'addok.batch.to_json',
+LOAD_PROCESSORS_PYPATHS = [
+    'addok.load.to_json',
     'addok.helpers.index.prepare_housenumbers',
     'addok.ds.store_documents',
     'addok.helpers.index.index_documents',
 ]
-BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
-BATCH_CHUNK_SIZE = 1000
+LOAD_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
+LOAD_CHUNK_SIZE = 1000
 # During imports, workers are consuming RAM;
 # let one process free for Redis by default.
-BATCH_WORKERS = os.cpu_count() - 1
+LOAD_WORKERS = os.cpu_count() - 1
 RESULTS_COLLECTORS_PYPATHS = [
     'addok.helpers.collectors.only_commons',
     'addok.helpers.collectors.bucket_with_meaningful',
