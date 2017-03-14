@@ -14,12 +14,15 @@ PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 class Token(str):
 
-    __slots__ = ('position', 'is_last', 'db_key', 'raw', '_frequency', '_key',
-                 'kind')
+    __slots__ = ('_positions', 'is_last', 'db_key', 'raw', '_frequency', '_key',
+                 'kind', 'is_first')
 
-    def __new__(cls, value, position=0, is_last=False, raw=None, kind=None):
+    def __new__(cls, value, position=None, is_last=False, raw=None, kind=None):
         obj = str.__new__(cls, value)
+        obj._positions = []
+        position = position or 0
         obj.position = position
+        obj.is_first = obj.position[0] == 0
         obj.is_last = is_last
         obj.db_key = None
         obj.raw = raw or value  # Allow to keep raw on update.
@@ -30,10 +33,14 @@ class Token(str):
         return '<Token {}>'.format(self)
 
     def update(self, value, **kwargs):
-        default = dict(position=self.position, is_last=self.is_last,
-                       raw=self.raw, kind=self.kind)
+        default = dict(is_last=self.is_last, raw=self.raw, kind=self.kind,
+                       position=self.position[:])
+        # Never replace position through `update`.
+        position = kwargs.pop('position', None)
         default.update(kwargs)
         token = Token(value=value, **default)
+        if position is not None:
+            token.position = position
         return token
 
     def search(self):
@@ -55,6 +62,18 @@ class Token(str):
         if not hasattr(self, '_key'):
             self._key = keys.token_key(self)
         return self._key
+
+    @property
+    def position(self):
+        # Allow to store multiple positions when a token is subdivided.
+        return self._positions
+
+    @position.setter
+    def position(self, position):
+        if isinstance(position, list):
+            self._positions = position
+        else:
+            self._positions.append(position)
 
 
 def _tokenize(text):
@@ -95,8 +114,8 @@ def load_synonyms():
 
 def synonymize(tokens):
     for token in tokens:
-        for subtoken in config.SYNONYMS.get(token, token).split():
-            yield token.update(subtoken)
+        for position, subtoken in enumerate(config.SYNONYMS.get(token, token).split()):
+            yield token.update(subtoken, position=position)
 
 
 class ascii(str):
