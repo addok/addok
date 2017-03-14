@@ -3,10 +3,13 @@
 import argparse
 import os
 
+from addok import VERSION
 from addok.config import config
 
 
 def main():
+    if VERSION:
+        print('Addok', VERSION)
     main_parser = argparse.ArgumentParser(description='Addok command line.',
                                           add_help=False)
     main_parser.add_argument('--config', help='Local config')
@@ -27,6 +30,7 @@ def main():
         args.func(args)
     else:
         main_parser.print_help()
+
 
 if __name__ == '__main__':
     main()
