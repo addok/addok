@@ -2,7 +2,7 @@ import json
 
 from addok import ds
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
-from addok.load import process_documents
+from addok.batch import process_documents
 from addok.db import DB
 
 

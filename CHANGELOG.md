@@ -1,7 +1,7 @@
 ## 1.0.0-dev
 
-- rename the `batch` shell command to `load` and all `BATCH_*` settings
-  to `LOAD_*`.
+- rename the `batch` shell command to `import` and `BATCH_*` settings to
+  `IMPORT_*`.
 
 ## 1.0.0-rc.2
 

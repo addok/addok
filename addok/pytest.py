@@ -70,7 +70,7 @@ class DummyDoc(dict):
         self.index()
 
     def index(self):
-        from addok.load import process_documents
+        from addok.batch import process_documents
         process_documents(json.dumps(self.copy()))
 
 

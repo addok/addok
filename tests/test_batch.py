@@ -1,6 +1,6 @@
 import json
 
-from addok.load import process_documents, reset
+from addok.batch import process_documents, reset
 from addok.core import search
 from addok.db import DB
 
