@@ -173,13 +173,13 @@ class Cmd(cmd.Cmd):
         def format_scores(result):
             if verbose or bucket:
                 return (', '.join('{}: {}/{}'.format(k, round(v[0], 4), v[1])
-                        for k, v in result._scores.items()))
+                                  for k, v in result._scores.items()))
             else:
                 return result.score
 
         for result in results:
             print('{} ({} | {})'.format(white(result),
-                                        blue(result.id),
+                                        blue(result._id),
                                         blue(format_scores(result))))
         formatter = red if duration > 50 else green
         print('{} — {} — {}'.format(formatter("{} ms".format(duration)),

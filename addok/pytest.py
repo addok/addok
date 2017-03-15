@@ -9,16 +9,17 @@ from pathlib import Path
 import uuid
 
 import pytest
+# Do not import files from the top of the module, otherwise they will
+# not be taken into account by the coverage.
 
 
 def pytest_configure():
-    # Do not import files from the top of the module, otherwise they will
-    # not taken into account by the coverage.
     from addok.config import config as addok_config
     addok_config.__class__.TESTING = True
     # Force test config.
     from addok import config as config_module
-    os.environ['ADDOK_CONFIG_MODULE'] = str(Path(config_module.__file__).parent / 'test.py')
+    os.environ['ADDOK_CONFIG_MODULE'] = str(
+        Path(config_module.__file__).parent / 'test.py')
     import logging
     logging.basicConfig(level=logging.DEBUG)
     addok_config.REDIS['indexes']['db'] = 14
@@ -76,9 +77,12 @@ class DummyDoc(dict):
 
 @pytest.fixture
 def factory(request):
+    from addok import db
+
     def _(**kwargs):
         default = {
             'id': uuid.uuid4().hex,
+            '_id': db.DB.next_id(),
             'type': 'street',
             'name': 'ellington',
             'importance': 0.0,

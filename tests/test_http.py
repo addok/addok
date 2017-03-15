@@ -116,8 +116,8 @@ def test_reverse_without_lat_or_lng_should_return_400(client, factory):
 
 
 def test_get_endpoint(client, factory):
-    factory(name='sentier de la côte', id='123')
-    resp = client.get('/get/123')
+    doc = factory(name='sentier de la côte', id='123')
+    resp = client.get('/get/{doc_id}'.format(doc_id=doc['_id']))
     assert resp.json['properties']['id'] == '123'
 
 

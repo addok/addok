@@ -103,7 +103,7 @@ class Result:
 
     @classmethod
     def from_id(self, _id):
-        """Return a result from it's document id."""
+        """Return a result from it's document _id."""
         return Result(keys.document_key(_id))
 
 

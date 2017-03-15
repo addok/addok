@@ -10,8 +10,8 @@ def index_document(doc):
     process_documents(json.dumps(doc))
 
 
-def deindex_document(id_):
-    process_documents(json.dumps({'id': id_, '_action': 'delete'}))
+def deindex_document(_id):
+    process_documents(json.dumps({'_id': _id, '_action': 'delete'}))
 
 
 def count_keys():
@@ -34,6 +34,7 @@ def test_index_edge_ngrams():
 
 DOC = {
     'id': 'xxxx',
+    '_id': 'yyyy',
     'type': 'street',
     'name': 'rue des Lilas',
     'city': 'Andrésy',
@@ -50,10 +51,10 @@ DOC = {
 
 def test_index_document():
     index_document(DOC.copy())
-    assert ds._DB.exists('d|xxxx')
-    assert ds._DB.type('d|xxxx') == b'string'
+    assert ds._DB.exists('d|yyyy')
+    assert ds._DB.type('d|yyyy') == b'string'
     assert DB.exists('w|rue')
-    assert b'd|xxxx' in DB.zrange('w|rue', 0, -1)
+    assert b'd|yyyy' in DB.zrange('w|rue', 0, -1)
     assert DB.exists('w|des')
     assert DB.exists('w|lilas')
     assert DB.exists('w|andresy')
@@ -70,7 +71,7 @@ def test_index_document():
     assert b'1' in DB.smembers('p|andresy')
     assert b'andresy' in DB.smembers('p|1')
     assert DB.exists('g|u09dgm7')
-    assert b'd|xxxx' in DB.smembers('g|u09dgm7')
+    assert b'd|yyyy' in DB.smembers('g|u09dgm7')
     assert DB.exists('n|lil')
     assert DB.exists('n|lila')
     assert DB.exists('n|and')
@@ -83,17 +84,27 @@ def test_index_document():
     assert b'andresy' in DB.smembers('n|andres')
     assert b'lilas' in DB.smembers('n|lil')
     assert DB.exists('f|type|street')
-    assert b'd|xxxx' in DB.smembers('f|type|street')
+    assert b'd|yyyy' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
-    assert b'd|xxxx' in DB.smembers('f|type|housenumber')
+    assert b'd|yyyy' in DB.smembers('f|type|housenumber')
     assert len(DB.keys()) == 19
     assert len(ds._DB.keys()) == 1
 
 
+def test_index_document_without_explicit_id():
+    doc = DOC.copy()
+    del doc['_id']
+    index_document(doc)
+    assert ds._DB.exists('d|jR')
+    assert ds._DB.type('d|jR') == b'string'
+    assert DB.exists('w|rue')
+
+
 def test_deindex_document_should_deindex():
     index_document(DOC.copy())
-    deindex_document(DOC['id'])
+    deindex_document(DOC['_id'])
     assert not ds._DB.exists('d|xxxx')
+    assert not ds._DB.exists('d|yyyy')
     assert not DB.exists('w|de')
     assert not DB.exists('w|lilas')
     assert not DB.exists('w|1')  # Housenumber.
@@ -115,6 +126,7 @@ def test_deindex_document_should_deindex():
 def test_deindex_document_should_not_affect_other_docs():
     DOC2 = {
         'id': 'xxxx2',
+        '_id': 'yyyy2',
         'type': 'street',
         'name': 'rue des Lilas',
         'city': 'Paris',
@@ -136,26 +148,26 @@ def test_deindex_document_should_not_affect_other_docs():
     index_document(DOC1)
     index_document(DOC2)
     assert b'2' in DB.smembers('p|rue')
-    deindex_document(DOC1['id'])
-    assert not ds._DB.exists('d|xxxx')
-    assert b'd|xxxx' not in DB.zrange('w|rue', 0, -1)
-    assert b'd|xxxx' not in DB.zrange('w|des', 0, -1)
-    assert b'd|xxxx' not in DB.zrange('w|lilas', 0, -1)
-    assert b'd|xxxx' not in DB.zrange('w|1', 0, -1)
+    deindex_document(DOC1['_id'])
+    assert not ds._DB.exists('d|yyyy')
+    assert b'd|yyyy' not in DB.zrange('w|rue', 0, -1)
+    assert b'd|yyyy' not in DB.zrange('w|des', 0, -1)
+    assert b'd|yyyy' not in DB.zrange('w|lilas', 0, -1)
+    assert b'd|yyyy' not in DB.zrange('w|1', 0, -1)
     assert DB.exists('g|u09dgm7')
-    assert b'd|xxxx' not in DB.smembers('g|u09dgm7')
+    assert b'd|yyyy' not in DB.smembers('g|u09dgm7')
     assert DB.exists('w|des')
     assert DB.exists('w|lilas')
     assert DB.exists('w|1')  # Housenumber.
     assert b'andresy' not in DB.smembers('p|1')
     assert b'2' not in DB.smembers('p|rue')
     assert DB.exists('p|rue')
-    assert b'd|xxxx2' in DB.zrange('w|rue', 0, -1)
-    assert b'd|xxxx2' in DB.zrange('w|des', 0, -1)
-    assert b'd|xxxx2' in DB.zrange('w|lilas', 0, -1)
-    assert b'd|xxxx2' in DB.zrange('w|1', 0, -1)
-    assert b'd|xxxx2' in DB.smembers('g|u09dgm7')
-    assert b'd|xxxx2' in DB.smembers('g|u0g08g7')
+    assert b'd|yyyy2' in DB.zrange('w|rue', 0, -1)
+    assert b'd|yyyy2' in DB.zrange('w|des', 0, -1)
+    assert b'd|yyyy2' in DB.zrange('w|lilas', 0, -1)
+    assert b'd|yyyy2' in DB.zrange('w|1', 0, -1)
+    assert b'd|yyyy2' in DB.smembers('g|u09dgm7')
+    assert b'd|yyyy2' in DB.smembers('g|u0g08g7')
     assert DB.exists('p|des')
     assert DB.exists('p|lilas')
     assert DB.exists('p|1')
@@ -170,9 +182,9 @@ def test_deindex_document_should_not_affect_other_docs():
     assert b'lilas' in DB.smembers('n|lil')
     assert b'lilas' in DB.smembers('n|lila')
     assert DB.exists('f|type|street')
-    assert b'd|xxxx2' in DB.smembers('f|type|street')
+    assert b'd|yyyy2' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
-    assert b'd|xxxx2' in DB.smembers('f|type|housenumber')
+    assert b'd|yyyy2' in DB.smembers('f|type|housenumber')
     assert len(DB.keys()) == 18
     assert len(ds._DB.keys()) == 1
 
@@ -180,6 +192,7 @@ def test_deindex_document_should_not_affect_other_docs():
 def test_allow_list_values():
     doc = {
         'id': 'xxxx',
+        '_id': 'yyyy',
         'type': 'street',
         'name': ['Vernou-la-Celle-sur-Seine', 'Vernou'],
         'city': 'Paris',
@@ -187,13 +200,14 @@ def test_allow_list_values():
         'lon': '4.2565'
     }
     index_document(doc)
-    assert DB.zscore('w|vernou', 'd|xxxx') == 4
-    assert DB.zscore('w|celle', 'd|xxxx') == 4 / 5
+    assert DB.zscore('w|vernou', 'd|yyyy') == 4
+    assert DB.zscore('w|celle', 'd|yyyy') == 4 / 5
 
 
 def test_deindex_document_should_deindex_list_values():
     doc = {
         'id': 'xxxx',
+        '_id': 'yyyy',
         'type': 'street',
         'name': ['Vernou-la-Celle-sur-Seine', 'Vernou'],
         'city': 'Paris',
@@ -201,8 +215,8 @@ def test_deindex_document_should_deindex_list_values():
         'lon': '4.2565'
     }
     index_document(doc)
-    deindex_document(doc['id'])
-    assert not ds._DB.exists('d|xxxx')
+    deindex_document(doc['_id'])
+    assert not ds._DB.exists('d|yyyy')
     assert not DB.exists('w|vernou')
     assert not DB.exists('w|celle')
     assert len(DB.keys()) == 0
@@ -219,6 +233,7 @@ def test_should_be_possible_to_define_fields_from_config(config):
     ]
     doc = {
         'id': 'xxxx',
+        '_id': 'yyyy',
         'lat': '49.32545',
         'lon': '4.2565',
         'custom': 'rue',
@@ -226,7 +241,7 @@ def test_should_be_possible_to_define_fields_from_config(config):
         'thisone': 'is not indexed',
     }
     index_document(doc)
-    assert ds._DB.exists('d|xxxx')
+    assert ds._DB.exists('d|yyyy')
     assert DB.exists('w|lilas')
     assert DB.exists('w|rue')
     assert not DB.exists('w|indexed')
@@ -239,15 +254,16 @@ def test_should_be_possible_to_override_boost_from_config(config):
     ]
     doc = {
         'id': 'xxxx',
+        '_id': 'yyyy',
         'lat': '49.32545',
         'lon': '4.2565',
         'name': 'Lilas',
         'city': 'Cergy'
     }
     index_document(doc)
-    assert ds._DB.exists('d|xxxx')
-    assert DB.zscore('w|lilas', 'd|xxxx') == 5
-    assert DB.zscore('w|cergy', 'd|xxxx') == 1
+    assert ds._DB.exists('d|yyyy')
+    assert DB.zscore('w|lilas', 'd|yyyy') == 5
+    assert DB.zscore('w|cergy', 'd|yyyy') == 1
 
 
 def test_should_be_possible_to_override_boost_with_callable(config):
@@ -257,15 +273,16 @@ def test_should_be_possible_to_override_boost_with_callable(config):
     ]
     doc = {
         'id': 'xxxx',
+        '_id': 'yyyy',
         'lat': '49.32545',
         'lon': '4.2565',
         'name': 'Lilas',
         'city': 'Cergy'
     }
     index_document(doc)
-    assert ds._DB.exists('d|xxxx')
-    assert DB.zscore('w|lilas', 'd|xxxx') == 5
-    assert DB.zscore('w|cergy', 'd|xxxx') == 1
+    assert ds._DB.exists('d|yyyy')
+    assert DB.zscore('w|lilas', 'd|yyyy') == 5
+    assert DB.zscore('w|cergy', 'd|yyyy') == 1
 
 
 def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
@@ -275,6 +292,7 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
     ]
     doc = {
         'id': 'xxxx',
+        '_id': 'yyyy',
         'lat': '49.32545',
         'lon': '4.2565',
         'name': '',
@@ -289,6 +307,7 @@ def test_create_edge_ngrams(config):
     config.INDEX_EDGE_NGRAMS = False
     doc = {
         'id': 'xxxx',
+        '_id': 'yyyy',
         'lat': '49.32545',
         'lon': '4.2565',
         'name': '28 Lilas',  # 28 should not appear in ngrams
