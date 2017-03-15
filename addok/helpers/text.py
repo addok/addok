@@ -175,3 +175,15 @@ def compute_edge_ngrams(token, min=None):
         min = config.MIN_EDGE_NGRAMS
     token = token[:config.MAX_EDGE_NGRAMS + 1]
     return [token[:i] for i in range(min, len(token))]
+
+
+class EntityTooLarge(ValueError):
+    pass
+
+
+@yielder
+def check_query_length(q):
+    if len(q) > config.QUERY_MAX_LENGTH:
+        raise EntityTooLarge('Query too long, {} chars, limit is {}'.format(
+            len(q), config.QUERY_MAX_LENGTH))
+    return q

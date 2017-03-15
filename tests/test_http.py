@@ -169,3 +169,10 @@ def test_search_should_not_split_querystring_on_commas(client, factory):
     props = resp.json['features'][0]['properties']
     assert props['label'] == '18 rue des avions'
     assert resp.json['query'] == '18, rue des avions'
+
+
+def test_query_string_lenght_should_be_checked(client, config):
+    config.QUERY_MAX_LENGTH = 10
+    resp = client.get('/search/', query_string={'q': 'this is too long'})
+    assert resp.status_code == 413
+    assert resp.json['title'] == 'Query too long, 16 chars, limit is 10'
