@@ -1,6 +1,10 @@
 import redis
+from hashids import Hashids
 
 from addok.config import config
+
+
+hashids = Hashids()
 
 
 class RedisProxy:
@@ -12,6 +16,10 @@ class RedisProxy:
 
     def __getattr__(self, name):
         return getattr(self.instance, name)
+
+    def next_id(self):
+        next_id = self.incr('_id_sequence')
+        return hashids.encode(next_id)
 
 
 DB = RedisProxy()

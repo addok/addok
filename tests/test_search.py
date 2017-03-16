@@ -322,9 +322,9 @@ def test_postcode_is_overwritten_when_in_housenumber_payload(config, factory):
 
 
 def test_from_id(factory):
-    factory(name="avenue de Paris", type="street", id="123")
-    doc = Result.from_id("123")
-    assert doc.id == "123"
+    doc = factory(name="avenue de Paris", type="street", id="123")
+    result = Result.from_id(doc['_id'])
+    assert result.id == "123"
 
 
 def test_should_compare_with_multiple_values(city, factory):

@@ -1,5 +1,5 @@
 from addok.config import config
-from addok.db import RedisProxy
+from addok.db import DB, RedisProxy
 from addok.helpers import keys
 
 
@@ -56,7 +56,9 @@ def store_documents(docs):
     for doc in docs:
         if not doc:
             continue
-        key = keys.document_key(doc['id'])
+        if '_id' not in doc:
+            doc['_id'] = DB.next_id()
+        key = keys.document_key(doc['_id'])
         if doc.get('_action') in ['delete', 'update']:
             to_remove.append(key)
         if doc.get('_action') in ['index', 'update', None]:

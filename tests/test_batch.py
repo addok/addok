@@ -15,7 +15,10 @@ def test_process_should_index_by_default(factory):
 def test_process_should_deindex_if_action_is_given(factory):
     doc = factory(name="Mélicocq")
     assert search("Mélicoq")
-    process_documents(json.dumps({"_action": "delete", "id": doc["id"]}))
+    process_documents(json.dumps({
+        "_action": "delete",
+        "_id": doc["_id"]
+    }))
     assert not search("Mélicoq")
 
 
