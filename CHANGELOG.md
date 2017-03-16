@@ -1,4 +1,4 @@
-## 1.0.0-dev
+## 1.0.0-rc.3
 
 - remove `DOCUMENT_PROCESSORS_PYPATHS` in favor of `BATCH_PROCESSORS_PYPATHS`
   (not in use before 1.0.0-rc.1)
