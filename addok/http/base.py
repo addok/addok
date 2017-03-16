@@ -7,6 +7,7 @@ import falcon
 
 from addok.config import config
 from addok.core import Result, reverse, search
+from addok.helpers.text import EntityTooLarge
 
 notfound_logger = None
 query_logger = None
@@ -139,8 +140,11 @@ class Search(View):
         if lon and lat:
             center = (lon, lat)
         filters = self.match_filters(req)
-        results = search(query, limit=limit, autocomplete=autocomplete,
-                         lat=lat, lon=lon, **filters)
+        try:
+            results = search(query, limit=limit, autocomplete=autocomplete,
+                             lat=lat, lon=lon, **filters)
+        except EntityTooLarge as e:
+            raise falcon.HTTPRequestEntityTooLarge(str(e))
         if not results:
             log_notfound(query)
         log_query(query, results)

@@ -25,6 +25,8 @@ INTERSECT_LIMIT = 100000
 # Min score considered matching the query.
 MATCH_THRESHOLD = 0.9
 
+QUERY_MAX_LENGTH = 200
+
 GEOHASH_PRECISION = 7
 
 MIN_EDGE_NGRAMS = 3
@@ -38,7 +40,9 @@ PROCESSORS_PYPATHS = [  # Rename in TOKEN_PROCESSORS / STRING_PROCESSORS?
     'addok.helpers.text.normalize',
     'addok.helpers.text.synonymize',
 ]
-QUERY_PROCESSORS_PYPATHS = []
+QUERY_PROCESSORS_PYPATHS = [
+    'addok.helpers.text.check_query_length',
+]
 # Remove SEARCH_PREFIXES.
 SEARCH_PREPROCESSORS_PYPATHS = [
     'addok.helpers.search.tokenize',

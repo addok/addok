@@ -178,6 +178,12 @@ endpoint or the `csv` one.
 
     LOG_NOT_FOUND = False
 
+#### QUERY_MAX_LENGTH (int)
+In characters, max accepted length of the query. Prevent huge strings to be
+processed.
+
+    QUERY_MAX_LENGTH = 200
+
 #### PROCESSORS_PYPATHS (iterable of Python paths)
 Define the various functions to preprocess the text, before indexing and
 searching. It's an `iterable` of Python paths. Some functions are built in
@@ -185,19 +191,17 @@ searching. It's an `iterable` of Python paths. Some functions are built in
 is on the pythonpath).
 
     PROCESSORS_PYPATHS = [
-        'addok.textutils.default.pipeline.tokenize',
-        'addok.textutils.default.pipeline.normalize',
-        'addok.textutils.default.pipeline.synonymize',
-        'addok.textutils.fr.phonemicize',
+        'addok.helpers.text.tokenize',
+        'addok.helpers.text.normalize',
+        'addok.helpers.text.synonymize',
     ]
 
 #### QUERY_PROCESSORS_PYPATHS (iterable of Python paths)
-Additional processors that are run only at query time.
+Additional processors that are run only at query time. By default, only
+`check_query_length` is active, it depends on `QUERY_MAX_LENGTH` to avoid DoS.
 
     QUERY_PROCESSORS_PYPATHS = (
-        'addok.textutils.fr_FR.extract_address',
-        'addok.textutils.fr_FR.clean_query',
-        'addok.textutils.fr_FR.glue_ordinal',
+        'addok.helpers.text.check_query_length',
     )
 
 #### SYNONYMS_PATH (path)
