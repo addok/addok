@@ -92,33 +92,33 @@ simple string, or a dict.
     # Or
     ATTRIBUTION = {source: attribution, source2: attribution2}
 
-#### IMPORT_CHUNK_SIZE (int)
+#### BATCH_CHUNK_SIZE (int)
 Number of documents to be processed together by each worker during import.
 
-    IMPORT_CHUNK_SIZE = 1000
+    BATCH_CHUNK_SIZE = 1000
 
 
-#### IMPORT_FILE_LOADER_PYPATH (Python path)
+#### BATCH_FILE_LOADER_PYPATH (Python path)
 Python path to a callable which will be responsible of loading file on
 import and return an iterable.
 
-    IMPORT_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
+    BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
 
-#### IMPORT_PROCESSORS_PYPATHS (iterable of Python paths)
-All methods called during the import process.
+#### BATCH_PROCESSORS_PYPATHS (iterable of Python paths)
+All methods called during the batch process.
 
-    IMPORT_PROCESSORS_PYPATHS = [
+    BATCH_PROCESSORS_PYPATHS = [
         'addok.batch.to_json',
         'addok.helpers.index.prepare_housenumbers',
         'addok.ds.store_documents',
         'addok.helpers.index.index_documents',
     ]
 
-#### IMPORT_WORKERS (int)
-Number of processes in use when parallelizing tasks such as imports or
+#### BATCH_WORKERS (int)
+Number of processes in use when parallelizing tasks such as batch imports or
 ngrams computing.
 
-    IMPORT_WORKERS = os.cpu_count() - 1
+    BATCH_WORKERS = os.cpu_count() - 1
 
 #### DOCUMENT_STORE_PYPATH (Python path)
 Python path to a store class for saving documents using another database

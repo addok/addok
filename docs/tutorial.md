@@ -102,7 +102,7 @@ This is for Seine-Saint-Denis, but choose the area you want from the
 
 Run those two commands:
 
-    addok import BAN_odbl_93-json
+    addok batch BAN_odbl_93-json
     addok ngrams
 
 Let's test that everything is ok. Run the addok shell:
