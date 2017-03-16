@@ -27,7 +27,7 @@ def reset(args):
 
 
 def register_command(subparsers):
-    parser = subparsers.add_parser('import', help='Load documents')
+    parser = subparsers.add_parser('batch', help='Batch import documents')
     parser.add_argument('filepath', nargs='*',
                         help='Path to file to process')
     parser.set_defaults(func=run)
@@ -45,12 +45,12 @@ def process_file(filepath):
         sys.stderr.write('File not found: {}'.format(filepath))
         sys.exit(1)
     config.INDEX_EDGE_NGRAMS = False  # Run command "ngrams" instead.
-    load(config.IMPORT_FILE_LOADER(filepath))
+    batch(config.BATCH_FILE_LOADER(filepath))
 
 
 def process_stdin(stdin):
     print('Import from stdin')
-    load(stdin)
+    batch(stdin)
 
 
 @yielder
@@ -62,10 +62,10 @@ def to_json(row):
 
 
 def process_documents(*docs):
-    return list(iter_pipe(docs, config.IMPORT_PROCESSORS))
+    return list(iter_pipe(docs, config.BATCH_PROCESSORS))
 
 
-def load(iterable):
+def batch(iterable):
     parallelize(process_documents, iterable,
-                chunk_size=config.IMPORT_CHUNK_SIZE,
+                chunk_size=config.BATCH_CHUNK_SIZE,
                 throttle=timedelta(seconds=1))
