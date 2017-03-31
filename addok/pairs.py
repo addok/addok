@@ -46,7 +46,7 @@ class PairsIndexer:
                         db.srem(pair_key(token2), token)
 
 
-def pair(word):
+def pair(cmd, word):
     """See all token associated with a given token.
     PAIR lilas"""
     word = list(preprocess_query(word))[0]
