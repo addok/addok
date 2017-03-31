@@ -6,6 +6,16 @@ from addok.helpers import scripts
 from addok.pairs import pair_key
 
 
+def no_tokens_but_housenumbers_and_geohash(helper):
+    if not helper.tokens and helper.housenumbers and helper.geohash_key:
+        helper.new_bucket([helper.geohash_key], config.BUCKET_MIN)
+
+
+def no_available_tokens_abort(helper):
+    if not helper.tokens:
+        return True  # Stop processing.
+
+
 def only_commons(helper):
     if len(helper.tokens) == len(helper.common):
         # Only common terms, shortcut to search

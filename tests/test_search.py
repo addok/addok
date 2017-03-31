@@ -1,3 +1,5 @@
+import pytest
+
 from addok.core import Result, search
 
 
@@ -97,6 +99,7 @@ def test_should_do_autocomplete_on_last_term(street):
 
 def test_synonyms_should_be_replaced(street, config):
     config.SYNONYMS = {'bd': 'boulevard'}
+    config.MIN_SCORE = 0
     street.update(name='boulevard des Fleurs')
     assert search('bd')
 
@@ -185,6 +188,20 @@ def test_should_autocomplete_if_only_commons_but_geohash(factory, config):
     factory(name="rue des aulnes")
     factory(name="rue descartes", lon=2.2, lat=48.1)
     results = search('rue des', autocomplete=True, lon=2.2, lat=48.1)
+    assert results[0].name == 'rue descartes'
+
+
+def test_should_autocomplete_if_only_housenumbers_but_geohash(factory, config):
+    config.COMMON_THRESHOLD = 3
+    config.BUCKET_MAX = 3
+    config.MIN_SCORE = 0.05
+    factory(name="rue des tilleuls", lon=2.256, lat=48.3254)
+    factory(name="rue des chênes", lon=2.256, lat=48.3254)
+    factory(name="rue des hètres", lon=2.256, lat=48.3254)
+    factory(name="rue des aulnes", lon=2.256, lat=48.3254)
+    factory(name="rue descartes", lon=2.256, lat=48.3254,
+            housenumbers={'11': {'lat': '48.3254', 'lon': '2.256'}})
+    results = search('11', autocomplete=True, lon=2.256, lat=48.3254)
     assert results[0].name == 'rue descartes'
 
 

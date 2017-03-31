@@ -69,7 +69,7 @@ QUERY_PROCESSORS_PYPATHS = [
     "addok_france.remove_leading_zeros",
 ]
 SEARCH_RESULT_PROCESSORS_PYPATHS = [
-    "addok_france.match_housenumber",
+    "addok.helpers.results.match_housenumber",
     "addok_france.make_labels",
     "addok.helpers.results.score_by_importance",
     "addok.helpers.results.score_by_autocomplete_distance",

@@ -115,8 +115,9 @@ def index_ngram_keys(*keys):
 
 
 def create_edge_ngrams(*args):
-    parallelize(index_ngram_keys, DB.scan_iter(match='w|*'), chunk_size=10000,
-                throttle=1000)
+    pattern = '{}*'.format(dbkeys.TOKEN_PREFIX)
+    parallelize(index_ngram_keys, DB.scan_iter(match=pattern),
+                chunk_size=10000, throttle=1000)
 
 
 def register_command(subparsers):

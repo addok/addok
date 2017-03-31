@@ -6,14 +6,14 @@ import geohash
 from .config import config
 from .db import DB
 from .ds import get_document, get_documents
-from .helpers import keys, scripts
+from .helpers import keys as dbkeys, scripts
 from .helpers.text import ascii
 
 
 def compute_geohash_key(geoh, with_neighbors=True):
     if with_neighbors:
         neighbors = geohash.expand(geoh)
-        neighbors = [keys.geohash_key(n) for n in neighbors]
+        neighbors = [dbkeys.geohash_key(n) for n in neighbors]
     else:
         neighbors = [geoh]
     key = 'gx|{}'.format(geoh)
@@ -104,7 +104,7 @@ class Result:
     @classmethod
     def from_id(self, _id):
         """Return a result from it's document _id."""
-        return Result(keys.document_key(_id))
+        return Result(dbkeys.document_key(_id))
 
 
 class BaseHelper:
@@ -147,18 +147,18 @@ class Search(BaseHelper):
         self.meaningful = []
         self.not_found = []
         self.common = []
+        self.housenumbers = []
         self.keys = []
         self.matched_keys = set([])
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
-        self.filters = [keys.filter_key(k, v.strip())
+        self.filters = [dbkeys.filter_key(k, v.strip())
                         for k, v in filters.items() if v.strip()]
         self.query = ascii(query.strip())
         for func in config.SEARCH_PREPROCESSORS:
             func(self)
-        if not self.tokens:
-            return []
         self.debug('Taken tokens: %s', self.meaningful)
         self.debug('Common tokens: %s', self.common)
+        self.debug('Housenumbers token: %s', self.housenumbers)
         self.debug('Not found tokens: %s', self.not_found)
         self.debug('Filters: %s', ['{}={}'.format(k, v)
                                    for k, v in filters.items()])
@@ -183,7 +183,8 @@ class Search(BaseHelper):
         self.convert()
         self._sorted_bucket = list(self.results.values())
         self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
-        return self._sorted_bucket[:self.wanted]
+        return [r for r in self._sorted_bucket[:self.wanted]
+                if r.score >= config.MIN_SCORE]
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
@@ -193,21 +194,27 @@ class Search(BaseHelper):
             if self.filters:
                 keys.extend(self.filters)
             if len(keys) == 1:
-                ids = DB.zrevrange(keys[0], 0, limit - 1)
+                key = keys[0]
+                if key.startswith(dbkeys.TOKEN_PREFIX):
+                    ids = DB.zrevrange(key, 0, limit - 1)
+                else:
+                    ids = DB.smembers(key)
             else:
                 ids = scripts.zinter(keys=set(keys), args=[self.pid, limit])
         return set(ids)
 
     def add_to_bucket(self, keys, limit=None):
         self.debug('Adding to bucket with keys %s', keys)
-        self.matched_keys.update([k for k in keys if k.startswith('w|')])
+        self.matched_keys.update([k for k in keys
+                                  if k.startswith(dbkeys.TOKEN_PREFIX)])
         limit = limit or (config.BUCKET_MAX - len(self.bucket))
         self.bucket.update(self.intersect(keys, limit))
         self.debug('%s ids in bucket so far', len(self.bucket))
 
     def new_bucket(self, keys, limit=0):
         self.debug('New bucket with keys %s and limit %s', keys, limit)
-        self.matched_keys = set([k for k in keys if k.startswith('w|')])
+        self.matched_keys = set([k for k in keys
+                                 if k.startswith(dbkeys.TOKEN_PREFIX)])
         self.bucket = self.intersect(keys, limit)
         self.debug('%s ids in bucket so far', len(self.bucket))
 
@@ -270,7 +277,7 @@ class Reverse(BaseHelper):
         self.wanted = limit
         self.fetched = []
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
-        self.filters = [keys.filter_key(k, v) for k, v in filters.items()]
+        self.filters = [dbkeys.filter_key(k, v) for k, v in filters.items()]
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
         self.fetch(hashes)
@@ -291,7 +298,7 @@ class Reverse(BaseHelper):
     def fetch(self, hashes):
         self.debug('Fetching %s', hashes)
         for h in hashes:
-            k = keys.geohash_key(h)
+            k = dbkeys.geohash_key(h)
             self.intersect(k)
             self.fetched.append(h)
 
