@@ -107,7 +107,7 @@ FIELDS = [
     {'key': 'name', 'boost': 4, 'null': False},
     {'key': 'street'},
     {'key': 'postcode',
-     'boost': lambda doc: 1.2 if doc.get('type') == 'commune' else 1},
+     'boost': lambda doc: 1.2 if doc.get('type') == 'municipality' else 1},
     {'key': 'city'},
     {'key': 'housenumbers'},
     {'key': 'context'},
