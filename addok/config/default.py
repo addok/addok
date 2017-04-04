@@ -25,6 +25,9 @@ INTERSECT_LIMIT = 100000
 # Min score considered matching the query.
 MATCH_THRESHOLD = 0.9
 
+# Do not consider result if final score is below this threshold.
+MIN_SCORE = 0.1
+
 QUERY_MAX_LENGTH = 200
 
 GEOHASH_PRECISION = 7
@@ -38,6 +41,7 @@ SYNONYMS_PATH = None
 PROCESSORS_PYPATHS = [  # Rename in TOKEN_PROCESSORS / STRING_PROCESSORS?
     'addok.helpers.text.tokenize',
     'addok.helpers.text.normalize',
+    'addok.helpers.text.flag_housenumber',
     'addok.helpers.text.synonymize',
 ]
 QUERY_PROCESSORS_PYPATHS = [
@@ -62,6 +66,8 @@ BATCH_CHUNK_SIZE = 1000
 # let one process free for Redis by default.
 BATCH_WORKERS = os.cpu_count() - 1
 RESULTS_COLLECTORS_PYPATHS = [
+    'addok.helpers.collectors.no_tokens_but_housenumbers_and_geohash',
+    'addok.helpers.collectors.no_available_tokens_abort',
     'addok.helpers.collectors.only_commons',
     'addok.helpers.collectors.bucket_with_meaningful',
     'addok.helpers.collectors.reduce_with_other_commons',

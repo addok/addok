@@ -92,28 +92,6 @@ simple string, or a dict.
     # Or
     ATTRIBUTION = {source: attribution, source2: attribution2}
 
-#### BATCH_CHUNK_SIZE (int)
-Number of documents to be processed together by each worker during import.
-
-    BATCH_CHUNK_SIZE = 1000
-
-
-#### BATCH_FILE_LOADER_PYPATH (Python path)
-Python path to a callable which will be responsible of loading file on
-import and return an iterable.
-
-    BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
-
-#### BATCH_PROCESSORS_PYPATHS (iterable of Python paths)
-All methods called during the batch process.
-
-    BATCH_PROCESSORS_PYPATHS = [
-        'addok.batch.to_json',
-        'addok.helpers.index.prepare_housenumbers',
-        'addok.ds.store_documents',
-        'addok.helpers.index.index_documents',
-    ]
-
 #### BATCH_WORKERS (int)
 Number of processes in use when parallelizing tasks such as batch imports or
 ngrams computing.
@@ -184,26 +162,6 @@ processed.
 
     QUERY_MAX_LENGTH = 200
 
-#### PROCESSORS_PYPATHS (iterable of Python paths)
-Define the various functions to preprocess the text, before indexing and
-searching. It's an `iterable` of Python paths. Some functions are built in
-(mainly for French at this time, but you can point to any Python function that
-is on the pythonpath).
-
-    PROCESSORS_PYPATHS = [
-        'addok.helpers.text.tokenize',
-        'addok.helpers.text.normalize',
-        'addok.helpers.text.synonymize',
-    ]
-
-#### QUERY_PROCESSORS_PYPATHS (iterable of Python paths)
-Additional processors that are run only at query time. By default, only
-`check_query_length` is active, it depends on `QUERY_MAX_LENGTH` to avoid DoS.
-
-    QUERY_PROCESSORS_PYPATHS = (
-        'addok.helpers.text.check_query_length',
-    )
-
 #### SYNONYMS_PATH (path)
 Path to the synonym file. Synonyms file are in the format `av, ave => avenue`.
 
@@ -212,6 +170,27 @@ Path to the synonym file. Synonyms file are in the format `av, ave => avenue`.
 ## Advanced settings
 
 Those are internal settings. Change them with caution.
+
+#### BATCH_CHUNK_SIZE (int)
+Number of documents to be processed together by each worker during import.
+
+    BATCH_CHUNK_SIZE = 1000
+
+#### BATCH_FILE_LOADER_PYPATH (Python path)
+Python path to a callable which will be responsible of loading file on
+import and return an iterable.
+
+    BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
+
+#### BATCH_PROCESSORS_PYPATHS (iterable of Python paths)
+All methods called during the batch process.
+
+    BATCH_PROCESSORS_PYPATHS = [
+        'addok.batch.to_json',
+        'addok.helpers.index.prepare_housenumbers',
+        'addok.ds.store_documents',
+        'addok.helpers.index.index_documents',
+    ]
 
 #### BUCKET_MIN (int)
 The min number of items addok will try to fetch from Redis before scoring and
@@ -248,7 +227,6 @@ For a faster option (but using more RAM), use `marshal` instead.
 
     DOCUMENT_SERIALIZER_PYPATH = 'marshal'
 
-
 #### GEOHASH_PRECISION (int)
 Size of the geohash. The bigger the setting, the smaller the hash.
 See [Geohash on Wikipedia](http://en.wikipedia.org/wiki/Geohash).
@@ -275,6 +253,12 @@ Minimum length of computed edge ngrams.
 
     MIN_EDGE_NGRAMS = 3
 
+#### MIN_SCORE (float)
+All results with final score below this threshold will not be kept. Score is
+between 0 and 1.
+
+    MIN_SCORE = 0.1
+
 #### MAKE_LABELS (func)
 Function to override labels built for string comparison with query
 at scoring time. Takes a `result` object as argument and must return a
@@ -286,3 +270,50 @@ list of strings.
 Min score used to consider a result may *match* the query.
 
     MATCH_THRESHOLD = 0.9
+
+#### PROCESSORS_PYPATHS (iterable of Python paths)
+Define the various functions to preprocess the text, before indexing and
+searching. It's an `iterable` of Python paths. Some functions are built in
+(mainly for French at this time, but you can point to any Python function that
+is on the pythonpath).
+
+    PROCESSORS_PYPATHS = [
+        'addok.helpers.text.tokenize',
+        'addok.helpers.text.normalize',
+        'addok.helpers.text.flag_housenumber',
+        'addok.helpers.text.synonymize',
+    ]
+
+#### QUERY_PROCESSORS_PYPATHS (iterable of Python paths)
+Additional processors that are run only at query time. By default, only
+`check_query_length` is active, it depends on `QUERY_MAX_LENGTH` to avoid DoS.
+
+    QUERY_PROCESSORS_PYPATHS = (
+        'addok.helpers.text.check_query_length',
+    )
+
+#### RESULTS_COLLECTORS_PYPATHS (iterable of Python paths)
+Addok will try each of those in the given order for searching matching results.
+
+    RESULTS_COLLECTORS_PYPATHS = [
+        'addok.helpers.collectors.no_tokens_but_housenumbers_and_geohash',
+        'addok.helpers.collectors.no_available_tokens_abort',
+        'addok.helpers.collectors.only_commons',
+        'addok.helpers.collectors.bucket_with_meaningful',
+        'addok.helpers.collectors.reduce_with_other_commons',
+        'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',
+        'addok.helpers.collectors.extend_results_reducing_tokens',
+        'addok.helpers.collectors.extend_results_extrapoling_relations',
+    ]
+
+### SEARCH_RESULT_PROCESSORS_PYPATHS (iterable of Python paths)
+Post processing of each result found during search.
+
+    SEARCH_RESULT_PROCESSORS_PYPATHS = [
+        'addok.helpers.results.match_housenumber',
+        'addok.helpers.results.make_labels',
+        'addok.helpers.results.score_by_importance',
+        'addok.helpers.results.score_by_autocomplete_distance',
+        'addok.helpers.results.score_by_ngram_distance',
+        'addok.helpers.results.score_by_geo_distance',
+    ]

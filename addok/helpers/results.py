@@ -29,13 +29,15 @@ def match_housenumber(helper, result):
 def _match_housenumber(helper, result, tokens):
     if not helper.check_housenumber:
         return
-    for token in sorted(tokens, key=lambda t: t.position):
-        if token in result.housenumbers:
-            data = result.housenumbers[str(token)]
-            result.housenumber = data.pop('raw')
-            result.type = 'housenumber'
-            result.update(data)
-            break
+    # Housenumber may have multiple tokens (eg. "dix huit"), we join
+    # those to match the way they have been processed by
+    # addok.helpers.index.prepare_housenumbers.
+    raw = ''.join(sorted(helper.housenumbers, key=lambda t: t.position))
+    if raw and raw in result.housenumbers:
+        data = result.housenumbers[str(raw)]
+        result.housenumber = data.pop('raw')
+        result.type = 'housenumber'
+        result.update(data)
 
 
 def score_by_importance(helper, result):

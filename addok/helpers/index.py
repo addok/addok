@@ -161,18 +161,14 @@ class HousenumbersIndexer:
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
         housenumbers = doc.get('housenumbers', {})
-        to_index = {}
         for number, data in housenumbers.items():
-            to_index[number] = config.DEFAULT_BOOST
             index_geohash(pipe, key, data['lat'], data['lon'])
-        index_tokens(pipe, to_index, key, **kwargs)
 
     @staticmethod
     def deindex(db, key, doc, tokens, **kwargs):
         housenumbers = doc.get('housenumbers', {})
         for token, data in housenumbers.items():
             deindex_geohash(key, data['lat'], data['lon'])
-            deindex_token(key, token)
 
 
 class FiltersIndexer:

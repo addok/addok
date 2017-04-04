@@ -187,3 +187,14 @@ def check_query_length(q):
         raise EntityTooLarge('Query too long, {} chars, limit is {}'.format(
             len(q), config.QUERY_MAX_LENGTH))
     return q
+
+
+@yielder
+def flag_housenumber(token):
+    """Very basic housenumber flagging. Make your own for your specific needs.
+    Eg. in addok-france:
+    https://github.com/addok/addok-france/blob/master/addok_france/utils.py#L106
+    """
+    if token.is_first and token.isdigit():
+        token.kind = 'housenumber'
+    return token

@@ -1,5 +1,8 @@
+TOKEN_PREFIX = 'w|'
+
+
 def token_key(s):
-    return 'w|{}'.format(s)
+    return '{}{}'.format(TOKEN_PREFIX, s)
 
 
 def document_key(s):

@@ -58,18 +58,12 @@ def test_index_document():
     assert DB.exists('w|des')
     assert DB.exists('w|lilas')
     assert DB.exists('w|andresy')
-    assert DB.exists('w|1')  # Housenumber.
     assert DB.exists('p|rue')
     assert DB.exists('p|des')
     assert DB.exists('p|lilas')
     assert DB.exists('p|andresy')
     assert b'lilas' in DB.smembers('p|andresy')
     assert b'andresy' in DB.smembers('p|lilas')
-    assert DB.exists('p|1')
-    assert b'1' in DB.smembers('p|rue')
-    assert b'rue' in DB.smembers('p|1')
-    assert b'1' in DB.smembers('p|andresy')
-    assert b'andresy' in DB.smembers('p|1')
     assert DB.exists('g|u09dgm7')
     assert b'd|yyyy' in DB.smembers('g|u09dgm7')
     assert DB.exists('n|lil')
@@ -87,7 +81,7 @@ def test_index_document():
     assert b'd|yyyy' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
     assert b'd|yyyy' in DB.smembers('f|type|housenumber')
-    assert len(DB.keys()) == 19
+    assert len(DB.keys()) == 17
     assert len(ds._DB.keys()) == 1
 
 
@@ -147,30 +141,23 @@ def test_deindex_document_should_not_affect_other_docs():
     }
     index_document(DOC1)
     index_document(DOC2)
-    assert b'2' in DB.smembers('p|rue')
     deindex_document(DOC1['_id'])
     assert not ds._DB.exists('d|yyyy')
     assert b'd|yyyy' not in DB.zrange('w|rue', 0, -1)
     assert b'd|yyyy' not in DB.zrange('w|des', 0, -1)
     assert b'd|yyyy' not in DB.zrange('w|lilas', 0, -1)
-    assert b'd|yyyy' not in DB.zrange('w|1', 0, -1)
     assert DB.exists('g|u09dgm7')
     assert b'd|yyyy' not in DB.smembers('g|u09dgm7')
     assert DB.exists('w|des')
     assert DB.exists('w|lilas')
-    assert DB.exists('w|1')  # Housenumber.
-    assert b'andresy' not in DB.smembers('p|1')
-    assert b'2' not in DB.smembers('p|rue')
     assert DB.exists('p|rue')
     assert b'd|yyyy2' in DB.zrange('w|rue', 0, -1)
     assert b'd|yyyy2' in DB.zrange('w|des', 0, -1)
     assert b'd|yyyy2' in DB.zrange('w|lilas', 0, -1)
-    assert b'd|yyyy2' in DB.zrange('w|1', 0, -1)
     assert b'd|yyyy2' in DB.smembers('g|u09dgm7')
     assert b'd|yyyy2' in DB.smembers('g|u0g08g7')
     assert DB.exists('p|des')
     assert DB.exists('p|lilas')
-    assert DB.exists('p|1')
     assert not DB.exists('n|and')
     assert not DB.exists('n|andr')
     assert not DB.exists('n|andre')
@@ -185,7 +172,7 @@ def test_deindex_document_should_not_affect_other_docs():
     assert b'd|yyyy2' in DB.smembers('f|type|street')
     assert DB.exists('f|type|housenumber')
     assert b'd|yyyy2' in DB.smembers('f|type|housenumber')
-    assert len(DB.keys()) == 18
+    assert len(DB.keys()) == 16
     assert len(ds._DB.keys()) == 1
 
 
