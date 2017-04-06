@@ -3,7 +3,7 @@
 - housenumbers are not indexed anymore (to gain RAM), they are only matched in
   result postprocessing
 - for `addok-france` users: `addok_france.match_housenumber` should be replaced
-  by `addok.helpers.text.match_housenumber` in SEARCH_RESULT_PROCESSORS_PYPATHS
+  by `addok.helpers.results.match_housenumber` in SEARCH_RESULT_PROCESSORS_PYPATHS
 - new `MIN_SCORE` setting to filter out results with very low scores
 - for `addok-france` users: fixed leading zeros wrongly removed from postcodes
 
