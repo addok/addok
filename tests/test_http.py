@@ -124,6 +124,8 @@ def test_get_endpoint(client, factory):
 def test_get_endpoint_with_invalid_id(client):
     resp = client.get('/get/123')
     assert resp.status_code == 404
+    assert resp.body == ''
+    assert resp.headers['content-type'] == 'text/html'
 
 
 def test_get_should_have_cors_headers(client, factory):

@@ -118,6 +118,7 @@ class Get(View):
         try:
             result = Result.from_id(doc_id)
         except ValueError:
+            resp.content_type = 'text/html'
             raise falcon.HTTPNotFound()
         else:
             self.json(req, resp, result.format())
