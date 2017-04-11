@@ -6,7 +6,7 @@ def geojson(result):
         properties["score"] = result.score
     for key in result.keys:
         val = getattr(result, key, None)
-        if val and key not in ['lat', 'lon']:
+        if val and key not in ['lat', 'lon', '_id']:
             properties[key] = val
     housenumber = getattr(result, 'housenumber', None)
     if housenumber:
