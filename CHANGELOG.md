@@ -1,25 +1,5 @@
 ## 1.0.0
 
-- breaking change: the key "id" is not required anymore in the loaded data and
-  as such has been removed from the geojson Feature root.
-
-## 1.0.0-rc.4
-
-- housenumbers are not indexed anymore (to gain RAM), they are only matched in
-  result postprocessing
-- for `addok-france` users: `addok_france.match_housenumber` should be replaced
-  by `addok.helpers.results.match_housenumber` in SEARCH_RESULT_PROCESSORS_PYPATHS
-- new `MIN_SCORE` setting to filter out results with very low scores
-- for `addok-france` users: fixed leading zeros wrongly removed from postcodes
-
-## 1.0.0-rc.3
-
-- remove `DOCUMENT_PROCESSORS_PYPATHS` in favor of `BATCH_PROCESSORS_PYPATHS`
-  (not in use before 1.0.0-rc.1)
-- add `BATCH_FILE_LOADER_PYPATH` to specify a custom file loader (e.g. msgpack)
-
-## 1.0.0-rc.1
-
 The 1.0.0 has been a big rewrite, with main features:
 
 - split in [plugins](http://addok.readthedocs.io/en/latest/plugins/)
@@ -27,6 +7,8 @@ The 1.0.0 has been a big rewrite, with main features:
 - use LUA scripting for performances
 - less RAM consumption
 - replaced Flask by Falcon for performances
+- housenumbers are not indexed anymore (to gain RAM), they are only matched in
+  result postprocessing
 
 It contains many breaking changes. Best option when possible is to restart
 from scratch (see the [tutorial](http://addok.readthedocs.io/en/latest/tutorial/))
