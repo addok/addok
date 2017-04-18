@@ -229,7 +229,7 @@ class Cmd(cmd.Cmd):
         DB.delete(words)
         for id_, score in results:
             r = Result(id_)
-            print('{} {} {}'.format(white(r), blue(r.id), cyan(score)))
+            print('{} {} {}'.format(white(r), blue(r._id), cyan(score)))
         duration = round((time.time() - start) * 1000, 1)
         print(magenta("({} in {} ms)".format(len(results), duration)))
 
@@ -337,7 +337,7 @@ class Cmd(cmd.Cmd):
         if key:
             for id_ in DB.smembers(key):
                 r = Result(id_)
-                print('{} {}'.format(white(r), blue(r.id)))
+                print('{} {}'.format(white(r), blue(r._id)))
 
     def do_GET(self, _id):
         """Get document from index with its id.
@@ -389,7 +389,7 @@ class Cmd(cmd.Cmd):
         key = keys.token_key(indexed_string(word)[0])
         for _id, score in DB.zrevrange(key, 0, 20, withscores=True):
             result = Result(_id)
-            print(white(result), blue(score), blue(result.id))
+            print(white(result), blue(score), green(result._id))
 
     def do_REVERSE(self, latlon):
         """Do a reverse search. Args: lat lon.
@@ -397,7 +397,7 @@ class Cmd(cmd.Cmd):
         lat, lon = latlon.split()
         for r in reverse(float(lat), float(lon)):
             print('{} ({} | {} km | {})'.format(white(r), blue(r.score),
-                                                blue(r.distance), blue(r.id)))
+                                                blue(r.distance), blue(r._id)))
 
     def do_TOKENIZE(self, string):
         """Inspect how a string is tokenized before being indexed.
