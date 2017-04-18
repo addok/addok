@@ -6,7 +6,7 @@ from pathlib import Path
 import falcon
 
 from addok.config import config
-from addok.core import Result, reverse, search
+from addok.core import reverse, search
 from addok.helpers.text import EntityTooLarge
 
 notfound_logger = None
@@ -112,18 +112,6 @@ class View:
         return lon, lat
 
 
-class Get(View):
-
-    def on_get(self, req, resp, doc_id, **kwargs):
-        try:
-            result = Result.from_id(doc_id)
-        except ValueError:
-            resp.content_type = 'text/html'
-            raise falcon.HTTPNotFound()
-        else:
-            self.json(req, resp, result.format())
-
-
 class Search(View):
 
     def on_get(self, req, resp, **kwargs):
@@ -166,7 +154,6 @@ class Reverse(View):
 
 
 def register_http_endpoint(api):
-    api.add_route('/get/{doc_id}', Get())
     api.add_route('/search', Search())
     api.add_route('/reverse', Reverse())
 

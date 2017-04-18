@@ -1,3 +1,8 @@
+## 1.0.0
+
+- breaking change: the key "id" is not required anymore in the loaded data and
+  as such has been removed from the geojson Feature root.
+
 ## 1.0.0-rc.4
 
 - housenumbers are not indexed anymore (to gain RAM), they are only matched in
@@ -37,6 +42,8 @@ and reindex everything.
   `index` and `deindex` methods
 - endpoints API changed
 - by default, documents are now stored in a separate Redis database
+- the key "id" is not required anymore in the loaded data and as such has been
+  removed from the geojson Feature root.
 
 ### Minor changes
 

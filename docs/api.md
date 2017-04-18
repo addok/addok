@@ -94,12 +94,3 @@ Parameters:
   parameters
 
 Same response format as the `/search/` enpoint.
-
-
-### /get/&lt;doc_id&gt;/
-
-Get a document from its id.
-
-#### Parameters
-
-- **doc_id**: the id of the document

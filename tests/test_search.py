@@ -1,5 +1,3 @@
-import pytest
-
 from addok.core import Result, search
 
 

@@ -115,26 +115,6 @@ def test_reverse_without_lat_or_lng_should_return_400(client, factory):
     assert resp.status_code == 400
 
 
-def test_get_endpoint(client, factory):
-    doc = factory(name='sentier de la côte', id='123')
-    resp = client.get('/get/{doc_id}'.format(doc_id=doc['_id']))
-    assert resp.json['properties']['id'] == '123'
-
-
-def test_get_endpoint_with_invalid_id(client):
-    resp = client.get('/get/123')
-    assert resp.status_code == 404
-    assert resp.body == ''
-    assert resp.headers['content-type'] == 'text/html'
-
-
-def test_get_should_have_cors_headers(client, factory):
-    factory(name='sentier de la côte', id='123')
-    resp = client.get('/get/123')
-    assert resp.headers['Access-Control-Allow-Origin'] == '*'
-    assert resp.headers['Access-Control-Allow-Headers'] == 'X-Requested-With'
-
-
 def test_view_should_expose_config(config):
     config.NEW_PROPERTY = "ok"
     assert View.config.NEW_PROPERTY == "ok"
