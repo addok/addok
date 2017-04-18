@@ -64,7 +64,7 @@ class Result:
         return value
 
     def __repr__(self):
-        return '<{} - {} ({})>'.format(str(self), self.id, self.score)
+        return '<{} - {} ({})>'.format(str(self), self._id, self.score)
 
     @property
     def keys(self):
