@@ -47,7 +47,12 @@ def on_load():
     if config.DOCUMENT_STORE == RedisStore:
         params = config.REDIS.copy()
         params.update(config.REDIS.get('documents', {}))
-        _DB.connect(host=params['host'], port=params['port'], db=params['db'])
+        _DB.connect(
+            host=params['host'],
+            port=params['port'],
+            db=params['db'],
+            password=params.get('password')
+        )
 
 
 def store_documents(docs):
