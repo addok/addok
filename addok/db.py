@@ -29,4 +29,9 @@ DB = RedisProxy()
 def connect():
     params = config.REDIS.copy()
     params.update(config.REDIS.get('indexes', {}))
-    DB.connect(host=params['host'], port=params['port'], db=params['db'])
+    DB.connect(
+        host=params['host'],
+        port=params['port'],
+        db=params['db'],
+        password=params.get('password')
+    )
