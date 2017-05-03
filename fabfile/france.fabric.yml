@@ -1,0 +1,12 @@
+plugins:
+  - addok-france
+  - addok-fr
+  - addok-sqlite-store
+  - addok-csv
+settings: fabfile/france.local.py
+data_uri: http://bano.openstreetmap.fr/BAN_odbl/BAN_odbl.json.bz2
+domain: addok.space
+data:
+  - {"id": "75056","type": "municipality","name": "Paris","postcode": "75000","lat": "48.8589","lon": "2.3469","city": "Paris","context":"75, Île-de-France", "population": 2244, "adm_weight": 6, "importance": 1, "citycode": "75056"}
+  - {"id": "69123","type": "municipality","name": "Lyon","postcode": "69000","lat": "45.7579","lon": "4.8353","city": "Lyon","context": "69, Rhône, Rhône-Alpes", "population": 484, "adm_weight": 5, "importance": 0.9, "citycode": "69123"}
+  - {"id": "13055","type": "municipality","name": "Marseille","postcode": "13000","lat": "43.2804","lon": "5.3806","city": "Marseille","context": "13, Bouches-du-Rhône, Provence-Alpes-Côte-d'Azur", "population": 850, "adm_weight": 5, "importance": 0.9, "citycode": "13055"}

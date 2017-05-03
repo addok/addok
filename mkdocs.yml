@@ -2,13 +2,14 @@ site_name: Addok
 pages:
 - index.md
 - Installation: install.md
+- Tutorial: tutorial.md
 - Configuration: config.md
 - Tuning Redis: redis.md
 - Plugins: plugins.md
 - Import: import.md
 - HTTP API: api.md
 - Shell: shell.md
-- Tutorial: tutorial.md
+- Fabric: fabric.md
 - Concepts: concepts.md
 - FAQ: faq.md
 - Changelog: changelog.md
