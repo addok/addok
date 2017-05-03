@@ -1,0 +1,8 @@
+plugins:
+  - addok-france
+  - addok-fr
+  - addok-sqlite-store
+  - addok-csv
+settings: fabfile/france.local.py
+data_uri: http://bano.openstreetmap.fr/BAN_odbl/BAN_odbl_90-json.bz2
+domain: addok.space

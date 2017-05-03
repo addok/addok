@@ -25,3 +25,4 @@ prof/
 local*.py
 *.rdb
 *.db
+*.tar.bz2

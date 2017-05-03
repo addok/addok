@@ -94,3 +94,15 @@ configuration file.
 ### `restart`
 
 Restart uwsgi and nginx.
+
+### `backup`
+
+Bzip and download settings, sqlite and redis database files.
+The downloaded file will be named like `addok-backup.YYYY-MM-DD.tar.bz2`.
+
+### `use_backup`
+
+Use files previously backuped locally with the `backup` command
+and launch a `redis-server`.
+Do not forget to use the appropriated configuration file when you run
+an addok command afterward.

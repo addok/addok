@@ -1,3 +1,4 @@
+from datetime import date
 from hashlib import md5
 from io import StringIO
 from pathlib import Path
@@ -126,3 +127,34 @@ def restart(ctx):
     ctx.run('sudo systemctl restart uwsgi')
     if not ctx.config.get('skip_nginx'):
         ctx.run('sudo systemctl restart nginx')
+
+
+@task
+def backup(ctx):
+    today = date.today().isoformat()
+    backup_filename = 'addok-backup.{}.tar.bz2'.format(today)
+    ctx.run('redis-cli save')
+    ctx.run('cp /etc/addok/addok.conf /tmp/local.{}.py'.format(today))
+    ctx.run('cp /srv/addok/addok.db /tmp/sqlite.{}.db'.format(today))
+    ctx.run('cp /var/lib/redis/dump.rdb /tmp/redis.{}.rdb'.format(today))
+    ctx.run('cd /tmp && tar -jcvf {filename} sqlite.{today}.db '
+            'redis.{today}.rdb local.{today}.py'.format(
+                filename=backup_filename, today=today))
+    scp = 'rsync --progress -e ssh'  # Allows to display progress.
+    ctx.local('{scp} {ctx.user}@{ctx.host}:/tmp/{filename} .'.format(
+        scp=scp, ctx=ctx, filename=backup_filename))
+
+
+@task
+def use_backup(ctx, backup_date=date.today().isoformat()):
+    ctx.local('tar -xvjf addok-backup.{}.tar.bz2'.format(backup_date))
+    with open('local.{}.py'.format(backup_date), 'r+') as configuration:
+        content = configuration.read()
+        if "SQLITE_DB_PATH = '/srv/addok/addok.db'" in content:
+            content = content.replace(
+                "SQLITE_DB_PATH = '/srv/addok/addok.db'",
+                "SQLITE_DB_PATH = 'sqlite.{}.db'".format(backup_date))
+            configuration.seek(0)  # Overwrite file.
+            configuration.write(content)
+    ctx.local('echo "dbfilename redis.{}.rdb" | redis-server -'.format(
+        backup_date))
