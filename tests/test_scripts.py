@@ -12,6 +12,22 @@ def test_manual_scan(factory):
                        'd|{}'.format(street2['_id']).encode()]
 
 
+def test_manual_scan_with_filter(factory):
+    vitry = factory(name="Vitry", type="city")
+    factory(name="La monnaye", city="Saint-Loup-Cammas")
+    street1 = factory(name="rue de la monnaie", city="Paris", importance=1)
+    street2 = factory(name="rue de la monnaie", city="Condom", importance=0.9)
+    results = scripts.manual_scan(keys=['w|rue', 'w|de', 'f|type|street'],
+                                  args=[2])
+    assert results == ['d|{}'.format(street1['_id']).encode(),
+                       'd|{}'.format(street2['_id']).encode()]
+    results = scripts.manual_scan(keys=['w|rue', 'w|de', 'f|type|whatever'],
+                                  args=[2])
+    assert results == []
+    results = scripts.manual_scan(keys=['w|vitry', 'f|type|city'], args=[2])
+    assert results == ['d|{}'.format(vitry['_id']).encode()]
+
+
 def test_zinter(factory):
     docs = (
         factory(name="rue de la monnaie", city="Vitry"),

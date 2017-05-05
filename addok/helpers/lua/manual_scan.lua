@@ -4,19 +4,23 @@
 -- in this case is big (millions of entries).
 -- KEYS are the various words of the search (in they key form: w|xxxx)
 -- ARGS[1] one is the number of candidates we want to retrieve
--- TODO handle filters
 local candidates = {}
 -- Take the first 500 documents of the first set
 local ids = redis.call('ZREVRANGE', KEYS[1], 0, 500)
 for i,id in ipairs(ids) do
     local count = 0;
     -- Check if this ids is available in other sets
-    for j,k in ipairs(KEYS) do
+    for j,key in ipairs(KEYS) do
         if j > 1 then
             -- we used the first key to get the ids, skip it
             -- slice anyone?
-            local rank = redis.call("ZRANK", k, id);
-            if type(rank) == "number" then
+            if redis.call('TYPE', key)['ok'] == 'zset' then
+                local rank = redis.call('ZRANK', key, id);
+                if type(rank) == 'number' then
+                    count = count + 1;
+                end
+            elseif redis.call('SISMEMBER', key, id) == 1 then
+                -- Happens with filters which are sets and not zsets
                 count = count + 1;
             end
         end
