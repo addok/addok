@@ -128,6 +128,9 @@ request.post({
   url: 'http://api-adresse.data.gouv.fr/search/csv/',
   formData: formData
 }).then(function (text) {
+  // You might want to use fs.writeFile instead because writeFileSync
+  // blocks the event loop. See section fs.writeFileSync() at
+  // http://www.daveeddy.com/2013/03/26/synchronous-file-io-in-nodejs/
   fs.writeFileSync('./out.csv', text);
 })
 .catch(function (err) {
