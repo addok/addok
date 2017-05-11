@@ -266,6 +266,10 @@ class Search(BaseHelper):
     def pass_should_match_threshold(self):
         return len(self.matched_keys) >= self.should_match_threshold
 
+    @property
+    def only_commons(self):
+        return self.tokens and len(self.tokens) == len(self.common)
+
 
 class Reverse(BaseHelper):
 
