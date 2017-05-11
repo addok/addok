@@ -20,6 +20,8 @@ a special location:
 
 You can also use the `--config` argument when running the `addok` command line.
 
+The default config file is in `addok/config/default.py`.
+
 ## Environment settings
 
 Some settings are used to define how addok will deal with the system it's
