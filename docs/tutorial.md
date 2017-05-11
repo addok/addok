@@ -63,7 +63,7 @@ tracker](https://github.com/addok/addok/issues) to ask for help.
 And paste this configuration:
 ```
 QUERY_PROCESSORS_PYPATHS = [
-    'addok.helpers.text.check_query_length',
+    "addok.helpers.text.check_query_length",
     "addok_france.extract_address",
     "addok_france.clean_query",
     "addok_france.remove_leading_zeros",
