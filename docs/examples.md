@@ -6,6 +6,19 @@ for your code. Feel free to add your own usage with a pull-request!
 
 ## Using Python
 
+### Geocoding a single value
+
+```python
+>>> import requests
+>>> ADDOK_URL = 'http://api-adresse.data.gouv.fr/search/'
+>>> response = requests.get(ADDOK_URL, params={'q': 'lill', 'limit': 5})
+>>> response.json()
+# => {'type': 'FeatureCollection', 'attribution': 'BAN',...
+```
+
+
+### Geocoding a whole file
+
 ```python
 import requests
 
@@ -48,9 +61,11 @@ def post_to_addok(filename, filelike_object):
     return filename, response
 
 
+# Geocode your file all at once if it is small.
 geocode('data.csv')
 # => data.geocoded.csv
 
+# Alternatively, geocode it by chunks when it is big.
 chunk_by = 50 * 2  # approximative number of lines.
 geocode_chunked('data.csv', 'result-{}.csv', chunk_by)
 # => result-1.geocoded.csv, result-2.geocoded.csv, etc
