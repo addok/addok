@@ -43,7 +43,7 @@ def addok(ctx, cmd):
 @task
 def system(ctx):
     ctx.run('sudo apt update')
-    ctx.run('sudo apt install redis-server python3.5 python3.5-dev '
+    ctx.run('sudo apt install redis-server python3 python3-dev '
             'python-virtualenv build-essential git wget uwsgi '
             'uwsgi-plugin-python3 bzip2 --yes')
     if not ctx.config.get('skip_nginx'):
