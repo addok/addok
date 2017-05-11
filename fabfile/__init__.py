@@ -97,9 +97,6 @@ def fetch(ctx):
 def batch(ctx):
     ctx.run('redis-cli config set save ""')
     addok(ctx, 'batch /tmp/data.json')
-    if ctx.config.get('data'):
-        ctx.put(StringIO('\n'.join(ctx.config.data)), '/tmp/extra.json')
-        addok('batch /tmp/extra.json')
     addok(ctx, 'ngrams')
     ctx.run('redis-cli save')
 
