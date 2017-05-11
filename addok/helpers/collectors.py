@@ -17,7 +17,7 @@ def no_available_tokens_abort(helper):
 
 
 def only_commons(helper):
-    if len(helper.tokens) == len(helper.common):
+    if helper.only_commons:
         # Only common terms, shortcut to search
         keys = [t.db_key for t in helper.tokens]
         if helper.geohash_key:
@@ -78,7 +78,7 @@ def bucket_with_meaningful(helper):
 
 
 def reduce_with_other_commons(helper):
-    if len(helper.tokens) == len(helper.common):
+    if helper.only_commons:
         return
     for token in helper.common:  # Already ordered by frequency asc.
         if token not in helper.meaningful and helper.bucket_overflow:

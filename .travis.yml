@@ -14,7 +14,7 @@ install:
 - python setup.py develop
 - pip install -r requirements-dev.txt
 - pip install python-coveralls
-script: py.test
+script: make testcoverage
 after_success:
 - coveralls
 notifications:
