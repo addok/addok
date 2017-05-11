@@ -42,12 +42,12 @@ class EdgeNgramIndexer:
 
 
 def only_commons_but_geohash_try_autocomplete_collector(helper):
-    if helper.geohash_key and len(helper.tokens) == len(helper.common):
+    if helper.geohash_key and helper.only_commons:
         autocomplete(helper, helper.tokens, use_geohash=True)
 
 
 def only_commons_try_autocomplete_collector(helper):
-    if len(helper.tokens) == len(helper.common):
+    if helper.only_commons:
         autocomplete(helper, helper.tokens, skip_commons=True)
         if not helper.bucket_empty:
             helper.debug('Only common terms. Return.')
