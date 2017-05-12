@@ -79,7 +79,10 @@ def http(ctx):
         nginx_conf = render_template('fabfile/nginx.conf',
                                      domain=ctx.config.domain)
         sudo_put(ctx, nginx_conf, '/etc/nginx/sites-enabled/addok')
-    ctx.run('sudo echo {} > /proc/sys/net/core/somaxconn'.format(connections))
+    # On LXC containers, somaxconn cannot be changed. This must be done on the
+    # host machine.
+    ctx.run(
+        'sudo sysctl -w net.core.somaxconn={} || exit 0'.format(connections))
     restart(ctx)
 
 
