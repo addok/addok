@@ -56,7 +56,7 @@ else:
 
     cmdclass = {'build_ext': build_ext}
 
-VERSION = (1, 0, 0)
+VERSION = (1, 0, 1)
 
 __author__ = 'Yohan Boniface'
 __contact__ = "yohan.boniface@data.gouv.fr"
@@ -75,7 +75,7 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
 
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: GIS',
