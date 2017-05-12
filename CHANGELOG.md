@@ -1,3 +1,10 @@
+## 1.0.1
+
+- Upgraded Falcon to 1.2.0
+- Fix bug when search request is empty but lat and lon are given and valid
+- Handle filters when doing a manual scan with Lua
+- Allow to configure Redis password from config
+
 ## 1.0.0
 
 The 1.0.0 has been a big rewrite, with main features:
