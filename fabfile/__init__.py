@@ -49,7 +49,9 @@ def system(ctx):
     if not ctx.config.get('skip_nginx'):
         ctx.run('sudo apt install nginx --yes')
     ctx.run('sudo mkdir -p /etc/addok')
+    ctx.run('sudo mkdir -p /var/log/addok')
     ctx.run('sudo useradd -N addok -m -d /srv/addok/ || exit 0')
+    ctx.run('sudo chown addok:users /var/log/addok')
     ctx.run('sudo chsh -s /bin/bash addok')
 
 
