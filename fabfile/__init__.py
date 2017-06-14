@@ -72,8 +72,10 @@ def settings(ctx):
 def http(ctx):
     sudo_put(ctx, 'fabfile/uwsgi_params', '/srv/addok/uwsgi_params')
     connections = ctx.config.get('connections', 256)
+    socket = ctx.config.get('socket', '/srv/addok/uwsgi.sock')
+    processes = ctx.config.get('processes', 4)
     uwsgi_conf = render_template('fabfile/uwsgi.ini', connections=connections,
-                                 processes=ctx.config.get('processes', 4))
+                                 processes=processes, socket=socket)
     sudo_put(ctx, uwsgi_conf, '/etc/uwsgi/apps-enabled/addok.ini')
     if not ctx.config.get('skip_nginx'):
         nginx_conf = render_template('fabfile/nginx.conf',
