@@ -92,7 +92,7 @@ simple string, or a dict.
 
     ATTRIBUTION = 'OpenStreetMap Contributors'
     # Or
-    ATTRIBUTION = {source: attribution, source2: attribution2}
+    ATTRIBUTION = {'source': 'attribution', 'source2': 'attribution2'}
 
 #### BATCH_WORKERS (int)
 Number of processes in use when parallelizing tasks such as batch imports or
@@ -144,7 +144,7 @@ The licence of the data returned by the API. Can be a simple string, or a dict.
 
     LICENCE = "ODbL"
     # Or
-    LICENCE = {source: licence, source2: licence2}
+    LICENCE = {'source': 'licence', 'source2': 'licence2'}
 
 #### LOG_QUERIES (boolean)
 Turn this to `True` to log every query received and firt result if any. *Note:
