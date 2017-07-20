@@ -8,10 +8,13 @@ def test_reverse_return_closer_point(factory):
 
 
 def test_reverse_return_housenumber(factory):
-    factory(housenumbers={'24': {'lat': 48.234545, 'lon': 5.235445}})
+    factory(housenumbers={'24': {'lat': 48.234545, 'lon': 5.235445,
+                                 'key': 'value'}})
     results = reverse(lat=48.234545, lon=5.235445)
     assert results[0].housenumber == '24'
     assert results[0].type == 'housenumber'
+    assert results[0].key == 'value'
+    assert not results[0].raw
 
 
 def test_reverse_can_be_limited(factory):
