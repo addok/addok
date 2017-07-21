@@ -109,7 +109,6 @@ def load_closer(helper, result):
     candidates.sort(key=sort)
     closer = candidates[0]
     if closer['raw']:  # Means a housenumber is closer than street center.
-        result.housenumber = closer['raw']
-        result.lat = closer['lat']
-        result.lon = closer['lon']
+        result.housenumber = closer.pop('raw')
         result.type = 'housenumber'
+        result.update(closer)
