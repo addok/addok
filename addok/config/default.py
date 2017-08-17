@@ -64,7 +64,7 @@ BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
 BATCH_CHUNK_SIZE = 1000
 # During imports, workers are consuming RAM;
 # let one process free for Redis by default.
-BATCH_WORKERS = os.cpu_count() - 1
+BATCH_WORKERS = max(os.cpu_count() - 1, 1)
 RESULTS_COLLECTORS_PYPATHS = [
     'addok.helpers.collectors.no_tokens_but_housenumbers_and_geohash',
     'addok.helpers.collectors.no_available_tokens_abort',
