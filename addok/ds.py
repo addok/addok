@@ -48,10 +48,11 @@ def on_load():
         params = config.REDIS.copy()
         params.update(config.REDIS.get('documents', {}))
         _DB.connect(
-            host=params['host'],
-            port=params['port'],
-            db=params['db'],
-            password=params.get('password')
+            host=params.get('host'),
+            port=params.get('port'),
+            db=params.get('db'),
+            password=params.get('password'),
+            unix_socket_path=params.get('unix_socket_path'),
         )
 
 

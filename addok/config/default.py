@@ -4,6 +4,7 @@ from pathlib import Path
 REDIS = {
     'host': os.environ.get('REDIS_HOST') or 'localhost',
     'port': os.environ.get('REDIS_PORT') or 6379,
+    'unix_socket_path': os.environ.get('REDIS_SOCKET'),
     'indexes': {
         'db': os.environ.get('REDIS_DB_INDEXES') or 0,
     },
