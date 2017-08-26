@@ -1,3 +1,9 @@
+## 1.0.2
+
+- allow to connect to Redis through unix socket
+- fix reverse not honouring extra housenumber fields
+- fix default BATCH_WORKERS values failing on systems with only one CPU
+
 ## 1.0.1
 
 - Upgraded Falcon to 1.2.0
