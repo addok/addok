@@ -68,6 +68,8 @@ If your hosts are different, you can define them like this:
 
 And of course, same for the port.
 
+To use Redis through a Unix socket, use `unix_socket_path` key.
+
 
 #### LOG_DIR (path)
 Path to the directory Addok will write its log and history files. Can also
