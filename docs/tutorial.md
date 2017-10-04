@@ -270,7 +270,7 @@ Congratulations!
 
 - uWSGI logs are in /var/log/uwsgi:
 
-        sudo tail -f /var/log/nginx/addok.log
+        sudo tail -f /var/log/uwsgi/addok.log
 
 - To make sure the environment variable is set in the current shell
   if you changed its location:
