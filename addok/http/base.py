@@ -73,10 +73,7 @@ class AddokQuery(Query):
 
     @property
     def limit(self):
-        if 'limit' in self:
-            return self.int('limit')
-        else:
-            return 5  # Use config.
+        return self.int('limit', 5)  # Use config.
 
     @property
     def autocomplete(self):

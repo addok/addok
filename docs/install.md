@@ -29,7 +29,6 @@ For a performance boost, you can use Cython:
 
 ```bash
 pip install cython
-pip install --no-binary :all: falcon
 pip install --no-binary :all: addok
 ```
 
