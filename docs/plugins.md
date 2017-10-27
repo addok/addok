@@ -90,42 +90,18 @@ Allow to modify config object after user local config has been loaded.
 
 #### register_http_endpoint(api)
 
-Add new endpoints to the HTTP API. It uses [Falcon](http://falcon.readthedocs.io/)
-so each [view](http://falcon.readthedocs.io/en/stable/api/request_and_response.html)
-must comply to Falcon's contract:
+Add new endpoints to the HTTP API. It uses [Roll](http://roll.readthedocs.io/)
+so each view must comply to Roll's contract:
 
 ```python
-class MyFalconView:
+from addok.http import app
+from addok.config import hooks
 
-    def on_get(self, req, resp, myparameter):
-        resp.body = do_something(myparameter)
-        resp.status = 200
-        resp.content_type = 'text/html'
+@app.route('/your-path/')
+async def search_view(request, response):
+    response.body = b'foo'
 
-def register_http_endpoint(api):
-    api.add_route('/path/{myparameter}', MyFalconView())
-```
-
-#### register_http_middleware(middlewares)
-
-Add new middlewares to the HTTP API. It uses [Falcon](http://falcon.readthedocs.io/)
-so each [middleware](http://falcon.readthedocs.io/en/stable/api/middleware.html)
-must comply to Falcon's contract:
-
-```python
-class MyFalconMiddleware:
-
-    def process_request(self, req, resp):
-        ...
-
-    def process_resource(self, req, resp, resource, params):
-        ...
-
-    def process_response(self, req, resp, resource, req_succeeded):
-        ...
-
-def register_http_middleware(middlewares):
-    middlewares.append(MyFalconMiddleware())
+hooks.register_http_endpoint(app)
 ```
 
 #### register_command(subparsers):
