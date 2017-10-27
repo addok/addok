@@ -1,6 +1,6 @@
 import pytest
 
-from addok.http.base import app as myapp
+from addok.http import app as myapp
 
 
 def pytest_configure():

@@ -109,14 +109,14 @@ class AddokQuery(Query):
 
 
 class AddokResponse(Response):
+
     def json(self, value: dict):
         self.headers['Content-Type'] = 'application/json; charset=utf-8'
         self.body = json.dumps(value)
 
     json = property(None, json)
 
-    def to_geojson(self, results, query=None, filters=None,
-                   center=None, limit=None):
+    def to_geojson(self, results, extras):
         results = {
             'type': 'FeatureCollection',
             'version': 'draft',
@@ -124,14 +124,7 @@ class AddokResponse(Response):
             'attribution': config.ATTRIBUTION,
             'licence': config.LICENCE,
         }
-        if query:
-            results['query'] = query
-        if filters:
-            results['filters'] = filters
-        if center:
-            results['center'] = center
-        if limit:
-            results['limit'] = limit
+        results.update(**extras)
         return results
 
 
@@ -163,14 +156,20 @@ cors(app)
 @app.route('/search/')
 async def search_view(request, response):
     needle = request.query.q
+    extras = {
+        'query': needle
+    }
     limit = request.query.limit
+    if limit:
+        extras['limit'] = limit
     autocomplete = request.query.autocomplete
     lon = request.query.lon
     lat = request.query.lat
-    center = None
     if lon and lat:
-        center = (lon, lat)
+        extras['center'] = (lon, lat)
     filters = request.query.filters
+    if filters:
+        extras['filters'] = filters
     try:
         results = search(needle, limit=limit, autocomplete=autocomplete,
                          lat=lat, lon=lon, **filters)
@@ -179,21 +178,25 @@ async def search_view(request, response):
     if not results:
         log_notfound(needle)
     log_query(needle, results)
-    response.json = response.to_geojson(results, query=needle, filters=filters,
-                                        center=center, limit=limit)
+    response.json = response.to_geojson(results, extras)
 
 
 @app.route('/reverse')
 @app.route('/reverse/')
 async def reverse_view(request, response):
+    extras = {}
     lon = request.query.lon
     lat = request.query.lat
     if lon is None or lat is None:
         raise HttpError(HTTPStatus.BAD_REQUEST, 'Invalid args')
     limit = request.query.limit
+    if limit:
+        extras['limit'] = limit
     filters = request.query.filters
+    if filters:
+        extras['filters'] = filters
     results = reverse(lat=lat, lon=lon, limit=limit, **filters)
-    response.json = response.to_geojson(results, filters=filters, limit=limit)
+    response.json = response.to_geojson(results, extras)
 
 
 def register_command(subparsers):
