@@ -172,4 +172,4 @@ async def test_query_string_lenght_should_be_checked(client, config):
     config.QUERY_MAX_LENGTH = 10
     resp = await client.get('/search/?q=this+is+too+long')
     assert resp.status == 413
-    assert resp.body == 'Query too long, 16 chars, limit is 10'
+    assert resp.body == b'Query too long, 16 chars, limit is 10'

@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import logging.handlers
 from http import HTTPStatus
@@ -9,8 +8,8 @@ import uvloop
 from addok.config import config
 from addok.core import reverse, search
 from addok.helpers.text import EntityTooLarge
-from roll import HttpError, Protocol, Query, Response, Roll
-from roll.extensions import simple_server
+from roll import HttpError, Query, Response, Roll
+from roll.extensions import cors, simple_server
 
 asyncio.set_event_loop(uvloop.new_event_loop())
 notfound_logger = None
@@ -107,12 +106,6 @@ class AddokQuery(Query):
 
 class AddokResponse(Response):
 
-    def json(self, value: dict):
-        self.headers['Content-Type'] = 'application/json; charset=utf-8'
-        self.body = json.dumps(value)
-
-    json = property(None, json)
-
     def to_geojson(self, results, extras):
         results = {
             'type': 'FeatureCollection',
@@ -125,28 +118,14 @@ class AddokResponse(Response):
         return results
 
 
-class AddokProtocol(Protocol):
+class AddokRoll(Roll):
     Query = AddokQuery
     Response = AddokResponse
 
 
-class AddokRoll(Roll):
-    Protocol = AddokProtocol
-
-
 app = AddokRoll()
 app.config = config
-
-
-def cors(app):
-
-    @app.listen('response')
-    async def add_cors_headers(request, response):
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With'
-
-
-cors(app)
+cors(app, headers=['X-Requested-With'])
 
 
 @app.route('/search')
