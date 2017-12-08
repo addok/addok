@@ -251,7 +251,7 @@ You should be logged in as your normal user, which is sudoer.
 
 Now you should be able to issue the search with an URL like:
 
-    http://yourdomain.org/search/?epinay sur seine
+    http://yourdomain.org/search/?q=epinay sur seine
 
 
 Congratulations!
