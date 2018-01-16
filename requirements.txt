@@ -1,4 +1,4 @@
-falcon==1.2.0
+falcon==1.4.1
 hashids==1.2.0
 hiredis==0.2.0
 ngram==3.3.2
