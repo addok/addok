@@ -188,7 +188,7 @@ class Search(BaseHelper):
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
-            limit = self.wanted if self.wanted > config.BUCKET_MAX else config.BUCKET_MAX
+            limit = max(self.wanted, config.BUCKET_MAX)
         ids = []
         if keys:
             if self.filters:
