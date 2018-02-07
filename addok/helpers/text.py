@@ -1,7 +1,6 @@
 import re
 from pathlib import Path
 
-from ngram import NGram
 from unidecode import unidecode
 
 from addok.config import config
@@ -137,14 +136,17 @@ class ascii(str):
         return self._raw
 
 
+ngram_cache = {}
+def ngrams(text,N=2):
+    if text not in ngram_cache:
+        ngram_cache[text] = list(set([text[i:i+N] for i in range(0, len(text)-(N-1))]))
+    return ngram_cache[text]
+
 def compare_ngrams(left, right, N=2, pad_len=0):
-    left = ascii(left)
-    right = ascii(right)
-    if len(left) == 1 and len(right) == 1:
-        # NGram.compare returns 0.0 for 1 letter comparison, even if letters
-        # are equal.
-        return 1.0 if left == right else 0.0
-    return NGram.compare(left, right, N=N, pad_len=pad_len)
+    # compute ngrams directly
+    left_n = ngrams(ascii(" "+left+" "))
+    right_n = ngrams(ascii(" "+right+" "))
+    return len(list(set(left_n) & set(right_n))) / len(list(set(left_n+right_n)))
 
 
 def contains(candidate, target):
