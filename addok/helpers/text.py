@@ -144,8 +144,8 @@ def ngrams(text,N=2):
 
 def compare_ngrams(left, right, N=2, pad_len=0):
     # compute ngrams directly
-    left_n = ngrams(ascii(" "+left+" "))
-    right_n = ngrams(ascii(" "+right+" "))
+    left_n = ngrams(ascii(" "+left)+"$")
+    right_n = ngrams(ascii(" "+right)+"$")
     return len(list(set(left_n) & set(right_n))) / len(list(set(left_n+right_n)))
 
 
