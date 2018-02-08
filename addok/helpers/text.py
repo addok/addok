@@ -146,8 +146,10 @@ def ngrams(text,N=2):
 
 def compare_ngrams(left, right, N=2, pad_len=0):
     # compute ngrams directly
-    left_n = ngrams(ascii(" "+left)+"$")
-    right_n = ngrams(ascii(" "+right)+"$")
+    left = ascii(" "+left)+"$"
+    right = ascii(" "+right)+"$"
+    left_n = ngrams(left)
+    right_n = ngrams(right)
     levenshtein = editdistance.eval(left,right) / 1000
     return len(list(set(left_n) & set(right_n))) / len(list(set(left_n+right_n))) - levenshtein
 

@@ -369,3 +369,12 @@ def test_should_keep_unchanged_name_as_default_label(factory):
 
 def test_does_not_fail_without_usable_tokens(street):
     assert not search('./.$*')
+
+
+def test_word_order_priority(factory):
+    expected = factory(name='avenue de paris', city='saint-mandé', importance=0.0185)
+    factory(name='avenue de saint-mandé', city='paris', importance=0.0463)
+    results = search('avenue de paris saint-mandé', autocomplete=False)
+    assert results[0].name == 'avenue de paris'
+    results = search('avenue de paris saint-mandé france', autocomplete=False)
+    assert results[0].name == 'avenue de paris'
