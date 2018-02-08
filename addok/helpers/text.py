@@ -8,6 +8,8 @@ from addok.db import DB
 from addok.helpers import keys, yielder
 from addok.helpers.index import token_frequency
 
+import editdistance
+
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 
@@ -146,7 +148,8 @@ def compare_ngrams(left, right, N=2, pad_len=0):
     # compute ngrams directly
     left_n = ngrams(ascii(" "+left)+"$")
     right_n = ngrams(ascii(" "+right)+"$")
-    return len(list(set(left_n) & set(right_n))) / len(list(set(left_n+right_n)))
+    levenshtein = editdistance.eval(left,right) / 1000
+    return len(list(set(left_n) & set(right_n))) / len(list(set(left_n+right_n))) - levenshtein
 
 
 def contains(candidate, target):
