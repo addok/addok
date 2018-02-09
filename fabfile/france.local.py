@@ -9,7 +9,7 @@ SEARCH_RESULT_PROCESSORS_PYPATHS = [
     "addok_france.make_labels",
     "addok.helpers.results.score_by_importance",
     "addok.helpers.results.score_by_autocomplete_distance",
-    "addok.helpers.results.score_by_ngram_distance",
+    "addok.helpers.results.score_by_str_distance",
     "addok.helpers.results.score_by_geo_distance",
 ]
 PROCESSORS_PYPATHS = [

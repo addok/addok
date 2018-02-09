@@ -1,7 +1,6 @@
 from addok.config import config
 from addok.helpers import haversine_distance, km_to_score
-from addok.helpers.text import (ascii, compare_ngrams, contains, equals,
-                                startswith)
+from addok.helpers.text import ascii, compare_str, contains, equals, startswith
 
 
 def make_labels(helper, result):
@@ -67,22 +66,25 @@ def score_by_autocomplete_distance(helper, result):
             if score >= config.MATCH_THRESHOLD:
                 break
     if not score:
-        _score_by_ngram_distance(helper, result, scale=0.9)
+        _score_by_str_distance(helper, result, scale=0.9)
 
 
-def _score_by_ngram_distance(helper, result, scale=1.0):
+def _score_by_str_distance(helper, result, scale=1.0):
     for label in result.labels:
         label = ascii(label)
-        score = compare_ngrams(label, helper.query) * scale
+        score = compare_str(label, helper.query) * scale
         result.add_score('str_distance', score, ceiling=1.0)
         if score >= config.MATCH_THRESHOLD:
             break
 
 
-def score_by_ngram_distance(helper, result):
+def score_by_str_distance(helper, result):
     if helper.autocomplete:
         return
-    _score_by_ngram_distance(helper, result)
+    _score_by_str_distance(helper, result)
+
+
+score_by_ngram_distance = score_by_str_distance  # Retrocompat.
 
 
 def score_by_geo_distance(helper, result):

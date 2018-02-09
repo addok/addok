@@ -1,10 +1,9 @@
 import pytest
-
 from addok.fuzzy import make_fuzzy
-from addok.helpers.text import (Token, _normalize, synonymize, _tokenize,
-                                alphanumerize, ascii, compare_ngrams,
-                                compute_edge_ngrams, contains, equals,
-                                startswith)
+from addok.helpers.text import (Token, _normalize, _tokenize, alphanumerize,
+                                ascii, compare_str, compute_edge_ngrams,
+                                contains, equals, ngrams, startswith,
+                                synonymize)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -58,8 +57,17 @@ def test_make_fuzzy_should_remove_letter_if_world_is_long():
     ['Y', 'y', 1],
     ['Ay', 'ay', 1],
 ])
-def test_compare_ngrams(left, right, score):
-    assert compare_ngrams(left, right) == score
+def test_compare_str(left, right, score):
+    assert compare_str(left, right) == score
+
+
+@pytest.mark.parametrize('input,n,output', [
+    ['Lille', 2, {'Li', 'il', 'll', 'le'}],
+    ['Lille', 3, {'Lil', 'ill', 'lle'}],
+    ['L', 3, {'L'}],
+])
+def test_ngrams(input, n, output):
+    assert ngrams(input, n) == output
 
 
 @pytest.mark.parametrize('input,output', [

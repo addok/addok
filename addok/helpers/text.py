@@ -1,4 +1,5 @@
 import re
+from functools import lru_cache
 from pathlib import Path
 
 from unidecode import unidecode
@@ -15,8 +16,8 @@ PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 class Token(str):
 
-    __slots__ = ('_positions', 'is_last', 'db_key', 'raw', '_frequency', '_key',
-                 'kind', 'is_first')
+    __slots__ = ('_positions', 'is_last', 'db_key', 'raw', '_frequency',
+                 '_key', 'kind', 'is_first')
 
     def __new__(cls, value, position=None, is_last=False, raw=None, kind=None):
         obj = str.__new__(cls, value)
@@ -138,20 +139,19 @@ class ascii(str):
         return self._raw
 
 
-ngram_cache = {}
-def ngrams(text,N=2):
-    if text not in ngram_cache:
-        ngram_cache[text] = list(set([text[i:i+N] for i in range(0, len(text)-(N-1))]))
-    return ngram_cache[text]
+@lru_cache(maxsize=512)
+def ngrams(text, n=2):
+    bound = len(text)-(n-1) if n < len(text) else len(text)
+    return set([text[i:i+n] for i in range(0, bound)])
 
-def compare_ngrams(left, right, N=2, pad_len=0):
-    # compute ngrams directly
-    left = ascii(" "+left)+"$"
-    right = ascii(" "+right)+"$"
+
+def compare_str(left, right):
+    left = ascii(' ' + left) + '$'
+    right = ascii(' ' + right) + '$'
     left_n = ngrams(left)
     right_n = ngrams(right)
-    levenshtein = editdistance.eval(left,right) / 1000
-    return len(list(set(left_n) & set(right_n))) / len(list(set(left_n+right_n))) - levenshtein
+    distance = editdistance.eval(left, right) / 1000
+    return len(list(left_n & right_n)) / len(list(left_n | right_n)) - distance
 
 
 def contains(candidate, target):
