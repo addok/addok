@@ -1,5 +1,5 @@
-pytest==3.2.1
+pytest==3.4.0
 pytest-cov==2.5.1
 pytest-falcon==0.4.2
 -e git://github.com/fabric/fabric.git@v2#egg=fabric2
-mkdocs==0.16.3
+mkdocs==0.17.2
