@@ -369,3 +369,15 @@ def test_should_keep_unchanged_name_as_default_label(factory):
 
 def test_does_not_fail_without_usable_tokens(street):
     assert not search('./.$*')
+
+
+def test_bucket_respects_limit(config, factory):
+    # issue #422
+    config.BUCKET_MAX = 100
+    limit = config.BUCKET_MAX * 2
+    fields = {'name': "allée des acacias", 'type': "street",
+              'housenumbers': {'1': {'lat': '48.325', 'lon': '2.256'}}}
+    for city in range(0, limit):
+        factory(id=str(city), postcode=str(10000+city), **fields)
+    results = search('allée des acacias', limit=limit, autocomplete=True)
+    assert len(results) == limit
