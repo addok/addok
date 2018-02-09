@@ -120,23 +120,9 @@ def synonymize(tokens):
             yield token.update(subtoken, position=position)
 
 
-class ascii(str):
-    """Just like a str, but ascii folded and cached."""
-
-    __slots__ = ['_cache', '_raw']
-
-    def __new__(cls, value):
-        try:
-            cache = value._cache
-        except AttributeError:
-            cache = alphanumerize(unidecode(value.lower()))
-        obj = str.__new__(cls, cache)
-        obj._cache = cache
-        obj._raw = getattr(value, '_raw', value)
-        return obj
-
-    def __str__(self):
-        return self._raw
+@lru_cache(maxsize=512)
+def ascii(str):
+    return alphanumerize(unidecode(str.lower()))
 
 
 @lru_cache(maxsize=512)

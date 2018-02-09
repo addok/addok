@@ -160,14 +160,11 @@ def test_ascii_should_clean_string():
     assert s == 'aystringe'
 
 
-def test_ascii_should_cache_cleaned_string(monkeypatch):
-    s = ascii('mystring')
-    assert s._cache
+def test_ascii_should_cache_cleaned_string():
+    ascii('test')
+    assert ascii.cache_info() != None
 
-    def do_not_call_me(x):
-        assert False
 
-    monkeypatch.setattr('addok.helpers.text.alphanumerize',
-                        do_not_call_me)
-
-    ascii(s)  # Should not call alphanumerize.
+def test_ngrams_should_cache():
+    ngrams('test')
+    assert ngrams.cache_info() != None
