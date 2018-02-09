@@ -88,7 +88,8 @@ Warning: you will see a lot of settings suffixed with PYPATH(S), those
 are expecting path(s) to Python callable. In case of a list, the order
 matters given that it is a chain of processors.
 
-#### ATTRIBUTION (string or dict)
+#### ATTRIBUTION (string or dict)
+
 The attribution of the data that will be used in the API results. Can be a
 simple string, or a dict.
 
@@ -107,14 +108,15 @@ Python path to a store class for saving documents using another database
 engine and save memory.
 Check out the dedicated documentation on the [plugins](plugins.md) page.
 
-#### EXTRA_FIELDS (list of dicts)
+#### EXTRA_FIELDS (list of dicts)
+
 Sometimes you just want to extend [default fields](#fields-list-of-dicts).
 
     EXTRA_FIELDS = [
         {'key': 'myfield'},
     ]
 
-#### FIELDS (list of dicts)
+#### FIELDS (list of dicts)
 The document fields *you want to index*. It's a list of dict, each one defining
 an indexed field. Available keys:
 
@@ -135,7 +137,7 @@ FIELDS = [
 ]
 ```
 
-#### FILTERS (list)
+#### FILTERS (list)
 A list of fields to be indexed as available filters. Keep in mind that every
 filter means bigger index.
 

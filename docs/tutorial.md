@@ -251,7 +251,7 @@ You should be logged in as your normal user, which is sudoer.
 
 Now you should be able to issue the search with an URL like:
 
-    http://yourdomain.org/search/?epinay sur seine
+    http://yourdomain.org/search/?q=epinay sur seine
 
 
 Congratulations!
@@ -270,7 +270,7 @@ Congratulations!
 
 - uWSGI logs are in /var/log/uwsgi:
 
-        sudo tail -f /var/log/nginx/addok.log
+        sudo tail -f /var/log/uwsgi/addok.log
 
 - To make sure the environment variable is set in the current shell
   if you changed its location:
