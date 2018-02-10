@@ -392,3 +392,5 @@ def test_bucket_respects_limit(config, factory):
         factory(id=str(city), postcode=str(10000+city), **fields)
     results = search('allée des acacias', limit=limit, autocomplete=True)
     assert len(results) == limit
+    results = search('allée des acacias', limit=limit, autocomplete=False)
+    assert len(results) == limit
