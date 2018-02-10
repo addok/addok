@@ -120,20 +120,32 @@ def synonymize(tokens):
             yield token.update(subtoken, position=position)
 
 
-@lru_cache(maxsize=512)
-def ascii(str):
-    return alphanumerize(unidecode(str.lower()))
+class ascii(str):
+    """Just like a str, but ascii folded and cached."""
+
+    __slots__ = ['_cache', '_raw']
+
+    def __new__(cls, value):
+        try:
+            cache = value._cache
+        except AttributeError:
+            cache = alphanumerize(unidecode(value.lower()))
+        obj = str.__new__(cls, cache)
+        obj._cache = cache
+        obj._raw = getattr(value, '_raw', value)
+        return obj
+
+    def __str__(self):
+        return self._raw
 
 
 @lru_cache(maxsize=512)
 def ngrams(text, n=2):
-    bound = len(text)-(n-1) if n < len(text) else len(text)
-    return set([text[i:i+n] for i in range(0, bound)])
+    text = alphanumerize(' '+text+'$')
+    return set([text[i:i+n] for i in range(0, len(text)-(n-1))])
 
 
 def compare_str(left, right):
-    left = ascii(' ' + left) + '$'
-    right = ascii(' ' + right) + '$'
     left_n = ngrams(left)
     right_n = ngrams(right)
     distance = editdistance.eval(left, right) / 1000
