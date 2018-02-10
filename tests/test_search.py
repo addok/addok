@@ -371,6 +371,17 @@ def test_does_not_fail_without_usable_tokens(street):
     assert not search('./.$*')
 
 
+def test_word_order_priority(factory):
+    factory(name='avenue de paris', city='saint-mandé', importance=0.0185)
+    factory(name='avenue de saint-mandé', city='paris', importance=0.0463)
+    results = search('avenue de paris saint-mandé')
+    assert results[0].name == 'avenue de paris'
+    results = search('avenue de paris saint-mandé france')
+    assert results[0].name == 'avenue de paris'
+    results = search('avenue de saint-mandé paris')
+    assert results[0].name == 'avenue de saint-mandé'
+
+
 def test_bucket_respects_limit(config, factory):
     # issue #422
     config.BUCKET_MAX = 100
