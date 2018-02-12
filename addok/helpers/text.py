@@ -141,15 +141,18 @@ class ascii(str):
 
 @lru_cache(maxsize=512)
 def ngrams(text, n=2):
-    text = alphanumerize(' '+text+'$')
+    text = alphanumerize(' '+text+' ')
     return set([text[i:i+n] for i in range(0, len(text)-(n-1))])
 
 
 def compare_str(left, right):
-    left_n = ngrams(left)
-    right_n = ngrams(right)
-    distance = editdistance.eval(left, right) / 1000
-    return len(list(left_n & right_n)) / len(list(left_n | right_n)) - distance
+    # use trigrams
+    left_n = ngrams(left,3)
+    right_n = ngrams(right,3)
+    # evaluate editdistance limited to common text portion
+    distance = (editdistance.eval(alphanumerize(left), alphanumerize(right)) - abs(len(left)-len(right))) / max(len(left),len(right))
+    #print(alphanumerize(left),'<->',alphanumerize(right), len(left_n & right_n) / len(right_n),len(left_n & right_n) / len(left_n),distance)
+    return len(left_n & right_n) / len(right_n) - distance / 2
 
 
 def contains(candidate, target):
@@ -170,8 +173,9 @@ def equals(candidate, target):
     return target == candidate
 
 
+@lru_cache(maxsize=512)
 def alphanumerize(text):
-    return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
+    return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', unidecode(text.lower())))
 
 
 def compute_edge_ngrams(token, min=None):
