@@ -70,12 +70,7 @@ def score_by_autocomplete_distance(helper, result):
 
 
 def _score_by_str_distance(helper, result, scale=1.0):
-    for label in result.labels:
-        label = ascii(label)
-        score = compare_str(label, helper.query) * scale
-        result.add_score('str_distance', score, ceiling=1.0)
-        if score >= config.MATCH_THRESHOLD:
-            break
+    result.add_score('str_distance', compare_str(result.labels[0], helper.query) * scale, ceiling=1.0)
 
 
 def score_by_str_distance(helper, result):
