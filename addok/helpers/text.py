@@ -128,10 +128,12 @@ class ascii(str):
             cache = value._cache
         except AttributeError:
             cache = alphanumerize(unidecode(value.lower()))
-        obj = str.__new__(cls, cache)
-        obj._cache = cache
-        obj._raw = getattr(value, '_raw', value)
-        return obj
+            obj = str.__new__(cls, cache)
+            obj._cache = cache
+            obj._raw = getattr(value, '_raw', value)
+            return obj
+        else:
+            return value
 
     def __str__(self):
         return self._raw
