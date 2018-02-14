@@ -152,7 +152,7 @@ def compare_str(left, right):
     # evaluate editdistance limited to common text portion
     distance = (editdistance.eval(alphanumerize(left), alphanumerize(right)) - abs(len(left)-len(right))) / max(len(left),len(right))
     #print(alphanumerize(left),'<->',alphanumerize(right), len(left_n & right_n) / len(right_n),len(left_n & right_n) / len(left_n),distance)
-    return len(left_n & right_n) / len(right_n) - distance / 2
+    return len(left_n & right_n) / len(right_n) - distance / 10
 
 
 def contains(candidate, target):
