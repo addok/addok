@@ -81,7 +81,7 @@ def test_normalize(input, output):
 
 
 @pytest.mark.parametrize('input,output', [
-    ["rue d'Andrésy", 'rue d Andrésy'],
+    ["rue d'Andrésy", 'rue d andresy'],
     ['   ', ' '],
 ])
 def test_alphanumerize(input, output):
