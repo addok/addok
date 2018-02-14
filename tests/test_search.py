@@ -394,3 +394,12 @@ def test_bucket_respects_limit(config, factory):
     assert len(results) == limit
     results = search('allée des acacias', limit=limit, autocomplete=False)
     assert len(results) == limit
+
+
+def test_geo_priority(config, factory):
+    factory(name='Villa Eugène', city='Colombes', importance=0.0147, housenumbers = {'13': {'lat': '48.915805', 'lon': '2.260938'}})
+    factory(name='Villa Eugène', city='Fontenay', importance=0.0191, housenumbers = {'13': {'lat': '48.879839', 'lon': '2.393369'}})
+    results = search('13 vla eugène', lat=48.9158, lon=2.2609, autocomplete=True)
+    assert results[0].city == 'Colombes'
+    results = search('13 vla eugène', lat=48.9158, lon=2.2609, autocomplete=False)
+    assert results[0].city == 'Colombes'
