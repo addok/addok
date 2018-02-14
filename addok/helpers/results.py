@@ -42,7 +42,11 @@ def _match_housenumber(helper, result, tokens):
 
 def score_by_importance(helper, result):
     importance = getattr(result, 'importance', None)
-    importance = importance or 0.0
+    # reduce importance when we have lat/lon
+    if helper.lat is None and helper.lon is None:
+        importance = importance or 0.0
+    else:
+        importance = importance/10 or 0.0
     result.add_score('importance',
                      float(importance) * config.IMPORTANCE_WEIGHT,
                      config.IMPORTANCE_WEIGHT)
