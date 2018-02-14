@@ -70,9 +70,9 @@ def test_compare_strs(best, other, query):
 
 
 @pytest.mark.parametrize('input,n,output', [
-    ['Lille', 2, {' l', 'li', 'il', 'll', 'le', 'e '}],
-    ['Lille', 3, {' li', 'lil', 'ill', 'lle','le '}],
-    ['L', 3, {' l '}],
+    ['Lille', 2, {' L', 'Li', 'il', 'll', 'le', 'e '}],
+    ['Lille', 3, {' Li', 'Lil', 'ill', 'lle','le '}],
+    ['L', 3, {' L '}],
 ])
 def test_ngrams(input, n, output):
     assert ngrams(input, n) == output
@@ -86,14 +86,6 @@ def test_ngrams(input, n, output):
 ])
 def test_normalize(input, output):
     assert _normalize(Token(input)) == output
-
-
-@pytest.mark.parametrize('input,output', [
-    ["rue d'Andrésy", 'rue d andresy'],
-    ['   ', ' '],
-])
-def test_alphanumerize(input, output):
-    assert alphanumerize(Token(input)) == output
 
 
 @pytest.mark.parametrize('input,output', [
@@ -168,9 +160,11 @@ def test_ascii_should_clean_string():
     assert s == 'aystringe'
 
 
-def test_ascii_should_cache_cleaned_string():
-    ascii('test')
-    assert ascii.cache_info() != None
+def test_ascii_should_cache_cleaned_string(monkeypatch):
+    s = ascii('mystring')
+    assert s._cache
+    def do_not_call_me(x):
+        assert False
 
 
 def test_ngrams_should_cache():
