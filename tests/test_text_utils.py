@@ -61,6 +61,14 @@ def test_compare_str(left, right, score):
     assert compare_str(left, right) == score
 
 
+@pytest.mark.parametrize('best,other,query', [
+    ['avenue de paris 94123 saint mande', 'avenue de saint mande 75012 paris', 'avenue de paris saint mande'],
+    ['1 place du trocadero et du 11 novembre 75016 paris', 'square du trocadero 75016 paris', 'place du trocadero paris'],
+])
+def test_compare_strs(best, other, query):
+    assert compare_str(best, query) > compare_str(other, query)
+
+
 @pytest.mark.parametrize('input,n,output', [
     ['Lille', 2, {' l', 'li', 'il', 'll', 'le', 'e '}],
     ['Lille', 3, {' li', 'lil', 'ill', 'lle','le '}],
