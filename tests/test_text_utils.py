@@ -62,8 +62,12 @@ def test_compare_str(left, right, score):
 
 
 @pytest.mark.parametrize('best,other,query', [
-    ['avenue de paris 94123 saint mande', 'avenue de saint mande 75012 paris', 'avenue de paris saint mande'],
-    ['1 place du trocadero et du 11 novembre 75016 paris', 'square du trocadero 75016 paris', 'place du trocadero paris'],
+    ['avenue de paris 94123 saint mande',
+     'avenue de saint mande 75012 paris',
+     'avenue de paris saint mande'],
+    ['1 place du trocadero et du 11 novembre 75016 paris',
+     'square du trocadero 75016 paris',
+     'place du trocadero paris'],
 ])
 def test_compare_strs(best, other, query):
     assert compare_str(best, query) > compare_str(other, query)
@@ -71,7 +75,7 @@ def test_compare_strs(best, other, query):
 
 @pytest.mark.parametrize('input,n,output', [
     ['Lille', 2, {' L', 'Li', 'il', 'll', 'le', 'e '}],
-    ['Lille', 3, {' Li', 'Lil', 'ill', 'lle','le '}],
+    ['Lille', 3, {' Li', 'Lil', 'ill', 'lle', 'le '}],
     ['L', 3, {' L '}],
 ])
 def test_ngrams(input, n, output):
@@ -86,6 +90,14 @@ def test_ngrams(input, n, output):
 ])
 def test_normalize(input, output):
     assert _normalize(Token(input)) == output
+
+
+@pytest.mark.parametrize('input,output', [
+    ["rue d'Andrésy", 'rue d Andrésy'],
+    ['   ', ' '],
+])
+def test_alphanumerize(input, output):
+    assert alphanumerize(Token(input)) == output
 
 
 @pytest.mark.parametrize('input,output', [
@@ -163,10 +175,11 @@ def test_ascii_should_clean_string():
 def test_ascii_should_cache_cleaned_string(monkeypatch):
     s = ascii('mystring')
     assert s._cache
+
     def do_not_call_me(x):
         assert False
 
 
 def test_ngrams_should_cache():
     ngrams('test')
-    assert ngrams.cache_info() != None
+    assert ngrams.cache_info() is not None

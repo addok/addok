@@ -2,6 +2,7 @@ from addok.config import config
 from addok.helpers import haversine_distance, km_to_score
 from addok.helpers.text import ascii, compare_str, contains, equals, startswith
 
+
 def make_labels(helper, result):
     if not result.labels:
         # Make your own for better scoring (see addok-france for inspiration).
@@ -11,14 +12,13 @@ def make_labels(helper, result):
         if city and city != label:
             postcode = getattr(result, 'postcode', None)
             if postcode:
-                label = '{} {} {}'.format(label, postcode, city)
-            else:
-                label = '{} {}'.format(label, city)
-            result.labels.insert(0, label)
+                label = label + ' ' + postcode
+            label = label + ' ' + city
         housenumber = getattr(result, 'housenumber', None)
         if housenumber:
             label = '{} {}'.format(housenumber, label)
-        # compute only one long label (compare_str now deals with it)
+        # Replace default label with our computed one, but keep the other raw
+        # aliases, and let plugins add more of them if needed.
         result.labels[0] = label
 
 
@@ -41,12 +41,9 @@ def _match_housenumber(helper, result, tokens):
 
 
 def score_by_importance(helper, result):
-    importance = getattr(result, 'importance', None)
-    # reduce importance when we have lat/lon
-    if helper.lat is None and helper.lon is None:
-        importance = importance or 0.0
-    else:
-        importance = importance/10 or 0.0
+    importance = getattr(result, 'importance', None) or 0.0
+    if helper.lat is not None and helper.lon is not None:
+        importance = importance/10
     result.add_score('importance',
                      float(importance) * config.IMPORTANCE_WEIGHT,
                      config.IMPORTANCE_WEIGHT)
@@ -96,6 +93,7 @@ def score_by_geo_distance(helper, result):
                             (helper.lat, helper.lon))
     result.distance = km * 1000
     result.add_score('geo_distance', km_to_score(km), ceiling=0.1)
+
 
 def load_closer(helper, result):
     if not helper.check_housenumber:
