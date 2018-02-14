@@ -62,9 +62,9 @@ def test_compare_str(left, right, score):
 
 
 @pytest.mark.parametrize('input,n,output', [
-    ['Lille', 2, {'Li', 'il', 'll', 'le'}],
-    ['Lille', 3, {'Lil', 'ill', 'lle'}],
-    ['L', 3, {'L'}],
+    ['Lille', 2, {' l', 'li', 'il', 'll', 'le', 'e '}],
+    ['Lille', 3, {' li', 'lil', 'ill', 'lle','le '}],
+    ['L', 3, {' l '}],
 ])
 def test_ngrams(input, n, output):
     assert ngrams(input, n) == output
