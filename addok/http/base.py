@@ -181,4 +181,4 @@ def register_command(subparsers):
 
 
 def run(args):
-    simple_server(app)
+    simple_server(app, port=7878)
