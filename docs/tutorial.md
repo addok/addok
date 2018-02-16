@@ -75,6 +75,7 @@ SEARCH_RESULT_PROCESSORS_PYPATHS = [
     "addok.helpers.results.score_by_autocomplete_distance",
     "addok.helpers.results.score_by_str_distance",
     "addok.helpers.results.score_by_geo_distance",
+    "addok.helpers.results.adjust_scores",
 ]
 PROCESSORS_PYPATHS = [
     "addok.helpers.text.tokenize",

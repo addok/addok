@@ -407,3 +407,11 @@ def test_geo_priority(config, factory):
     results = search('13 vla eugène', lat=48.9158, lon=2.2609,
                      autocomplete=False)
     assert results[0].city == 'Colombes'
+
+
+def test_importance_should_be_minored_if_geohash(factory, config):
+    factory(name="rue descartes", lon=2.2, lat=48.1, importance=1)
+    results = search('rue descartes')
+    assert results[0]._scores['importance'][0] == 0.1
+    results = search('rue descartes', lon=2.2, lat=48.1)
+    assert results[0]._scores['importance'][0] == 0.010000000000000002

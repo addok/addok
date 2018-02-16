@@ -42,8 +42,6 @@ def _match_housenumber(helper, result, tokens):
 
 def score_by_importance(helper, result):
     importance = getattr(result, 'importance', None) or 0.0
-    if helper.lat is not None and helper.lon is not None:
-        importance = importance/10
     result.add_score('importance',
                      float(importance) * config.IMPORTANCE_WEIGHT,
                      config.IMPORTANCE_WEIGHT)
@@ -70,8 +68,6 @@ def score_by_autocomplete_distance(helper, result):
 
 
 def _score_by_str_distance(helper, result, scale=1.0):
-    if helper.lat is not None and helper.lon is not None:
-        scale = scale * 0.9
     for label in result.labels:
         score = compare_str(label, helper.query) * scale
         result.add_score('str_distance', score, ceiling=1.0)
@@ -93,6 +89,17 @@ def score_by_geo_distance(helper, result):
                             (helper.lat, helper.lon))
     result.distance = km * 1000
     result.add_score('geo_distance', km_to_score(km), ceiling=0.1)
+
+
+def adjust_scores(helper, result):
+    if helper.lat is not None and helper.lon is not None:
+        str_distance = result._scores.get('str_distance')
+        if str_distance:
+            result._scores['str_distance'] = (str_distance[0] * 0.9,
+                                              str_distance[1])
+        importance = result._scores.get('importance')
+        if importance:
+            result._scores['importance'] = (importance[0] * 0.1, importance[1])
 
 
 def load_closer(helper, result):

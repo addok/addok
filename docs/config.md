@@ -322,4 +322,5 @@ Post processing of each result found during search.
         'addok.helpers.results.score_by_autocomplete_distance',
         'addok.helpers.results.score_by_str_distance',
         'addok.helpers.results.score_by_geo_distance',
+        'addok.helpers.results.adjust_scores',
     ]
