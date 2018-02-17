@@ -14,8 +14,6 @@ def geojson(result):
             properties[result._doc['type']] = properties.get('name')
         properties['name'] = '{} {}'.format(housenumber,
                                             properties.get('name'))
-    else:
-        properties['street'] = properties.get('name')
     try:
         properties['distance'] = int(result.distance)
     except ValueError:
