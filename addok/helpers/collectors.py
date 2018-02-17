@@ -92,7 +92,7 @@ def reduce_with_other_commons(helper):
 def ensure_geohash_results_are_included_if_center_is_given(helper):
     if helper.bucket_overflow and helper.geohash_key:
         helper.debug('Bucket overflow and center, force nearby look up')
-        helper.add_to_bucket(helper.keys + [helper.geohash_key], helper.wanted)
+        helper.add_to_bucket(helper.keys + [helper.geohash_key], max(helper.wanted,10))
 
 
 def extend_results_reducing_tokens(helper):
