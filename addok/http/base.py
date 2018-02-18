@@ -2,6 +2,7 @@ import json
 import logging
 import logging.handlers
 from pathlib import Path
+import time
 
 import falcon
 
@@ -11,7 +12,7 @@ from addok.helpers.text import EntityTooLarge
 
 notfound_logger = None
 query_logger = None
-
+slow_query_logger = None
 
 @config.on_load
 def on_load():
@@ -41,6 +42,18 @@ def on_load():
         else:
             query_logger.addHandler(handler)
 
+    if config.LOG_SLOW_QUERIES:
+        global slow_query_logger
+        slow_query_logger = logging.getLogger('slow_queries')
+        slow_query_logger.setLevel(logging.DEBUG)
+        filename = Path(config.LOG_DIR).joinpath('slow_queries.log')
+        try:
+            handler = logging.handlers.TimedRotatingFileHandler(
+                                                str(filename), when='midnight')
+        except FileNotFoundError:
+            print('Unable to write to {}'.format(filename))
+        else:
+            slow_query_logger.addHandler(handler)
 
 def log_notfound(query):
     if config.LOG_NOT_FOUND:
@@ -56,6 +69,18 @@ def log_query(query, results):
             result = '-'
             score = '-'
         query_logger.debug('\t'.join([query, result, score]))
+
+def log_slow_query(query, results, timer):
+    if config.LOG_SLOW_QUERIES:
+        if results:
+            result = str(results[0])
+            score = str(round(results[0].score, 2))
+            id_ = results[0].id
+        else:
+            result = '-'
+            score = '-'
+            id_ = '-'
+        slow_query_logger.debug('\t'.join([str(timer), query, id_, result, score]))
 
 
 class CorsMiddleware:
@@ -129,14 +154,18 @@ class Search(View):
         if lon and lat:
             center = (lon, lat)
         filters = self.match_filters(req)
+        timer = time.clock()
         try:
             results = search(query, limit=limit, autocomplete=autocomplete,
                              lat=lat, lon=lon, **filters)
         except EntityTooLarge as e:
             raise falcon.HTTPRequestEntityTooLarge(str(e))
+        timer = int((time.clock() - timer)*1000)
         if not results:
             log_notfound(query)
         log_query(query, results)
+        if config.SLOW_QUERY and timer > config.SLOW_QUERY:
+            log_slow_query(query, results, timer)
         self.to_geojson(req, resp, results, query=query, filters=filters,
                         center=center, limit=limit)
 
