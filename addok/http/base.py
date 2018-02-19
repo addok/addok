@@ -158,13 +158,13 @@ class Search(View):
         if lon and lat:
             center = (lon, lat)
         filters = self.match_filters(req)
-        timer = time.clock()
+        timer = time.perf_counter()
         try:
             results = search(query, limit=limit, autocomplete=autocomplete,
                              lat=lat, lon=lon, **filters)
         except EntityTooLarge as e:
             raise falcon.HTTPRequestEntityTooLarge(str(e))
-        timer = int((time.clock() - timer)*1000)
+        timer = int((time.perf_counter()-timer)*1000)
         if not results:
             log_notfound(query)
         log_query(query, results)
