@@ -8,10 +8,11 @@ def geojson(result):
         val = getattr(result, key, None)
         if val and key not in ['lat', 'lon', '_id']:
             properties[key] = val
+    type_ = result._doc.get('type')
+    if type_ and type_ not in properties:
+        properties[type_] = properties.get('name')
     housenumber = getattr(result, 'housenumber', None)
     if housenumber:
-        if result._doc.get('type'):
-            properties[result._doc['type']] = properties.get('name')
         properties['name'] = '{} {}'.format(housenumber,
                                             properties.get('name'))
     try:

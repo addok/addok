@@ -158,3 +158,21 @@ def test_query_string_lenght_should_be_checked(client, config):
     resp = client.get('/search/', query_string={'q': 'this is too long'})
     assert resp.status_code == 413
     assert resp.json['title'] == 'Query too long, 16 chars, limit is 10'
+
+
+def test_geojson_should_have_document_type_as_key(client, factory):
+    factory(name="rue de Paris", type="street", id="123",
+            housenumbers={'1': {'lat': '48.32', 'lon': '2.25'}})
+    factory(name="rue de foobar", type="foo", id="123", foo='bar')
+    resp = client.get('/search/', query_string={'q': '1 rue de paris'})
+    properties = resp.json['features'][0]['properties']
+    assert properties['name'] == '1 rue de Paris'
+    assert properties['street'] == 'rue de Paris'
+    resp = client.get('/search/', query_string={'q': 'rue de paris'})
+    properties = resp.json['features'][0]['properties']
+    assert properties['name'] == 'rue de Paris'
+    assert properties['street'] == 'rue de Paris'
+    resp = client.get('/search/', query_string={'q': 'rue de foobar'})
+    properties = resp.json['features'][0]['properties']
+    assert properties['name'] == 'rue de foobar'
+    assert properties['foo'] == 'bar'  # Not overrided.
