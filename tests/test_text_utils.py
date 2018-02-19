@@ -1,10 +1,9 @@
 import pytest
-
 from addok.fuzzy import make_fuzzy
-from addok.helpers.text import (Token, _normalize, synonymize, _tokenize,
-                                alphanumerize, ascii, compare_ngrams,
-                                compute_edge_ngrams, contains, equals,
-                                startswith)
+from addok.helpers.text import (Token, _normalize, _tokenize, alphanumerize,
+                                ascii, compare_str, compute_edge_ngrams,
+                                contains, equals, ngrams, startswith,
+                                synonymize)
 
 
 @pytest.mark.parametrize('input,output', [
@@ -58,8 +57,29 @@ def test_make_fuzzy_should_remove_letter_if_world_is_long():
     ['Y', 'y', 1],
     ['Ay', 'ay', 1],
 ])
-def test_compare_ngrams(left, right, score):
-    assert compare_ngrams(left, right) == score
+def test_compare_str(left, right, score):
+    assert compare_str(left, right) == score
+
+
+@pytest.mark.parametrize('best,other,query', [
+    ['avenue de paris 94123 saint mande',
+     'avenue de saint mande 75012 paris',
+     'avenue de paris saint mande'],
+    ['1 place du trocadero et du 11 novembre 75016 paris',
+     'square du trocadero 75016 paris',
+     'place du trocadero paris'],
+])
+def test_compare_strs(best, other, query):
+    assert compare_str(best, query) > compare_str(other, query)
+
+
+@pytest.mark.parametrize('input,n,output', [
+    ['Lille', 2, {' L', 'Li', 'il', 'll', 'le', 'e '}],
+    ['Lille', 3, {' Li', 'Lil', 'ill', 'lle', 'le '}],
+    ['L', 3, {' L '}],
+])
+def test_ngrams(input, n, output):
+    assert ngrams(input, n) == output
 
 
 @pytest.mark.parametrize('input,output', [
@@ -159,7 +179,7 @@ def test_ascii_should_cache_cleaned_string(monkeypatch):
     def do_not_call_me(x):
         assert False
 
-    monkeypatch.setattr('addok.helpers.text.alphanumerize',
-                        do_not_call_me)
 
-    ascii(s)  # Should not call alphanumerize.
+def test_ngrams_should_cache():
+    ngrams('test')
+    assert ngrams.cache_info() is not None
