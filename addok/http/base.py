@@ -14,6 +14,7 @@ notfound_logger = None
 query_logger = None
 slow_query_logger = None
 
+
 @config.on_load
 def on_load():
     if config.LOG_NOT_FOUND:
@@ -42,7 +43,7 @@ def on_load():
         else:
             query_logger.addHandler(handler)
 
-    if config.LOG_SLOW_QUERIES:
+    if config.SLOW_QUERIES:
         global slow_query_logger
         slow_query_logger = logging.getLogger('slow_queries')
         slow_query_logger.setLevel(logging.DEBUG)
@@ -54,6 +55,7 @@ def on_load():
             print('Unable to write to {}'.format(filename))
         else:
             slow_query_logger.addHandler(handler)
+
 
 def log_notfound(query):
     if config.LOG_NOT_FOUND:
@@ -70,8 +72,9 @@ def log_query(query, results):
             score = '-'
         query_logger.debug('\t'.join([query, result, score]))
 
+
 def log_slow_query(query, results, timer):
-    if config.LOG_SLOW_QUERIES:
+    if config.SLOW_QUERIES:
         if results:
             result = str(results[0])
             score = str(round(results[0].score, 2))
@@ -80,7 +83,8 @@ def log_slow_query(query, results, timer):
             result = '-'
             score = '-'
             id_ = '-'
-        slow_query_logger.debug('\t'.join([str(timer), query, id_, result, score]))
+        slow_query_logger.debug('\t'.join([str(timer),
+                                           query, id_, result, score]))
 
 
 class CorsMiddleware:
@@ -164,7 +168,7 @@ class Search(View):
         if not results:
             log_notfound(query)
         log_query(query, results)
-        if config.SLOW_QUERY and timer > config.SLOW_QUERY:
+        if config.SLOW_QUERIES and timer > config.SLOW_QUERIES:
             log_slow_query(query, results, timer)
         self.to_geojson(req, resp, results, query=query, filters=filters,
                         center=center, limit=limit)
