@@ -117,8 +117,8 @@ def extend_results_reducing_tokens(helper):
             if helper.bucket_overflow:
                 break
 
-        if helper.bucket_empty and len(helper.meaningful)>2:
-            helper.debug("Bucket still empty, let's remove 2 meaningful tokens.")
+        if helper.bucket_empty and len(helper.meaningful) > 3:
+            helper.debug("Bucket still empty, remove 2 meaningful tokens.")
             for token, token2 in product(helper.meaningful, helper.meaningful):
                 if token != token2:
                     keys = helper.keys[:]
@@ -127,6 +127,7 @@ def extend_results_reducing_tokens(helper):
                     helper.add_to_bucket(keys)
                     if helper.bucket_overflow:
                         break
+
 
 def extend_results_extrapoling_relations(helper):
     """Try to extract the bigger group of interlinked tokens.
