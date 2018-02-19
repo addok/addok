@@ -2,6 +2,7 @@ import json
 import logging
 import logging.handlers
 from pathlib import Path
+import time
 
 import falcon
 
@@ -11,35 +12,36 @@ from addok.helpers.text import EntityTooLarge
 
 notfound_logger = None
 query_logger = None
+slow_query_logger = None
+
+
+def get_logger(name):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    filename = Path(config.LOG_DIR).joinpath('{}.log'.format(name))
+    try:
+        handler = logging.handlers.TimedRotatingFileHandler(
+                                            str(filename), when='midnight')
+    except FileNotFoundError:
+        print('Unable to write to {}'.format(filename))
+    else:
+        logger.addHandler(handler)
+    return logger
 
 
 @config.on_load
 def on_load():
     if config.LOG_NOT_FOUND:
         global notfound_logger
-        notfound_logger = logging.getLogger('notfound')
-        notfound_logger.setLevel(logging.DEBUG)
-        filename = Path(config.LOG_DIR).joinpath('notfound.log')
-        try:
-            handler = logging.handlers.TimedRotatingFileHandler(
-                                                str(filename), when='midnight')
-        except FileNotFoundError:
-            print('Unable to write to {}'.format(filename))
-        else:
-            notfound_logger.addHandler(handler)
+        notfound_logger = get_logger('notfound')
 
     if config.LOG_QUERIES:
         global query_logger
-        query_logger = logging.getLogger('queries')
-        query_logger.setLevel(logging.DEBUG)
-        filename = Path(config.LOG_DIR).joinpath('queries.log')
-        try:
-            handler = logging.handlers.TimedRotatingFileHandler(
-                                                str(filename), when='midnight')
-        except FileNotFoundError:
-            print('Unable to write to {}'.format(filename))
-        else:
-            query_logger.addHandler(handler)
+        query_logger = get_logger('queries')
+
+    if config.SLOW_QUERIES:
+        global slow_query_logger
+        slow_query_logger = get_logger('slow_queries')
 
 
 def log_notfound(query):
@@ -56,6 +58,20 @@ def log_query(query, results):
             result = '-'
             score = '-'
         query_logger.debug('\t'.join([query, result, score]))
+
+
+def log_slow_query(query, results, timer):
+    if config.SLOW_QUERIES:
+        if results:
+            result = str(results[0])
+            score = str(round(results[0].score, 2))
+            id_ = results[0].id
+        else:
+            result = '-'
+            score = '-'
+            id_ = '-'
+        slow_query_logger.debug('\t'.join([str(timer),
+                                           query, id_, result, score]))
 
 
 class CorsMiddleware:
@@ -129,14 +145,18 @@ class Search(View):
         if lon and lat:
             center = (lon, lat)
         filters = self.match_filters(req)
+        timer = time.perf_counter()
         try:
             results = search(query, limit=limit, autocomplete=autocomplete,
                              lat=lat, lon=lon, **filters)
         except EntityTooLarge as e:
             raise falcon.HTTPRequestEntityTooLarge(str(e))
+        timer = int((time.perf_counter()-timer)*1000)
         if not results:
             log_notfound(query)
         log_query(query, results)
+        if config.SLOW_QUERIES and timer > config.SLOW_QUERIES:
+            log_slow_query(query, results, timer)
         self.to_geojson(req, resp, results, query=query, filters=filters,
                         center=center, limit=limit)
 

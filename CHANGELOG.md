@@ -6,6 +6,7 @@
   instead they are now hard coded in the default config; if you haven't changed
   `RESULTS_COLLECTORS_PYPATHS` in your local config this should not impact you,
   otherwise, see "Updating" below.
+- Added a slow queries logger (see [config](config.md#slow_queries-integer) for usage)
 
 ### Updating to dev
 
