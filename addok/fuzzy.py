@@ -97,14 +97,6 @@ def try_fuzzy(helper, tokens, include_common=True):
                     helper.add_to_bucket(keys + [key])
 
 
-def configure(config):
-    target = 'addok.helpers.collectors.extend_results_reducing_tokens'
-    if target in config.RESULTS_COLLECTORS_PYPATHS:
-        idx = config.RESULTS_COLLECTORS_PYPATHS.index(target)
-        config.RESULTS_COLLECTORS_PYPATHS.insert(
-            idx, 'addok.fuzzy.fuzzy_collector')
-
-
 def do_fuzzy(self, word):
     """Compute fuzzy extensions of word.
     FUZZY lilas"""

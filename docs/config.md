@@ -302,14 +302,19 @@ Additional processors that are run only at query time. By default, only
 Addok will try each of those in the given order for searching matching results.
 
     RESULTS_COLLECTORS_PYPATHS = [
+        'addok.autocomplete.only_commons_but_geohash_try_autocomplete_collector',
         'addok.helpers.collectors.no_tokens_but_housenumbers_and_geohash',
         'addok.helpers.collectors.no_available_tokens_abort',
         'addok.helpers.collectors.only_commons',
+        'addok.autocomplete.no_meaningful_but_common_try_autocomplete_collector',
+        'addok.autocomplete.only_commons_try_autocomplete_collector',
         'addok.helpers.collectors.bucket_with_meaningful',
         'addok.helpers.collectors.reduce_with_other_commons',
-        'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',
-        'addok.helpers.collectors.extend_results_reducing_tokens',
+        'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',  # noqa
+        'addok.fuzzy.fuzzy_collector',
+        'addok.autocomplete.autocomplete_meaningful_collector',
         'addok.helpers.collectors.extend_results_extrapoling_relations',
+        'addok.helpers.collectors.extend_results_reducing_tokens',
     ]
 
 ### SEARCH_RESULT_PROCESSORS_PYPATHS (iterable of Python paths)
