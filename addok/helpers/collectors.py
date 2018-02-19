@@ -1,11 +1,11 @@
 from collections import defaultdict
+from itertools import product
 
 from addok.config import config
 from addok.db import DB
 from addok.helpers import scripts
 from addok.pairs import pair_key
 
-from itertools import product
 
 def no_tokens_but_housenumbers_and_geohash(helper):
     if not helper.tokens and helper.housenumbers and helper.geohash_key:
