@@ -1,4 +1,5 @@
 from addok.core import Result, search
+from addok.helpers import collectors
 
 
 def test_should_match_name(street):
@@ -415,3 +416,19 @@ def test_importance_should_be_minored_if_geohash(factory, config):
     assert results[0]._scores['importance'][0] == 0.1
     results = search('rue descartes', lon=2.2, lat=48.1)
     assert results[0]._scores['importance'][0] == 0.010000000000000002
+
+
+def test_extend_results_reducing_tokens_should_remove_two_tokens(factory,
+                                                                 config):
+    # Keep the basic bucket_with_meaningful to fill in the various helper
+    # properties.
+    config.RESULTS_COLLECTORS = [collectors.bucket_with_meaningful,
+                                 collectors.extend_results_reducing_tokens]
+    factory(name="quai jules verne", city="saint cyprien")
+    factory(name="allee des cyprie", city="larmor plage")
+    factory(name="rue jules verne", city="chatelaillon plage")
+    factory(name="quai saint truc", city="la plage")
+    # "plage" is the bad guy here: it has been seen with every other terms of
+    # the search string, but it's not in the searched document.
+    results = search('quai jules verne saint cyprie plage')
+    assert results[0].name == 'quai jules verne'

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import product
 
 from addok.config import config
 from addok.db import DB
@@ -102,7 +103,7 @@ def extend_results_reducing_tokens(helper):
     # Only if bucket is empty or we have margin on should_match_threshold.
     if (helper.bucket_empty
             or len(helper.meaningful) - 1 > helper.should_match_threshold):
-        helper.debug('Bucket dry. Trying to remove some tokens.')
+        helper.debug('Bucket dry. Trying to remove 1 meaningful token.')
 
         def sorter(t):
             # First numbers, then by frequency
@@ -115,6 +116,17 @@ def extend_results_reducing_tokens(helper):
             helper.add_to_bucket(keys)
             if helper.bucket_overflow:
                 break
+
+        if helper.bucket_empty and len(helper.meaningful) > 3:
+            helper.debug("Bucket still empty, remove 2 meaningful tokens.")
+            for token, token2 in product(helper.meaningful, helper.meaningful):
+                if token != token2:
+                    keys = helper.keys[:]
+                    keys.remove(token.db_key)
+                    keys.remove(token2.db_key)
+                    helper.add_to_bucket(keys)
+                    if helper.bucket_overflow:
+                        break
 
 
 def extend_results_extrapoling_relations(helper):
