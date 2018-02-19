@@ -1,7 +1,6 @@
 from addok.config import config
 from addok.helpers import haversine_distance, km_to_score
-from addok.helpers.text import (ascii, compare_ngrams, contains, equals,
-                                startswith)
+from addok.helpers.text import ascii, compare_str, contains, equals, startswith
 
 
 def make_labels(helper, result):
@@ -13,13 +12,14 @@ def make_labels(helper, result):
         if city and city != label:
             postcode = getattr(result, 'postcode', None)
             if postcode:
-                label = '{} {}'.format(label, postcode)
-            label = '{} {}'.format(label, city)
-            result.labels.insert(0, label)
+                label = label + ' ' + postcode
+            label = label + ' ' + city
         housenumber = getattr(result, 'housenumber', None)
         if housenumber:
             label = '{} {}'.format(housenumber, label)
-            result.labels.insert(0, label)
+        # Replace default label with our computed one, but keep the other raw
+        # aliases, and let plugins add more of them if needed.
+        result.labels[0] = label
 
 
 def match_housenumber(helper, result):
@@ -41,8 +41,7 @@ def _match_housenumber(helper, result, tokens):
 
 
 def score_by_importance(helper, result):
-    importance = getattr(result, 'importance', None)
-    importance = importance or 0.0
+    importance = getattr(result, 'importance', None) or 0.0
     result.add_score('importance',
                      float(importance) * config.IMPORTANCE_WEIGHT,
                      config.IMPORTANCE_WEIGHT)
@@ -64,25 +63,23 @@ def score_by_autocomplete_distance(helper, result):
             score = 0.7
         if score:
             result.add_score('str_distance', score, ceiling=1.0)
-            if score >= config.MATCH_THRESHOLD:
-                break
     if not score:
-        _score_by_ngram_distance(helper, result, scale=0.9)
+        _score_by_str_distance(helper, result, scale=0.9)
 
 
-def _score_by_ngram_distance(helper, result, scale=1.0):
+def _score_by_str_distance(helper, result, scale=1.0):
     for label in result.labels:
-        label = ascii(label)
-        score = compare_ngrams(label, helper.query) * scale
+        score = compare_str(label, helper.query) * scale
         result.add_score('str_distance', score, ceiling=1.0)
-        if score >= config.MATCH_THRESHOLD:
-            break
 
 
-def score_by_ngram_distance(helper, result):
+def score_by_str_distance(helper, result):
     if helper.autocomplete:
         return
-    _score_by_ngram_distance(helper, result)
+    _score_by_str_distance(helper, result)
+
+
+score_by_ngram_distance = score_by_str_distance  # Retrocompat.
 
 
 def score_by_geo_distance(helper, result):
@@ -92,6 +89,17 @@ def score_by_geo_distance(helper, result):
                             (helper.lat, helper.lon))
     result.distance = km * 1000
     result.add_score('geo_distance', km_to_score(km), ceiling=0.1)
+
+
+def adjust_scores(helper, result):
+    if helper.lat is not None and helper.lon is not None:
+        str_distance = result._scores.get('str_distance')
+        if str_distance:
+            result._scores['str_distance'] = (str_distance[0] * 0.9,
+                                              str_distance[1])
+        importance = result._scores.get('importance')
+        if importance:
+            result._scores['importance'] = (importance[0] * 0.1, importance[1])
 
 
 def load_closer(helper, result):

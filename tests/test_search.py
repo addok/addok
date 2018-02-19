@@ -371,6 +371,17 @@ def test_does_not_fail_without_usable_tokens(street):
     assert not search('./.$*')
 
 
+def test_word_order_priority(factory):
+    factory(name='avenue de paris', city='saint-mandé', importance=0.0185)
+    factory(name='avenue de saint-mandé', city='paris', importance=0.0463)
+    results = search('avenue de paris saint-mandé')
+    assert results[0].name == 'avenue de paris'
+    results = search('avenue de paris saint-mandé france')
+    assert results[0].name == 'avenue de paris'
+    results = search('avenue de saint-mandé paris')
+    assert results[0].name == 'avenue de saint-mandé'
+
+
 def test_bucket_respects_limit(config, factory):
     # issue #422
     config.BUCKET_MAX = 100
@@ -381,3 +392,26 @@ def test_bucket_respects_limit(config, factory):
         factory(id=str(city), postcode=str(10000+city), **fields)
     results = search('allée des acacias', limit=limit, autocomplete=True)
     assert len(results) == limit
+    results = search('allée des acacias', limit=limit, autocomplete=False)
+    assert len(results) == limit
+
+
+def test_geo_priority(config, factory):
+    factory(name='Villa Eugène', city='Colombes', importance=0.0147,
+            housenumbers={'13': {'lat': '48.915805', 'lon': '2.260938'}})
+    factory(name='Villa Eugène', city='Fontenay', importance=0.0191,
+            housenumbers={'13': {'lat': '48.879839', 'lon': '2.393369'}})
+    results = search('13 vla eugène', lat=48.9158, lon=2.2609,
+                     autocomplete=True)
+    assert results[0].city == 'Colombes'
+    results = search('13 vla eugène', lat=48.9158, lon=2.2609,
+                     autocomplete=False)
+    assert results[0].city == 'Colombes'
+
+
+def test_importance_should_be_minored_if_geohash(factory, config):
+    factory(name="rue descartes", lon=2.2, lat=48.1, importance=1)
+    results = search('rue descartes')
+    assert results[0]._scores['importance'][0] == 0.1
+    results = search('rue descartes', lon=2.2, lat=48.1)
+    assert results[0]._scores['importance'][0] == 0.010000000000000002

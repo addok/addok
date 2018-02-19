@@ -1,7 +1,7 @@
 import re
+from functools import lru_cache
 from pathlib import Path
 
-from ngram import NGram
 from unidecode import unidecode
 
 from addok.config import config
@@ -9,13 +9,15 @@ from addok.db import DB
 from addok.helpers import keys, yielder
 from addok.helpers.index import token_frequency
 
+import editdistance
+
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
 
 class Token(str):
 
-    __slots__ = ('_positions', 'is_last', 'db_key', 'raw', '_frequency', '_key',
-                 'kind', 'is_first')
+    __slots__ = ('_positions', 'is_last', 'db_key', 'raw', '_frequency',
+                 '_key', 'kind', 'is_first')
 
     def __new__(cls, value, position=None, is_last=False, raw=None, kind=None):
         obj = str.__new__(cls, value)
@@ -128,23 +130,36 @@ class ascii(str):
             cache = value._cache
         except AttributeError:
             cache = alphanumerize(unidecode(value.lower()))
-        obj = str.__new__(cls, cache)
-        obj._cache = cache
-        obj._raw = getattr(value, '_raw', value)
-        return obj
+            obj = str.__new__(cls, cache)
+            obj._cache = cache
+            obj._raw = getattr(value, '_raw', value)
+            return obj
+        else:
+            return value
 
     def __str__(self):
         return self._raw
 
 
-def compare_ngrams(left, right, N=2, pad_len=0):
+@lru_cache(maxsize=512)
+def ngrams(text, n=3):
+    # Make sure strings are at least 3 chars long, and a given token will have
+    # same ngrams whether at the start, the middle or the end of the string.
+    text = ' ' + text + ' '
+    return set([text[i:i+n] for i in range(0, len(text)-(n-1))])
+
+
+def compare_str(left, right):
     left = ascii(left)
     right = ascii(right)
-    if len(left) == 1 and len(right) == 1:
-        # NGram.compare returns 0.0 for 1 letter comparison, even if letters
-        # are equal.
-        return 1.0 if left == right else 0.0
-    return NGram.compare(left, right, N=N, pad_len=pad_len)
+    left_n = ngrams(left)
+    right_n = ngrams(right)
+    # Evaluate editdistance limited to common text portion.
+    distance = ((editdistance.eval(left, right) - abs(len(left)-len(right)))
+                / max(len(left), len(right)))
+    return (len(left_n & right_n) / len(right_n) * 0.85
+            + len(left_n & right_n) / len(left_n) * 0.05
+            + (1 - distance) * 0.1)
 
 
 def contains(candidate, target):
