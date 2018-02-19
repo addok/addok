@@ -1,4 +1,4 @@
-## dev
+## 1.1.0-rc1
 
 - Faster new scoring algorithm (#431)
 - Upgraded Falcon to 1.4.1
@@ -8,7 +8,7 @@
   otherwise, see "Updating" below.
 - Added a slow queries logger (see [config](config.md#slow_queries-integer) for usage)
 
-### Updating to dev
+### Upgrading to 1.1.0-rc1
 
 If you have changed `RESULTS_COLLECTORS_PYPATHS` in your local config file, make
 sure to add manually `fuzzy` and `autocomplete` ones. Check the
