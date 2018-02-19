@@ -15,46 +15,33 @@ query_logger = None
 slow_query_logger = None
 
 
+def get_logger(name):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    filename = Path(config.LOG_DIR).joinpath('{}.log'.format(name))
+    try:
+        handler = logging.handlers.TimedRotatingFileHandler(
+                                            str(filename), when='midnight')
+    except FileNotFoundError:
+        print('Unable to write to {}'.format(filename))
+    else:
+        logger.addHandler(handler)
+    return logger
+
+
 @config.on_load
 def on_load():
     if config.LOG_NOT_FOUND:
         global notfound_logger
-        notfound_logger = logging.getLogger('notfound')
-        notfound_logger.setLevel(logging.DEBUG)
-        filename = Path(config.LOG_DIR).joinpath('notfound.log')
-        try:
-            handler = logging.handlers.TimedRotatingFileHandler(
-                                                str(filename), when='midnight')
-        except FileNotFoundError:
-            print('Unable to write to {}'.format(filename))
-        else:
-            notfound_logger.addHandler(handler)
+        notfound_logger = get_logger('notfound')
 
     if config.LOG_QUERIES:
         global query_logger
-        query_logger = logging.getLogger('queries')
-        query_logger.setLevel(logging.DEBUG)
-        filename = Path(config.LOG_DIR).joinpath('queries.log')
-        try:
-            handler = logging.handlers.TimedRotatingFileHandler(
-                                                str(filename), when='midnight')
-        except FileNotFoundError:
-            print('Unable to write to {}'.format(filename))
-        else:
-            query_logger.addHandler(handler)
+        query_logger = get_logger('queries')
 
     if config.SLOW_QUERIES:
         global slow_query_logger
-        slow_query_logger = logging.getLogger('slow_queries')
-        slow_query_logger.setLevel(logging.DEBUG)
-        filename = Path(config.LOG_DIR).joinpath('slow_queries.log')
-        try:
-            handler = logging.handlers.TimedRotatingFileHandler(
-                                                str(filename), when='midnight')
-        except FileNotFoundError:
-            print('Unable to write to {}'.format(filename))
-        else:
-            slow_query_logger.addHandler(handler)
+        slow_query_logger = get_logger('slow_queries')
 
 
 def log_notfound(query):
