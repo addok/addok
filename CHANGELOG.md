@@ -1,3 +1,8 @@
+## dev
+
+- Faster new scoring algorithm (#431)
+- Upgraded Falcon to 1.4.1
+
 ## 1.0.2
 
 - allow to connect to Redis through unix socket

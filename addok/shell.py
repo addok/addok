@@ -17,7 +17,7 @@ from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
                       magenta, red, scripts, white, yellow)
 from .helpers.index import token_frequency
 from .helpers.search import preprocess_query
-from .helpers.text import compare_ngrams
+from .helpers.text import compare_str
 
 try:
     import gnureadline as readline  # For OSX.
@@ -412,7 +412,7 @@ class Cmd(cmd.Cmd):
             print(red('Malformed string. Use | between the two strings.'))
             return
         one, two = s
-        print(white(compare_ngrams(one, two)))
+        print(white(compare_str(one, two)))
 
     def do_CONFIG(self, name):
         """Inspect loaded Addok config. Output all config without argument.
