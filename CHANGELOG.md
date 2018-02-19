@@ -2,6 +2,17 @@
 
 - Faster new scoring algorithm (#431)
 - Upgraded Falcon to 1.4.1
+- `autocomplete` and `fuzzy` are not adding any more their collectors automagically,
+  instead they are now hard coded in the default config; if you haven't changed
+  `RESULTS_COLLECTORS_PYPATHS` in your local config this should not impact you,
+  otherwise, see "Updating" below.
+
+### Updating to dev
+
+If you have changed `RESULTS_COLLECTORS_PYPATHS` in your local config file, make
+sure to add manually `fuzzy` and `autocomplete` ones. Check the
+[config doc](config.md) for an example.
+
 
 ## 1.0.2
 
