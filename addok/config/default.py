@@ -145,5 +145,6 @@ LOG_DIR = os.environ.get("ADDOK_LOG_DIR", Path(__file__).parent.parent.parent)
 
 LOG_QUERIES = False
 LOG_NOT_FOUND = False
+SLOW_QUERIES = False  # False or time in ms to consider query as slow
 
 INDEX_EDGE_NGRAMS = True
