@@ -7,6 +7,8 @@ from addok.helpers.search import preprocess_query
 from addok.helpers.text import Token
 from addok.pairs import pair_key
 
+from addok.config import config
+
 
 def make_fuzzy(word, max=1):
     """Naive neighborhoods algo."""
@@ -16,26 +18,39 @@ def make_fuzzy(word, max=1):
         neighbor = list(word)
         neighbor[i], neighbor[i+1] = neighbor[i+1], neighbor[i]
         neighbors.append(''.join(neighbor))
-    # substitutions
-    for letter in string.ascii_lowercase:
+
+    # limit substitutions to keyboard mapping
+    if config.FUZZY_KEY_MAP is not None:
         for i in range(0, len(word)):
             neighbor = list(word)
-            if letter != neighbor[i]:
-                neighbor[i] = letter
-                neighbors.append(''.join(neighbor))
+            for letter in list(config.FUZZY_KEY_MAP[neighbor[i]]):
+                if letter != neighbor[i]:
+                    neighbor[i] = letter
+                    neighbors.append(''.join(neighbor))
+    else:
+        # substitutions
+        for letter in string.ascii_lowercase:
+            for i in range(0, len(word)):
+                neighbor = list(word)
+                if letter != neighbor[i]:
+                    neighbor[i] = letter
+                    neighbors.append(''.join(neighbor))
+
     # insertions
     for letter in string.ascii_lowercase:
         for i in range(0, len(word) + 1):
             neighbor = list(word)
             neighbor.insert(i, letter)
             neighbors.append(''.join(neighbor))
+
+    # removal
     if len(word) > 3:
-        # removal
         for i in range(0, len(word)):
             neighbor = list(word)
             del neighbor[i]
             neighbors.append(''.join(neighbor))
-    return neighbors
+
+    return sorted(set(neighbors), key=lambda x: neighbors.index(x))
 
 
 def fuzzy_collector(helper):
@@ -101,7 +116,9 @@ def do_fuzzy(self, word):
     """Compute fuzzy extensions of word.
     FUZZY lilas"""
     word = list(preprocess_query(word))[0]
-    print(white(make_fuzzy(word)))
+    fuzzy = make_fuzzy(word)
+    print(white(fuzzy))
+    print(blue("{} items".format(len(fuzzy))))
 
 
 def do_fuzzyindex(self, word):
