@@ -166,7 +166,7 @@ class Search(BaseHelper):
             self.debug('** %s **', collector.__name__.upper())
             if collector(self):
                 break
-        return self.render()
+        return list(self.render())
 
     @property
     def geohash_key(self):
@@ -183,8 +183,12 @@ class Search(BaseHelper):
         self.convert()
         self._sorted_bucket = list(self.results.values())
         self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
-        return [r for r in self._sorted_bucket[:self.wanted]
-                if r.score >= config.MIN_SCORE]
+        for result in self._sorted_bucket[:self.wanted]:
+            if result.score < config.MIN_SCORE:
+                self.debug('Score too low (%s), removing `%s`', result.score,
+                           result)
+                continue
+            yield result
 
     def intersect(self, keys, limit=0):
         if not limit > 0:
