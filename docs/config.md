@@ -194,6 +194,11 @@ import and return an iterable.
 
     BATCH_FILE_LOADER_PYPATH = 'addok.helpers.load_file'
 
+Addok provides three loaders: `load_file`, `load_msgpack_file`
+(needs `msgpack-python`) and `load_csv_file`. But you can pass any path to
+a loadable function. This function will take a `filepath` as argument, and
+should yield dicts.
+
 #### BATCH_PROCESSORS_PYPATHS (iterable of Python paths)
 All methods called during the batch process.
 

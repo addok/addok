@@ -1,4 +1,4 @@
-import os
+import csv
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
@@ -20,6 +20,14 @@ def load_msgpack_file(filepath):
     with open(filepath, mode='rb') as f:
         for line in msgpack.Unpacker(f, encoding='utf-8'):
             yield line
+
+
+def load_csv_file(filepath):
+    with open(filepath, newline='') as csvfile:
+        dialect = csv.Sniffer().sniff(csvfile.read(1024))
+        csvfile.seek(0)
+        reader = csv.DictReader(csvfile, dialect=dialect)
+        yield from reader
 
 
 def iter_pipe(pipe, processors):

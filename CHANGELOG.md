@@ -1,3 +1,7 @@
+## dev
+
+- Add `load_csv_file` batch loader
+
 ## 1.1.0-rc1
 
 - Faster new scoring algorithm (#431)
