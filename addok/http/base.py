@@ -91,8 +91,8 @@ class View:
             req.get_param(name, store=filters)
         return filters
 
-    def to_geojson(self, req, resp, results, query=None, filters=None,
-                   center=None, limit=None):
+    def render(self, req, resp, results, query=None, filters=None, center=None,
+               limit=None):
         results = {
             "type": "FeatureCollection",
             "version": "draft",
@@ -109,6 +109,8 @@ class View:
         if limit:
             results['limit'] = limit
         self.json(req, resp, results)
+
+    to_geojson = render  # retrocompat.
 
     def json(self, req, resp, content):
         resp.body = json.dumps(content)
@@ -157,8 +159,8 @@ class Search(View):
         log_query(query, results)
         if config.SLOW_QUERIES and timer > config.SLOW_QUERIES:
             log_slow_query(query, results, timer)
-        self.to_geojson(req, resp, results, query=query, filters=filters,
-                        center=center, limit=limit)
+        self.render(req, resp, results, query=query, filters=filters,
+                    center=center, limit=limit)
 
 
 class Reverse(View):
@@ -170,7 +172,7 @@ class Reverse(View):
         limit = req.get_param_as_int('limit') or 1
         filters = self.match_filters(req)
         results = reverse(lat=lat, lon=lon, limit=limit, **filters)
-        self.to_geojson(req, resp, results, filters=filters, limit=limit)
+        self.render(req, resp, results, filters=filters, limit=limit)
 
 
 def register_http_endpoint(api):
