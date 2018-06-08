@@ -12,7 +12,7 @@ In those servers, full France data is imported in about 15 min and it scales
 to around 2000 searches per second.
 
 Check the [documentation](http://addok.readthedocs.org/en/latest/) and a
-[demo](http://adresse.data.gouv.fr/map/) with French data.
+[demo](http://adresse.data.gouv.fr/map) with French data.
 
 Powered by Python and Redis.
 
