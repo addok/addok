@@ -128,7 +128,7 @@ class Cmd(cmd.Cmd):
 
     @staticmethod
     def _match_option(key, string):
-        matchs = re.findall('{}[= ][^A-Z]*'.format(key), string)
+        matchs = re.findall('{}[= ][^ ]*'.format(key), string)
         option = None
         if matchs:
             option = matchs[0]
