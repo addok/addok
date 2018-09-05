@@ -7,7 +7,6 @@ from unidecode import unidecode
 from addok.config import config
 from addok.db import DB
 from addok.helpers import keys, yielder
-from addok.helpers.index import token_frequency
 
 import editdistance
 
@@ -17,9 +16,10 @@ PATTERN = re.compile(r"[\w]+", re.U | re.X)
 class Token(str):
 
     __slots__ = ('_positions', 'is_last', 'db_key', 'raw', '_frequency',
-                 '_key', 'kind', 'is_first')
+                 '_key', 'kind', 'is_first', 'field')
 
-    def __new__(cls, value, position=None, is_last=False, raw=None, kind=None):
+    def __new__(cls, value, position=None, is_last=False, raw=None, kind=None,
+                field={}):
         obj = str.__new__(cls, value)
         obj._positions = []
         position = position or 0
@@ -29,6 +29,7 @@ class Token(str):
         obj.db_key = None
         obj.raw = raw or value  # Allow to keep raw on update.
         obj.kind = kind
+        obj.field = field
         return obj
 
     def __repr__(self):
@@ -36,7 +37,7 @@ class Token(str):
 
     def update(self, value, **kwargs):
         default = dict(is_last=self.is_last, raw=self.raw, kind=self.kind,
-                       position=self.position[:])
+                       position=self.position[:], field=self.field)
         # Never replace position through `update`.
         position = kwargs.pop('position', None)
         default.update(kwargs)
@@ -56,6 +57,7 @@ class Token(str):
     @property
     def frequency(self):
         if not hasattr(self, '_frequency'):
+            from addok.helpers.index import token_frequency
             self._frequency = token_frequency(self)
         return self._frequency
 
@@ -78,15 +80,16 @@ class Token(str):
             self._positions.append(position)
 
 
-def _tokenize(text):
+def _tokenize(token):
     """Split text into a list of tokens."""
-    return PATTERN.findall(text)
+    for sub in PATTERN.findall(token):
+        yield token.update(value=sub)
 
 
 def tokenize(pipe):
     for text in pipe:
         for position, token in enumerate(_tokenize(text)):
-            yield Token(token, position=position)
+            yield token.update(value=token, position=position)
 
 
 def _normalize(s):
@@ -181,7 +184,7 @@ def equals(candidate, target):
 
 
 def alphanumerize(text):
-    return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
+    return re.sub(r' {2,}', ' ', re.sub(r'[^\w]', ' ', text))
 
 
 def compute_edge_ngrams(token, min=None):

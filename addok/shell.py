@@ -346,7 +346,7 @@ class Cmd(cmd.Cmd):
         if not doc:
             return self.error('id "{}" not found'.format(_id))
         for key, value in doc.items():
-            if key == config.HOUSENUMBERS_FIELD:
+            if key == config.HOUSENUMBERS_KEY:
                 continue
             print('{} {}'.format(white(key), magenta(value)))
         if doc.get('housenumbers'):

@@ -6,7 +6,7 @@ from addok.helpers.text import ascii, compare_str, contains, equals, startswith
 def make_labels(helper, result):
     if not result.labels:
         # Make your own for better scoring (see addok-france for inspiration).
-        result.labels = result._rawattr(config.NAME_FIELD)[:]
+        result.labels = result._rawattr(config.NAME_KEY)[:]
         label = result.labels[0]
         city = getattr(result, 'city', None)
         if city and city != label:

@@ -2,10 +2,12 @@ from math import ceil
 
 from addok.config import config
 from addok.helpers import iter_pipe
+from addok.helpers.text import Token
 
 
 def preprocess_query(s):
-    return list(iter_pipe(s, config.QUERY_PROCESSORS + config.PROCESSORS))
+    return list(iter_pipe(Token(s),
+                          config.QUERY_PROCESSORS + config.PROCESSORS))
 
 
 def tokenize(helper):

@@ -6,6 +6,7 @@ from addok.db import DB
 from addok.ds import get_document
 
 from . import iter_pipe, keys, yielder
+from .text import Token
 
 VALUE_SEPARATOR = '|~|'
 
@@ -25,8 +26,8 @@ def token_frequency(token):
     return token_key_frequency(keys.token_key(token))
 
 
-def extract_tokens(tokens, string, boost):
-    els = list(preprocess(string))
+def extract_tokens(field, tokens, string, boost):
+    els = list(preprocess(Token(string, field=field)))
     if not els:
         return
     boost = config.DEFAULT_BOOST / len(els) * boost
@@ -40,8 +41,8 @@ def index_tokens(pipe, tokens, key, **kwargs):
         pipe.zadd(keys.token_key(token), boost, key)
 
 
-def deindex_field(key, string):
-    els = list(preprocess(string))
+def deindex_field(field, key, string):
+    els = list(preprocess(Token(string, field=field)))
     for s in els:
         deindex_token(key, s)
     return els
@@ -120,7 +121,7 @@ class FieldsIndexer:
                     # A mandatory field is null.
                     raise ValueError('{} must not be null'.format(name))
                 continue
-            if name != config.HOUSENUMBERS_FIELD:
+            if name != config.HOUSENUMBERS_KEY:
                 boost = field.get('boost', config.DEFAULT_BOOST)
                 if callable(boost):
                     boost = boost(doc)
@@ -128,21 +129,21 @@ class FieldsIndexer:
                 if not isinstance(values, (list, tuple)):
                     values = [values]
                 for value in values:
-                    extract_tokens(tokens, str(value), boost=boost)
+                    extract_tokens(field, tokens, str(value), boost=boost)
         index_tokens(pipe, tokens, key, **kwargs)
 
     @staticmethod
     def deindex(db, key, doc, tokens, **kwargs):
         for field in config.FIELDS:
             name = field['key']
-            if name == config.HOUSENUMBERS_FIELD:
+            if name == config.HOUSENUMBERS_KEY:
                 continue
             values = doc.get(name)
             if values:
                 if not isinstance(values, (list, tuple)):
                     values = [values]
                 for value in values:
-                    tokens.extend(deindex_field(key, value))
+                    tokens.extend(deindex_field(field, key, value))
 
 
 class GeohashIndexer:
@@ -183,8 +184,8 @@ class FiltersIndexer:
                 for value in values:
                     pipe.sadd(keys.filter_key(name, value), key)
         # Special case for housenumber type, because it's not a real type
-        if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
-           and doc.get(config.HOUSENUMBERS_FIELD):
+        if "type" in config.FILTERS and config.HOUSENUMBERS_KEY \
+           and doc.get(config.HOUSENUMBERS_KEY):
             pipe.sadd(keys.filter_key("type", "housenumber"), key)
 
     @staticmethod
@@ -206,12 +207,13 @@ def prepare_housenumbers(doc):
     # from user query (see results.match_housenumber).
     if not doc:
         return
-    housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
+    housenumbers = doc.get(config.HOUSENUMBERS_KEY)
     if housenumbers:
+        field = config.HOUSENUMBERS_FIELD
         doc['housenumbers'] = {}
         for number, data in housenumbers.items():
             # Housenumber may have multiple tokens (eg.: "dix huit").
-            token = ''.join(list(preprocess(number)))
+            token = ''.join(list(preprocess(Token(number, field=field))))
             data['raw'] = number
             doc['housenumbers'][token] = data
     return doc

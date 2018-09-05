@@ -101,10 +101,12 @@ class Config(dict):
             key = field['key']
             if (field.get('type') == 'housenumbers' or
                     key == 'housenumbers'):
-                self.HOUSENUMBERS_FIELD = key
+                self.HOUSENUMBERS_KEY = key
+                self.HOUSENUMBERS_FIELD = field
                 field['type'] = 'housenumbers'
             elif field.get('type') == 'name' or key == 'name':
-                self.NAME_FIELD = key
+                self.NAME_KEY = key
+                self.NAME_FIELD = field
                 field['type'] = 'name'
         for func in self._post_load_func:
             func()

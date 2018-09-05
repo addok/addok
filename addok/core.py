@@ -55,7 +55,7 @@ class Result:
 
     def __str__(self):
         return (str(self.labels[0]) if self.labels
-                else self._rawattr(config.NAME_FIELD)[0])
+                else self._rawattr(config.NAME_KEY)[0])
 
     def _rawattr(self, key):
         value = self._doc.get(key, '')
