@@ -137,6 +137,8 @@ FIELDS = [
 ]
 ```
 
+Warning: Indexes are computed during the import. If you already imported data, you need to reset and reimport it after you modified this config.
+
 #### FILTERS (list)
 A list of fields to be indexed as available filters. Keep in mind that every
 filter means bigger index.
