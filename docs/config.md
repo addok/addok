@@ -137,7 +137,9 @@ FIELDS = [
 ]
 ```
 
-Warning: Indexes are computed during the import. If you already imported data, you need to reset and reimport it after you modified this config.
+You can access any fields from your original data source here. For example, `doc.get('type')` refers to the `type` property defined in the BAN json file.
+
+Warning: Indexes are computed during the import. If you already imported data, you need to reset and reimport it after you modified this configuration file.
 
 #### FILTERS (list)
 A list of fields to be indexed as available filters. Keep in mind that every
