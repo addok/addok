@@ -259,6 +259,11 @@ The max inherent score of a document in the final score.
 
     IMPORTANCE_WEIGHT = 0.1
 
+#### GEO_DISTANCE_WEIGHT (float)
+The max inherent score of geographical distance to the provided center (if any) in the final score.
+
+    GEO_DISTANCE_WEIGHT = 0.1
+
 #### INTERSECT_LIMIT (int)
 Above this treshold, we avoid intersecting sets.
 
