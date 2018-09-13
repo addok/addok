@@ -88,7 +88,9 @@ def score_by_geo_distance(helper, result):
     km = haversine_distance((float(result.lat), float(result.lon)),
                             (helper.lat, helper.lon))
     result.distance = km * 1000
-    result.add_score('geo_distance', km_to_score(km), ceiling=0.1)
+    result.add_score('geo_distance',
+                     km_to_score(km) * config.GEO_DISTANCE_WEIGHT,
+                     ceiling=config.GEO_DISTANCE_WEIGHT)
 
 
 def adjust_scores(helper, result):

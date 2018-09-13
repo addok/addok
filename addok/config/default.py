@@ -132,6 +132,9 @@ EXTRA_FIELDS = []
 # Weight of a document own importance:
 IMPORTANCE_WEIGHT = 0.1
 
+# Geographical distance importance on final score
+GEO_DISTANCE_WEIGHT = 0.1
+
 # Default score for the relation token => document
 DEFAULT_BOOST = 1.0
 

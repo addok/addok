@@ -86,7 +86,7 @@ def haversine_distance(point1, point2):
 def km_to_score(km):
     # Score between 0 and 0.1 (close to 0 km will be close to 0.1, and 100 and
     # above will be 0).
-    return 0.0 if km > 100 else .1 * exp(-(km / 50.0) ** 2)
+    return 0.0 if km > 100 else exp(-(km / 50.0) ** 2)
 
 
 COLORS = {
