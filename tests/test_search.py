@@ -409,6 +409,16 @@ def test_geo_priority(config, factory):
                      autocomplete=False)
     assert results[0].city == 'Colombes'
 
+def test_geo_importance_weight(config, factory):
+    initial_weight = config.GEO_DISTANCE_WEIGHT
+    factory(name="rue descartes", lon=2.2, lat=48.1)
+    results = search('rue descartes', lat=48.9158, lon=2.2609)
+    initial_geo_score = results[0]._scores['geo_distance']
+    config.GEO_DISTANCE_WEIGHT = 2.0
+    results = search('rue descartes', lat=48.9158, lon=2.2609)
+    assert results[0]._scores['geo_distance'][0] == initial_geo_score[0] * config.GEO_DISTANCE_WEIGHT / initial_weight
+    assert results[0]._scores['geo_distance'][1] == config.GEO_DISTANCE_WEIGHT
+
 
 def test_importance_should_be_minored_if_geohash(factory, config):
     factory(name="rue descartes", lon=2.2, lat=48.1, importance=1)
