@@ -83,9 +83,15 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
     pair_keys = [pair_key(t) for t in tokens if not t.is_last]
     key = edge_ngram_key(helper.last_token)
     autocomplete_tokens = DB.sinter(pair_keys + [key])
-    autocomplete_tokens = scripts.ordered_tokens(
-        keys=[dbkeys.token_key(t.decode()) for t in autocomplete_tokens])
-    helper.debug('Found tokens to autocomplete %s', autocomplete_tokens)
+    token_keys = [dbkeys.token_key(t.decode()) for t in autocomplete_tokens]
+    if len(tokens) == 1:
+        helper.debug('Ordering candidates by max score')
+        autocomplete_tokens = scripts.order_by_max_score(keys=token_keys)
+    else:
+        helper.debug('Ordering candidates by frequency')
+        autocomplete_tokens = scripts.order_by_frequency(keys=token_keys)
+    helper.debug('Found tokens to autocomplete [%s, …]',
+                 b', '.join(autocomplete_tokens[:10]))
     for token in autocomplete_tokens:
         key = token.decode()
         if skip_commons\

@@ -46,11 +46,21 @@ def test_zinter(factory):
                        'd|{}'.format(docs[0]['_id']).encode()]
 
 
-def test_ordered_tokens(factory):
+def test_order_by_frequency(factory):
     factory(name="rue de la monnaie", city="Vitry")
     factory(name="rue des lilas", city="Vitry")
     factory(name="rue des figues", city="Vitry")
     factory(name="rue des lilas", city="Pantin")
-    assert scripts.ordered_tokens(
+    assert scripts.order_by_frequency(
             keys=['w|monnaie', 'w|lilas', 'w|vitry', 'w|rue']) == [
             b'w|rue', b'w|vitry', b'w|lilas', b'w|monnaie']
+
+
+def test_order_by_max_score(factory):
+    factory(name="rue de la monnaie", city="Vitry")
+    factory(name="rue des lilas", city="Vitry")
+    factory(name="rue des figues", city="Vitry")
+    factory(name="rue des lilas", city="Pantin")
+    factory(name="Vitry", importance=.5)
+    keys = ['w|monnaie', 'w|lilas', 'w|vitry', 'w|rue']
+    assert scripts.order_by_max_score(keys=keys)[0] == b'w|vitry'
