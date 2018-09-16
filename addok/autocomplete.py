@@ -83,6 +83,9 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
     pair_keys = [pair_key(t) for t in tokens if not t.is_last]
     key = edge_ngram_key(helper.last_token)
     autocomplete_tokens = DB.sinter(pair_keys + [key])
+    if not autocomplete_tokens:
+        helper.debug('No candidates. Aborting.')
+        return
     token_keys = [dbkeys.token_key(t.decode()) for t in autocomplete_tokens]
     if len(tokens) == 1:
         helper.debug('Ordering candidates by max score')
