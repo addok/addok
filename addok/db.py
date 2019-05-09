@@ -12,7 +12,7 @@ class RedisProxy:
     Error = redis.RedisError
 
     def connect(self, *args, **kwargs):
-        self.instance = redis.StrictRedis(*args, **kwargs)
+        self.instance = redis.Redis(*args, **kwargs)
 
     def __getattr__(self, name):
         return getattr(self.instance, name)

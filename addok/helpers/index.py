@@ -37,7 +37,7 @@ def extract_tokens(tokens, string, boost):
 
 def index_tokens(pipe, tokens, key, **kwargs):
     for token, boost in tokens.items():
-        pipe.zadd(keys.token_key(token), boost, key)
+        pipe.zadd(keys.token_key(token), mapping={key: boost})
 
 
 def deindex_field(key, string):
