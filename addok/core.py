@@ -152,7 +152,7 @@ class Search(BaseHelper):
         self.matched_keys = set([])
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
         self.filters = [dbkeys.filter_key(k, v.strip())
-                        for k, v in filters.items() if v.strip()]
+                        for k, v in filters.items() if v and v.strip()]
         self.query = ascii(query.strip())
         for func in config.SEARCH_PREPROCESSORS:
             func(self)

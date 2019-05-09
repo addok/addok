@@ -20,7 +20,6 @@ class Config(dict):
         self.loaded = False
         self.plugins = [
             'addok.shell',
-            'addok.http.base',
             'addok.batch',
             'addok.pairs',
             'addok.fuzzy',
