@@ -5,4 +5,4 @@ ngram==3.3.2
 progressist==0.1.0
 python-geohash==0.8.5
 redis==3.2.1
-Unidecode==1.0.22
+Unidecode==1.0.23
