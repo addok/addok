@@ -1,3 +1,6 @@
+develop:
+	pip install -e .
+	pip install -r requirements-dev.txt
 test:
 	py.test
 testcoverage:
