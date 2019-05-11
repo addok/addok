@@ -7,20 +7,23 @@ You need sudo grants on this server, and it must be connected to Internet.
 
 ## Install system dependencies
 
-    sudo apt install redis-server python3.5 python3.5-dev python-virtualenv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt update
+    sudo apt install redis-server python3.6 python3.6-dev python-virtualenv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
 
+Note: any version of python above or equal to 3.5 is OK.
 
 ## Create a Unix user
 
 Here we use the name `addok`, but this name is up to you. Remember to change it
 on the various commands and configuration files if you go with your own.
 
-    useradd -N addok -m -d /srv/addok/
+    sudo useradd -N addok -m -d /srv/addok/
+    sudo chsh -s /bin/bash addok
 
 ## Create config folder
 
-    mkdir /etc/addok/
-    chown addok /etc/addok
+    sudo mkdir /etc/addok/
+    sudo chown addok /etc/addok
 
 ## Login as this new user
 
@@ -31,17 +34,19 @@ From now on, until we say differently, the commands are run as `addok` user.
 
 ## Create a virtualenv and activate it
 
-    virtualenv venv --python=/usr/bin/python3.5
-    source venv/bin/activate
+    python3.6 -m venv /srv/addok/venv
+    source /srv/addok/venv/bin/activate
 
 Note: this activation is not persistent, so if you open a new terminal window,
 you will need to run again this last line.
 
+## Upgrade pip and setuptools to latest
+
+    pip install pip setuptools --upgrade
+
 ## Install addok and plugins
 
-    pip install addok
-    pip install addok-fr
-    pip install addok-france
+    pip install addok addok-fr addok-france
 
 Note: if you want batch CSV support on the HTTP API, also install the plugin
 `addok-csv`.
@@ -73,9 +78,8 @@ SEARCH_RESULT_PROCESSORS_PYPATHS = [
     "addok_france.make_labels",
     "addok.helpers.results.score_by_importance",
     "addok.helpers.results.score_by_autocomplete_distance",
-    "addok.helpers.results.score_by_str_distance",
+    "addok.helpers.results.score_by_ngram_distance",
     "addok.helpers.results.score_by_geo_distance",
-    "addok.helpers.results.adjust_scores",
 ]
 PROCESSORS_PYPATHS = [
     "addok.helpers.text.tokenize",
