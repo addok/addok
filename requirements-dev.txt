@@ -1,5 +1,5 @@
 pytest==4.4.2
-pytest-cov==2.7.1
+pytest-cov==2.8.1
 pytest-falcon==0.4.2
 fabric==2.1.3
 mkdocs==1.0.4
