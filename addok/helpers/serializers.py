@@ -19,13 +19,14 @@ class ZstdSerializer:
 
     dict_data = zstd.ZstdCompressionDict(
         open(Path(__file__).parent / 'addok-zstd-dict', 'rb').read())
-    compressor = zstd.ZstdCompressor(level=10, dict_data=dict_data)
+    compressor = zstd.ZstdCompressor(level=15, dict_data=dict_data)
     decompressor = zstd.ZstdDecompressor(dict_data=dict_data)
 
 
     @classmethod
     def dumps(cls, data):
-        return cls.compressor.compress(json.dumps(data).encode())
+        j = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
+        return cls.compressor.compress(j.encode())
 
     @classmethod
     def loads(cls, data):
