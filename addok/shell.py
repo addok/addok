@@ -459,6 +459,13 @@ class Cmd(cmd.Cmd):
         for line in output:
             print(white(line))
 
+    def do_AUTOTYPE(self, query):
+        """Simulate typing for autocomplete.
+        AUTOTYPE grenoble"""
+        for l in range(1, len(query)+1):
+            print(query[:l])
+            self._search(query[:l]+' LIMIT 3 AUTOCOMPLETE 1')
+
 
 def format_config(value):
     out = ''
