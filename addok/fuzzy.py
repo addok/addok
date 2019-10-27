@@ -23,10 +23,11 @@ def make_fuzzy(word, max=1):
     if config.FUZZY_KEY_MAP is not None:
         for i in range(0, len(word)):
             neighbor = list(word)
-            for letter in list(config.FUZZY_KEY_MAP[neighbor[i]]):
-                if letter != neighbor[i]:
-                    neighbor[i] = letter
-                    neighbors.append(''.join(neighbor))
+            if neighbor[i] in config.FUZZY_KEY_MAP:
+                for letter in list(config.FUZZY_KEY_MAP[neighbor[i]]):
+                    if letter != neighbor[i]:
+                        neighbor[i] = letter
+                        neighbors.append(''.join(neighbor))
     else:
         # substitutions
         for letter in string.ascii_lowercase:

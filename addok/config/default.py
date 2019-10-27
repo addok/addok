@@ -158,9 +158,9 @@ SLOW_QUERIES = False  # False or time in ms to consider query as slow
 INDEX_EDGE_NGRAMS = True
 
 # surrouding letters on a standard keyboard (default french azerty)
-FUZZY_KEY_MAP = {'a': 'zqop', 'z': 'aqse', 'e': 'zsdrauy', 'r': 'edft',
-                 't': 'rfgy', 'y': 'tghu',
-                 'u': 'yhji', 'i': 'ujko', 'o': 'iklp', 'p': 'olm',
+FUZZY_KEY_MAP = {'a': 'ezqop', 'z': 'aqse', 'e': 'azsdryu', 'r': 'edft',
+                 't': 'rfgy', 'y': 'teghu',
+                 'u': 'yehji', 'i': 'ujko', 'o': 'iaklp', 'p': 'oalm',
                  'q': 'azsw', 's': 'qzedxw', 'd': 'serfcx', 'f': 'drtgvc',
                  'g': 'ftyhbv', 'h': 'gyujnb', 'j': 'huikn', 'k': 'jil',
                  'l': 'kom', 'm': 'lpu', 'w': 'qsx', 'x': 'wsdc',
