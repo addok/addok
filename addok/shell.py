@@ -463,7 +463,7 @@ class Cmd(cmd.Cmd):
         """Simulate typing for autocomplete.
         AUTOTYPE grenoble"""
         for l in range(1, len(query)+1):
-            print(query[:l])
+            print(l, query[:l])
             self._search(query[:l]+' LIMIT 3 AUTOCOMPLETE 1')
 
 
