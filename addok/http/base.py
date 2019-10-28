@@ -118,15 +118,29 @@ class View:
 
     def parse_lon_lat(self, req):
         try:
-            lat = float(req.get_param('lat'))
+            for key in ('lat', 'latitude'):
+                lat = req.get_param(key)
+                if lat is not None:
+                    lat = float(lat)
+                    break
+        except (ValueError, TypeError):
+            lat = None
+            raise falcon.HTTPInvalidParam('invalid value', 'lat')
+
+        try:
             for key in ('lon', 'lng', 'long'):
                 lon = req.get_param(key)
                 if lon is not None:
                     lon = float(lon)
                     break
         except (ValueError, TypeError):
-            lat = None
             lon = None
+            raise falcon.HTTPInvalidParam('invalid value', 'lon')
+
+        if lon and (lon > 180 or lon < -180):
+            raise falcon.HTTPInvalidParam('out of range', 'lon')
+        elif lat and (lat > 90 or lat < -90):
+            raise falcon.HTTPInvalidParam('out of range', 'lat')
         return lon, lat
 
 
@@ -135,8 +149,10 @@ class Search(View):
     def on_get(self, req, resp, **kwargs):
         query = req.get_param('q')
         if not query:
-            raise falcon.HTTPBadRequest('Missing query', 'Missing query')
+            raise falcon.HTTPMissingParam('q')
         limit = req.get_param_as_int('limit') or 5  # use config
+        if limit < 1 or limit > 100:
+            raise falcon.HTTPInvalidParam('out of range (1..100)', 'limit')
         autocomplete = req.get_param_as_bool('autocomplete')
         if autocomplete is None:
             # Default is True.
@@ -167,8 +183,10 @@ class Reverse(View):
 
     def on_get(self, req, resp, **kwargs):
         lon, lat = self.parse_lon_lat(req)
-        if lon is None or lat is None:
-            raise falcon.HTTPBadRequest('Invalid args', 'Invalid args')
+        if lon is None:
+            raise falcon.HTTPMissingParam('lon')
+        elif lat is None:
+            raise falcon.HTTPMissingParam('lat')
         limit = req.get_param_as_int('limit') or 1
         filters = self.match_filters(req)
         results = reverse(lat=lat, lon=lon, limit=limit, **filters)
