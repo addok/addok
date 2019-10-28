@@ -109,7 +109,7 @@ INDEXERS_PYPATHS = [
     'addok.helpers.index.GeohashIndexer',
 ]
 # Any object like instance having `loads` and `dumps` methods.
-DOCUMENT_SERIALIZER_PYPATH = 'addok.helpers.serializers.ZlibSerializer'
+DOCUMENT_SERIALIZER_PYPATH = 'addok.helpers.serializers.ZstdSerializer'
 
 DOCUMENT_STORE_PYPATH = 'addok.ds.RedisStore'
 
