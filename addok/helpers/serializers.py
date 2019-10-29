@@ -1,4 +1,4 @@
-import json
+import json as json
 import zlib
 import zstandard as zstd
 from pathlib import Path

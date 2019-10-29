@@ -1,4 +1,4 @@
-import json
+import ujson as json
 import os.path
 import sys
 from datetime import timedelta
