@@ -276,7 +276,7 @@ def test_housenumber_type_can_be_filtered(factory):
     street_with_housenumber = factory(name="rue de Paris", type="street",
                                       housenumbers={'11': {'lat': '48.3254',
                                                            'lon': '2.256'}})
-    results = search("paris", type="housenumber")
+    results = search("11 paris", type="housenumber")
     ids = [r.id for r in results]
     assert street_with_housenumber['id'] in ids
     assert street_without_housenumber['id'] not in ids
