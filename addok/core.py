@@ -166,7 +166,7 @@ class Search(BaseHelper):
             self.debug('** %s **', collector.__name__.upper())
             if collector(self):
                 break
-        return list(self.render())
+        return list(self.render(filters.get('type') == "housenumber"))
 
     @property
     def geohash_key(self):
@@ -179,7 +179,7 @@ class Search(BaseHelper):
                 self.debug('Empty geohash key, deleting %s', self._geohash_key)
         return self._geohash_key
 
-    def render(self):
+    def render(self, only_housenumbers=False):
         self.convert()
         self._sorted_bucket = list(self.results.values())
         self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
@@ -187,6 +187,8 @@ class Search(BaseHelper):
             if result.score < config.MIN_SCORE:
                 self.debug('Score too low (%s), removing `%s`', result.score,
                            result)
+                continue
+            if only_housenumbers and result.type != 'housenumber':
                 continue
             yield result
 
