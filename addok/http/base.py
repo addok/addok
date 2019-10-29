@@ -1,4 +1,4 @@
-import json
+import ujson as json
 import logging
 import logging.handlers
 from pathlib import Path
