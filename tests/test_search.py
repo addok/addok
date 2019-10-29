@@ -58,8 +58,8 @@ def test_should_give_priority_to_best_match3(street, factory):
 
 def test_should_be_fuzzy_of_1_by_default(city):
     city.update(name="Andrésy")
-    assert search('antresy')
-    assert not search('antresu')
+    assert search('anfresy')
+    assert not search('anfresu')
 
 
 def test_fuzzy_should_work_with_inversion(city):
