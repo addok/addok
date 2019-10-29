@@ -294,7 +294,7 @@ class Reverse(BaseHelper):
         if not self.keys:
             hashes = self.expand(hashes)
             self.fetch(hashes)
-        return self.convert()
+        return self.convert(filters.get('type') == 'housenumber')
 
     def expand(self, hashes):
         new = []
@@ -319,11 +319,13 @@ class Reverse(BaseHelper):
             keys = DB.smembers(key)
         self.keys.update(keys)
 
-    def convert(self):
+    def convert(self, only_housenumbers=False):
         for _id in self.keys:
             result = Result(_id)
             for processor in config.REVERSE_RESULT_PROCESSORS:
                 processor(self, result)
+            if only_housenumbers and result.type != 'housenumber':
+                continue
             self.results.append(result)
             self.debug(result, result.distance, result.score)
         self.results.sort(key=lambda r: r.score, reverse=True)
