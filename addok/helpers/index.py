@@ -90,10 +90,11 @@ def deindex_document(doc, **kwargs):
         indexer.deindex(DB, key, doc, tokens, **kwargs)
 
 
-def index_geohash(pipe, key, lat, lon):
-    lat = float(lat)
-    lon = float(lon)
-    geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
+def index_geohash(pipe, key, lat=0, lon=0, geoh=None):
+    if not geoh:
+        lat = float(lat)
+        lon = float(lon)
+        geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
     geok = keys.geohash_key(geoh)
     pipe.sadd(geok, key)
 
@@ -161,8 +162,14 @@ class HousenumbersIndexer:
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
         housenumbers = doc.get('housenumbers', {})
+        geo_cache = []
         for number, data in housenumbers.items():
-            index_geohash(pipe, key, data['lat'], data['lon'])
+            lat = float(data['lat'])
+            lon = float(data['lon'])
+            geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
+            if geoh not in geo_cache:
+                index_geohash(pipe, key, geoh=geoh)
+                geo_cache.append(geoh)
 
     @staticmethod
     def deindex(db, key, doc, tokens, **kwargs):
