@@ -1,5 +1,5 @@
-import os
 import time
+import uuid
 
 import geohash
 
@@ -9,6 +9,7 @@ from .ds import get_document, get_documents
 from .helpers import keys as dbkeys, scripts
 from .helpers.text import ascii
 
+REDIS_UNIQUE_ID = uuid.uuid4() # Unique id for tmp values in redis.
 
 def compute_geohash_key(geoh, with_neighbors=True):
     if with_neighbors:
@@ -136,7 +137,6 @@ class Search(BaseHelper):
         self.fuzzy = fuzzy
         self.wanted = limit
         self.autocomplete = autocomplete
-        self.pid = os.getpid()  # Unique id for tmp values in redis.
 
     def __call__(self, query, lat=None, lon=None, **filters):
         self.lat = lat
@@ -204,7 +204,7 @@ class Search(BaseHelper):
                 else:
                     ids = DB.smembers(key)
             else:
-                ids = scripts.zinter(keys=set(keys), args=[self.pid, limit])
+                ids = scripts.zinter(keys=set(keys), args=[REDIS_UNIQUE_ID, limit])
         return set(ids)
 
     def add_to_bucket(self, keys, limit=None):
