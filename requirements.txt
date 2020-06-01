@@ -4,5 +4,5 @@ hiredis==1.0.0
 ngram==3.3.2
 progressist==0.1.0
 python-geohash==0.8.5
-redis==3.3.11
+redis==3.5.3
 Unidecode==1.1.1
