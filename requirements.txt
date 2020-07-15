@@ -1,6 +1,6 @@
 falcon==1.4.1
 hashids==1.2.0
-hiredis==1.0.0
+hiredis==1.1.0
 ngram==3.3.2
 progressist==0.1.0
 python-geohash==0.8.5
