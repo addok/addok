@@ -157,7 +157,7 @@ class ChunkedPool(Pool):
         """
         assert self._state == RUN
         task_batches = Pool._get_tasks(func, iterable, chunksize)
-        result = IMapUnorderedIterator(self._cache)
+        result = IMapUnorderedIterator(self)
         tasks = ((result._job, i, func, chunk, {})
                  for i, (_, chunk) in enumerate(task_batches))
         self._taskqueue.put((tasks, result._set_length))
