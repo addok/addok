@@ -1,4 +1,4 @@
-import json as json
+import ujson as json
 import zlib
 import zstandard as zstd
 from pathlib import Path
@@ -25,7 +25,7 @@ class ZstdSerializer:
 
     @classmethod
     def dumps(cls, data):
-        j = json.dumps(data, separators=(',', ':'), ensure_ascii=False)
+        j = json.dumps(data, ensure_ascii=False)
         return cls.compressor.compress(j.encode())
 
     @classmethod
