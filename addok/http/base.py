@@ -76,7 +76,7 @@ def log_slow_query(query, results, timer):
 
 class CorsMiddleware:
 
-    def process_response(self, req, resp, resource):
+    def process_response(self, req, resp, resource, true):
         resp.set_header('Access-Control-Allow-Origin', '*')
         resp.set_header('Access-Control-Allow-Headers', 'X-Requested-With')
 
