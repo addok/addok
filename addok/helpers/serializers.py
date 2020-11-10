@@ -17,8 +17,8 @@ class ZlibSerializer:
 
 class ZstdSerializer:
 
-    dict_data = zstd.ZstdCompressionDict(
-        open(Path(__file__).parent / 'addok-zstd-dict', 'rb').read())
+    with open(Path(__file__).parent / 'addok-zstd-dict', 'rb') as dico:
+        dict_data = zstd.ZstdCompressionDict(dico.read())
     compressor = zstd.ZstdCompressor(level=15, dict_data=dict_data)
     decompressor = zstd.ZstdDecompressor(dict_data=dict_data)
 
