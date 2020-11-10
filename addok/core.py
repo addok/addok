@@ -1,4 +1,4 @@
-import os
+import uuid
 import time
 
 import geohash
@@ -9,6 +9,7 @@ from .ds import get_document, get_documents
 from .helpers import keys as dbkeys, scripts
 from .helpers.text import ascii
 
+REDIS_UNIQUE_ID = str(uuid.uuid4())  # Really unique id for tmp values in redis.
 
 def compute_geohash_key(geoh, with_neighbors=True):
     if with_neighbors:
@@ -136,7 +137,7 @@ class Search(BaseHelper):
         self.fuzzy = fuzzy
         self.wanted = limit
         self.autocomplete = autocomplete
-        self.pid = os.getpid()  # Unique id for tmp values in redis.
+        self.pid = REDIS_UNIQUE_ID
 
     def __call__(self, query, lat=None, lon=None, **filters):
         self.lat = lat
