@@ -113,7 +113,7 @@ class View:
     to_geojson = render  # retrocompat.
 
     def json(self, req, resp, content):
-        resp.text = json.dumps(content)
+        resp.text = json.dumps(content, ensure_ascii=False)
         resp.content_type = 'application/json; charset=utf-8'
 
     def parse_float(sel, req, *keys):
