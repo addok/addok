@@ -249,7 +249,7 @@ class Search(BaseHelper):
 
     @property
     def bucket_dry(self):
-        return len(self.bucket) < self.wanted
+        return len(self.bucket) < max(self.wanted, 10 if not self.autocomplete else 0)
 
     @property
     def bucket_empty(self):
