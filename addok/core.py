@@ -27,6 +27,15 @@ def compute_geohash_key(geoh, with_neighbors=True):
         DB.expire(key, 10)
     return key
 
+def combine_filters(self):
+    "combine filters in a new temporary pre-computed filter"
+    key = repr(self.filters)
+    DB.expire(key, 10)
+    if not DB.exists(key):
+        self.debug('Combined filter: %s' % key)
+        DB.sinterstore(key, self.filters)
+        DB.expire(key, 10)
+    return [key]
 
 class Result:
 
@@ -163,6 +172,9 @@ class Search(BaseHelper):
         self.debug('Not found tokens: %s', self.not_found)
         self.debug('Filters: %s', ['{}={}'.format(k, v)
                                    for k, v in filters.items()])
+        if len(self.filters) > 1:
+            self.filters = combine_filters(self)
+
         for collector in config.RESULTS_COLLECTORS:
             self.debug('** %s **', collector.__name__.upper())
             if collector(self):
