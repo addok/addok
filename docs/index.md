@@ -23,4 +23,4 @@ The code is published via [Github](https://github.com/addok/addok/).
 
 ## Licence
 
-Addok is released under the WTFPL Licence.
+Addok is released under the MIT Licence.
