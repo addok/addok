@@ -71,7 +71,7 @@ setup(
     url=__homepage__,
     author=__author__,
     author_email=__contact__,
-    license='WTFPL',
+    license='MIT',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
