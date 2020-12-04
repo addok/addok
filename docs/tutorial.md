@@ -98,16 +98,16 @@ Save (ctrl+O) and close (Ctrl+X) the file.
 ## Download ODbL BAN data and uncompress it:
 
 This is for Seine-Saint-Denis, but choose the area you want from the
-[download page](http://bano.openstreetmap.fr/BAN_odbl/):
+[download page](https://adresse.data.gouv.fr/data/ban/adresses/latest/addok/):
 
-    wget http://bano.openstreetmap.fr/BAN_odbl/BAN_odbl_93-json.bz2
-    bunzip2 BAN_odbl_93-json.bz2
+    wget https://adresse.data.gouv.fr/data/ban/adresses/latest/addok/adresses-addok-93.ndjson.gz
+    gunzip adresses-addok-93.ndjson.gz
 
 ## Import the data
 
 Run those two commands:
 
-    addok batch BAN_odbl_93-json
+    addok batch adresses-addok-93.ndjson
     addok ngrams
 
 Let's test that everything is ok. Run the addok shell:
