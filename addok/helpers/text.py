@@ -181,7 +181,7 @@ def equals(candidate, target):
 
 
 def alphanumerize(text):
-    return re.sub(' {2,}', ' ', re.sub('[^\w]', ' ', text))
+    return re.sub(r' {2,}', ' ', re.sub(r'[^\w]', ' ', text)).strip()
 
 
 def compute_edge_ngrams(token, min=None):
