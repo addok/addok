@@ -114,7 +114,9 @@ def test_normalize(input, output):
 
 @pytest.mark.parametrize('input,output', [
     ["rue d'Andrésy", 'rue d Andrésy'],
-    ['   ', ' '],
+    ['a   ', 'a'],
+    ["(défibrillateur)", 'défibrillateur'],
+    ["machin (défibrillateur)", 'machin défibrillateur'],
 ])
 def test_alphanumerize(input, output):
     assert alphanumerize(Token(input)) == output
