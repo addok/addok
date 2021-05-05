@@ -7,21 +7,26 @@ Addok is a [geocoder](https://en.wikipedia.org/wiki/Geocoding). It allows to loo
 
 Addok accepts batch loading of geo-related documents like addresses. At least latitude and longitude are required for each indexed document. Even once loaded, data should not be considered as your reference but versatile, each reindexation requires initial source files to be loaded again.
 
-By default, a Redis database stores indexes while another one is storing raw documents. All data stored into Redis means it is stored into memory. You can install a [plugin](plugins.md) to keep documents within another database engine (SQLite or PostgreSQL for instance) to save memory.
+By default, a Redis database° stores indexes while another one is storing raw documents. All data stored into Redis means it is stored into memory. You can install a [plugin](plugins.md) to keep documents within another database engine (SQLite or PostgreSQL for instance) to save memory.
+
+° addok has also been tested with Redis fork like KeyDB. All references to Redis in this documentation also apply to KeyDB.
 
 
 ## Indexation
 
-Each document is computed through many processors defined in your [configuration file](config.md). There are two main steps to handle a document: strings preparation and indexes computation.
+Each document goes through several processors defined in your [configuration file](config.md). There are two main steps to handle a document: strings preparation and indexes computation.
 
-The document is split into tokens (by default words but can be trigrams when using [addok-trigrams](https://github.com/addok/addok-trigrams) plugin). Each token will became a [Redis sorted set](https://redis.io/topics/data-types#sorted-sets) storing the list of documents containing that token. Filters and geographical properties will also be stored as Redis sorted sets. A search query consists of intersections of these defined sets.
+The document is split into tokens (by default words but it can be trigrams when using [addok-trigrams](https://github.com/addok/addok-trigrams) plugin). Each token becomes an item in a [Redis sorted set](https://redis.io/topics/data-types#sorted-sets) storing the list of documents containing that token. Filters and geographical properties will also be stored as Redis sorted sets. A search query consists of intersections of these defined sets.
 
 
 ## Search
 
-Search is a three-steps process: first we clean and put into tokens the query (with same processors as during indexation), then we try to find all candidates for a given query and finally we iterate to order results by relevance.
+Search is a three-steps process:
+1) we clean and put into tokens the query (with same processors as during indexation),
+2) then we try to find all candidates for a given query,
+3) finally we iterate to order results by relevance.
 
-Through heuristics, we try to find a reasonable number of candidates (about 100) dealing with noise, typos and wrong input. Once the candidates are retrieved, they are ordered mainly by string comparisons.
+Through heuristics, we try to find a reasonable number of candidates (about 100) dealing with noise, typos and wrong input. Once the candidates are retrieved, they are ordered mainly by string comparisons with the original searched text.
 
 Documents importances and geographical positions may also be taken into account. Additionally, a query can be explicitly filtered by the issuer based on documents’ fields to restrain the number of potential results.
 
