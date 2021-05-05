@@ -28,6 +28,29 @@ def compute_geohash_key(geoh, with_neighbors=True):
         DB.expire(key, 10)
     return key
 
+def compute_multifilter(self, filter, value):
+    "creates temporary OR filter keys if missing"
+    key = dbkeys.filter_key(filter, value)
+    DB.expire(key, 10)
+    if not DB.exists(key):
+        self.debug('MultiFilter created: %s=%s' % (filter, value))
+        keys = [dbkeys.filter_key(filter, v) for v in value.split('+')]
+        DB.sunionstore(key, keys)
+    if DB.scard(key) > 100000:
+        DB.persist(key)
+        self.debug('MultiFilter persistent: %s=%s' % (filter, value))
+    else:
+        DB.expire(key, 10)
+
+def combine_filters(self):
+    "combine filters in a new temporary pre-computed filter"
+    key = repr(self.filters)
+    DB.expire(key, 10)
+    if not DB.exists(key):
+        self.debug('Combined filter: %s' % key)
+        DB.sinterstore(key, self.filters)
+        DB.expire(key, 10)
+    return [key]
 
 class Result:
     def __init__(self, _id):
@@ -154,9 +177,8 @@ class Search(BaseHelper):
         self.matched_keys = set([])
         self.check_housenumber = filters.get("type") in [None, "housenumber"]
         self.only_housenumber = filters.get("type") == "housenumber"
-        self.filters = [
-            dbkeys.filter_key(k, v.strip()) for k, v in filters.items() if v.strip()
-        ]
+        self.filters = [dbkeys.filter_key(k, '+'.join(sorted(v.replace(' ', '+').strip().split('+'))))
+            for k, v in filters.items() if v.strip()]
         self.query = ascii(query.strip())
         for func in config.SEARCH_PREPROCESSORS:
             func(self)
@@ -164,7 +186,17 @@ class Search(BaseHelper):
         self.debug("Common tokens: %s", self.common)
         self.debug("Housenumbers token: %s", self.housenumbers)
         self.debug("Not found tokens: %s", self.not_found)
-        self.debug("Filters: %s", ["{}={}".format(k, v) for k, v in filters.items()])
+
+        self.debug('Filters: %s', ['{}={}'.format(k, v)
+                                   for k, v in filters.items()])
+        for k, v in filters.items():
+            v = v.replace(' ','+')
+            if '+' in v:
+                compute_multifilter(
+                    self, k, '+'.join(sorted(v.strip().split('+'))))
+        if len(self.filters) > 1:
+            self.filters = combine_filters(self)
+
         for collector in config.RESULTS_COLLECTORS:
             self.debug("** %s **", collector.__name__.upper())
             if collector(self):
