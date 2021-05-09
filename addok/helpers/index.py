@@ -1,3 +1,4 @@
+import re
 import geohash
 import redis
 
@@ -207,6 +208,8 @@ class FiltersIndexer:
             db.srem(keys.filter_key("type", "housenumber"), key)
 
 
+ALPHANUMPATTERN = re.compile(r'[^a-zA-Z0-9]')
+
 @yielder
 def prepare_housenumbers(doc):
     # We need to have the housenumbers tokenized in the document, to match
@@ -218,7 +221,7 @@ def prepare_housenumbers(doc):
         doc['housenumbers'] = {}
         for number, data in housenumbers.items():
             # Housenumber may have multiple tokens (eg.: "dix huit").
-            token = ''.join(list(preprocess(number)))
+            token = ''.join(list(preprocess(re.sub(ALPHANUMPATTERN,'',number))))
             data['raw'] = number
             doc['housenumbers'][token] = data
     return doc
