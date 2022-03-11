@@ -56,7 +56,8 @@ def test_should_give_priority_to_best_match3(street, factory):
     assert results[0].id == other['id']
 
 
-def test_should_be_fuzzy_of_1_by_default(city):
+def test_should_be_fuzzy_of_1_by_default(city, config):
+    config.FUZZY_KEY_MAP = None
     city.update(name="Andrésy")
     assert search('antresy')
     assert not search('antresu')

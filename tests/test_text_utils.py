@@ -15,7 +15,8 @@ def test_tokenize(input, output):
     assert _tokenize(input) == output
 
 
-def test_make_fuzzy_should_extend_term():
+def test_make_fuzzy_should_extend_term(config):
+    config.FUZZY_KEY_MAP = None
     expected = set([
         'omt', 'mto', 'amot', 'maot', 'moat', 'mota', 'bmot', 'mbot', 'mobt',
         'motb', 'cmot', 'mcot', 'moct', 'motc', 'dmot', 'mdot', 'modt', 'motd',
