@@ -76,7 +76,7 @@ def log_slow_query(query, results, timer):
 
 class CorsMiddleware:
 
-    def process_response(self, req, resp, resource):
+    def process_response(self, req, resp, resource, req_succeeded):
         resp.set_header('Access-Control-Allow-Origin', '*')
         resp.set_header('Access-Control-Allow-Headers', 'X-Requested-With')
 
@@ -113,7 +113,7 @@ class View:
     to_geojson = render  # retrocompat.
 
     def json(self, req, resp, content):
-        resp.body = json.dumps(content)
+        resp.text = json.dumps(content)
         resp.content_type = 'application/json; charset=utf-8'
 
     def parse_lon_lat(self, req):
@@ -135,7 +135,7 @@ class Search(View):
     def on_get(self, req, resp, **kwargs):
         query = req.get_param('q')
         if not query:
-            raise falcon.HTTPBadRequest('Missing query', 'Missing query')
+            raise falcon.HTTPBadRequest(title='Missing query')
         limit = req.get_param_as_int('limit') or 5  # use config
         autocomplete = req.get_param_as_bool('autocomplete')
         if autocomplete is None:
@@ -152,7 +152,7 @@ class Search(View):
             results = search(query, limit=limit, autocomplete=autocomplete,
                              lat=lat, lon=lon, **filters)
         except EntityTooLarge as e:
-            raise falcon.HTTPRequestEntityTooLarge(str(e))
+            raise falcon.HTTPPayloadTooLarge(title=str(e))
         timer = int((time.perf_counter()-timer)*1000)
         if not results:
             log_notfound(query)
@@ -168,7 +168,7 @@ class Reverse(View):
     def on_get(self, req, resp, **kwargs):
         lon, lat = self.parse_lon_lat(req)
         if lon is None or lat is None:
-            raise falcon.HTTPBadRequest('Invalid args', 'Invalid args')
+            raise falcon.HTTPBadRequest(title='Invalid args')
         limit = req.get_param_as_int('limit') or 1
         filters = self.match_filters(req)
         results = reverse(lat=lat, lon=lon, limit=limit, **filters)
