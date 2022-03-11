@@ -116,26 +116,19 @@ class View:
         resp.text = json.dumps(content)
         resp.content_type = 'application/json; charset=utf-8'
 
-    def parse_lon_lat(self, req):
+    def parse_float(sel, req, *keys):
         try:
-            for key in ('lat', 'latitude'):
-                lat = req.get_param(key)
-                if lat is not None:
-                    lat = float(lat)
-                    break
+            for key in keys:
+                val = req.get_param(key)
+                if val is not None:
+                    return float(val)
         except (ValueError, TypeError):
-            lat = None
-            raise falcon.HTTPInvalidParam('invalid value', 'lat')
+            raise falcon.HTTPInvalidParam('invalid value', key)
+        return None
 
-        try:
-            for key in ('lon', 'lng', 'long'):
-                lon = req.get_param(key)
-                if lon is not None:
-                    lon = float(lon)
-                    break
-        except (ValueError, TypeError):
-            lon = None
-            raise falcon.HTTPInvalidParam('invalid value', 'lon')
+    def parse_lon_lat(self, req):
+        lat = self.parse_float(req, 'lat', 'latitude')
+        lon = self.parse_float(req, 'lon', 'lng', 'long', 'longitude')
 
         if lon and (lon > 180 or lon < -180):
             raise falcon.HTTPInvalidParam('out of range', 'lon')

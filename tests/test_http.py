@@ -176,3 +176,30 @@ def test_geojson_should_have_document_type_as_key(client, factory):
     properties = resp.json['features'][0]['properties']
     assert properties['name'] == 'rue de foobar'
     assert properties['foo'] == 'bar'  # Not overrided.
+
+
+def test_search_should_catch_invalid_lat(client):
+    resp = client.get('/search?q=blah&lat=invalid&lon=3.21')
+    assert resp.status_code == 400
+    assert resp.json == {
+        'description': 'The "lat" parameter is invalid. invalid value',
+        'title': 'Invalid parameter'
+    }
+
+
+def test_search_should_catch_invalid_lon(client):
+    resp = client.get('/search?q=blah&longitude=invalid&lat=3.21')
+    assert resp.status_code == 400
+    assert resp.json == {
+        'description': 'The "longitude" parameter is invalid. invalid value',
+        'title': 'Invalid parameter'
+    }
+
+
+def test_search_should_catch_out_of_range_lon(client):
+    resp = client.get('/search?q=blah&longitude=200&lat=3.21')
+    assert resp.status_code == 400
+    assert resp.json == {
+        'description': 'The "lon" parameter is invalid. out of range',
+        'title': 'Invalid parameter'
+    }
