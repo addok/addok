@@ -1,4 +1,5 @@
 import os
+import sys
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
@@ -7,6 +8,8 @@ from multiprocessing.pool import RUN, IMapUnorderedIterator, Pool
 from progressist import ProgressBar
 
 from addok.config import config
+
+PYTHON_VERSION = sys.version_info
 
 
 def load_file(filepath):
@@ -149,7 +152,7 @@ class ChunkedPool(Pool):
         """
         assert self._state == RUN
         task_batches = Pool._get_tasks(func, iterable, chunksize)
-        result = IMapUnorderedIterator(self._cache)
+        result = IMapUnorderedIterator(self if PYTHON_VERSION >= (3, 8) else self._cache)
         tasks = ((result._job, i, func, chunk, {})
                  for i, (_, chunk) in enumerate(task_batches))
         self._taskqueue.put((tasks, result._set_length))
