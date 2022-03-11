@@ -2,7 +2,7 @@ from addok.http import View
 
 
 def test_search_without_query_should_return_400(client):
-    resp = client.get('/search/')
+    resp = client.get('/search')
     assert resp.status_code == 400
 
 
