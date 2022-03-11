@@ -42,6 +42,25 @@ def test_make_fuzzy_should_extend_term(config):
     assert set(make_fuzzy('mot')) == expected
 
 
+def test_make_fuzzy_with_key_map_should_extend_term():
+    expected = set([
+        'omt', 'mto', 'lot', 'pot', 'uot', 'mit', 'mat', 'mkt', 'mlt', 'mpt',
+        'mor', 'mof', 'mog', 'moy', 'amot', 'maot', 'moat', 'mota', 'bmot',
+        'mbot', 'mobt', 'motb', 'cmot', 'mcot', 'moct', 'motc', 'dmot', 'mdot',
+        'modt', 'motd', 'emot', 'meot', 'moet', 'mote', 'fmot', 'mfot', 'moft',
+        'motf', 'gmot', 'mgot', 'mogt', 'motg', 'hmot', 'mhot', 'moht', 'moth',
+        'imot', 'miot', 'moit', 'moti', 'jmot', 'mjot', 'mojt', 'motj', 'kmot',
+        'mkot', 'mokt', 'motk', 'lmot', 'mlot', 'molt', 'motl', 'mmot', 'momt',
+        'motm', 'nmot', 'mnot', 'mont', 'motn', 'omot', 'moot', 'moto', 'pmot',
+        'mpot', 'mopt', 'motp', 'qmot', 'mqot', 'moqt', 'motq', 'rmot', 'mrot',
+        'mort', 'motr', 'smot', 'msot', 'most', 'mots', 'tmot', 'mtot', 'mott',
+        'umot', 'muot', 'mout', 'motu', 'vmot', 'mvot', 'movt', 'motv', 'wmot',
+        'mwot', 'mowt', 'motw', 'xmot', 'mxot', 'moxt', 'motx', 'ymot', 'myot',
+        'moyt', 'moty', 'zmot', 'mzot', 'mozt', 'motz'
+    ])
+    assert set(make_fuzzy('mot')) == expected
+
+
 def test_make_fuzzy_should_remove_letter_if_world_is_long():
     assert 'mt' not in make_fuzzy('mot')
     assert 'rain' in make_fuzzy('train')
