@@ -3,7 +3,7 @@ import redis
 from addok.config import config
 from addok.db import DB
 from addok.helpers import keys as dbkeys
-from addok.helpers import magenta, parallelize, white
+from addok.helpers import magenta, parallelize, white, scripts
 from addok.helpers.index import token_key_frequency
 from addok.helpers.search import preprocess_query
 from addok.helpers.text import compute_edge_ngrams
@@ -83,9 +83,20 @@ def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
     pair_keys = [pair_key(t) for t in tokens if not t.is_last]
     key = edge_ngram_key(helper.last_token)
     autocomplete_tokens = DB.sinter(pair_keys + [key])
-    helper.debug('Found tokens to autocomplete %s', autocomplete_tokens)
+    if not autocomplete_tokens:
+        helper.debug('No candidates. Aborting.')
+        return
+    token_keys = [dbkeys.token_key(t.decode()) for t in autocomplete_tokens]
+    if len(tokens) == 1:
+        helper.debug('Ordering candidates by max score')
+        autocomplete_tokens = scripts.order_by_max_score(keys=token_keys)
+    else:
+        helper.debug('Ordering candidates by frequency')
+        autocomplete_tokens = scripts.order_by_frequency(keys=token_keys)
+    helper.debug('Found tokens to autocomplete [%s, …]',
+                 b', '.join(autocomplete_tokens[:10]))
     for token in autocomplete_tokens:
-        key = dbkeys.token_key(token.decode())
+        key = token.decode()
         if skip_commons\
            and token_key_frequency(key) > config.COMMON_THRESHOLD:
             helper.debug('Skip common token to autocomplete %s', key)

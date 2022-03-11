@@ -76,8 +76,8 @@ RESULTS_COLLECTORS_PYPATHS = [
     'addok.helpers.collectors.bucket_with_meaningful',
     'addok.helpers.collectors.reduce_with_other_commons',
     'addok.helpers.collectors.ensure_geohash_results_are_included_if_center_is_given',  # noqa
-    'addok.fuzzy.fuzzy_collector',
     'addok.autocomplete.autocomplete_meaningful_collector',
+    'addok.fuzzy.fuzzy_collector',
     'addok.helpers.collectors.extend_results_extrapoling_relations',
     'addok.helpers.collectors.extend_results_reducing_tokens',
 ]
