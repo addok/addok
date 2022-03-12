@@ -1,5 +1,5 @@
 site_name: Addok
-pages:
+nav:
 - index.md
 - Installation: install.md
 - Tutorial: tutorial.md
