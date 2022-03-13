@@ -16,8 +16,8 @@ def make_fuzzy(word, max=1):
     neighbors = []
     for i in range(0, len(word) - 1):
         neighbor = list(word)
-        neighbor[i], neighbor[i+1] = neighbor[i+1], neighbor[i]
-        neighbors.append(''.join(neighbor))
+        neighbor[i], neighbor[i + 1] = neighbor[i + 1], neighbor[i]
+        neighbors.append("".join(neighbor))
 
     # limit substitutions to keyboard mapping
     if config.FUZZY_KEY_MAP is not None:
@@ -27,7 +27,7 @@ def make_fuzzy(word, max=1):
                 for letter in list(config.FUZZY_KEY_MAP[neighbor[i]]):
                     if letter != neighbor[i]:
                         neighbor[i] = letter
-                        neighbors.append(''.join(neighbor))
+                        neighbors.append("".join(neighbor))
     else:
         # substitutions
         for letter in string.ascii_lowercase:
@@ -35,21 +35,21 @@ def make_fuzzy(word, max=1):
                 neighbor = list(word)
                 if letter != neighbor[i]:
                     neighbor[i] = letter
-                    neighbors.append(''.join(neighbor))
+                    neighbors.append("".join(neighbor))
 
     # insertions
     for letter in string.ascii_lowercase:
         for i in range(0, len(word) + 1):
             neighbor = list(word)
             neighbor.insert(i, letter)
-            neighbors.append(''.join(neighbor))
+            neighbors.append("".join(neighbor))
 
     # removal
     if len(word) > 3:
         for i in range(0, len(word)):
             neighbor = list(word)
             del neighbor[i]
-            neighbors.append(''.join(neighbor))
+            neighbors.append("".join(neighbor))
 
     return sorted(set(neighbors), key=lambda x: neighbors.index(x))
 
@@ -67,14 +67,13 @@ def fuzzy_collector(helper):
 def try_fuzzy(helper, tokens, include_common=True):
     if not helper.bucket_dry or not tokens:
         return
-    helper.debug('Fuzzy on. Trying with %s.', tokens)
+    helper.debug("Fuzzy on. Trying with %s.", tokens)
     tokens.sort(key=lambda t: len(t), reverse=True)
     allkeys = helper.keys[:]
     if include_common:
         # As we are in fuzzy, try to narrow as much as possible by adding
         # unused common tokens.
-        allkeys.extend([t.db_key for t in helper.common
-                        if t.db_key not in helper.keys])
+        allkeys.extend([t.db_key for t in helper.common if t.db_key not in helper.keys])
     for try_one in tokens:
         if helper.bucket_full:
             break
@@ -83,7 +82,7 @@ def try_fuzzy(helper, tokens, include_common=True):
             keys.remove(try_one.db_key)
         if try_one.isdigit():
             continue
-        helper.debug('Going fuzzy with %s and %s', try_one, keys)
+        helper.debug("Going fuzzy with %s and %s", try_one, keys)
         neighbors = make_fuzzy(try_one, max=helper.fuzzy)
         if len(keys):
             # Only retain tokens that have been seen in the index at least
@@ -106,7 +105,7 @@ def try_fuzzy(helper, tokens, include_common=True):
                 if count:
                     fuzzy_words.append(neighbor)
         if fuzzy_words:
-            helper.debug('Found fuzzy candidates %s', fuzzy_words)
+            helper.debug("Found fuzzy candidates %s", fuzzy_words)
             fuzzy_keys = [dbkeys.token_key(w) for w in fuzzy_words]
             for key in fuzzy_keys:
                 if helper.bucket_dry:

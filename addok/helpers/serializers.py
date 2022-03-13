@@ -3,7 +3,6 @@ import zlib
 
 
 class ZlibSerializer:
-
     @classmethod
     def dumps(cls, data):
         return zlib.compress(json.dumps(data).encode())

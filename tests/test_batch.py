@@ -15,10 +15,7 @@ def test_process_should_index_by_default(factory):
 def test_process_should_deindex_if_action_is_given(factory):
     doc = factory(name="Mélicocq")
     assert search("Mélicoq")
-    process_documents(json.dumps({
-        "_action": "delete",
-        "_id": doc["_id"]
-    }))
+    process_documents(json.dumps({"_action": "delete", "_id": doc["_id"]}))
     assert not search("Mélicoq")
 
 
@@ -33,22 +30,20 @@ def test_process_should_update_if_action_is_given(factory):
 
 
 def test_reset(factory, monkeypatch):
-
     class Args:
         force = False
 
     factory(name="rue de l'avoine")
     assert DB.keys()
-    monkeypatch.setitem(__builtins__, 'input', lambda *args, **kwargs: 'no')
+    monkeypatch.setitem(__builtins__, "input", lambda *args, **kwargs: "no")
     reset(Args())
     assert DB.keys()
-    monkeypatch.setitem(__builtins__, 'input', lambda *args, **kwargs: 'yes')
+    monkeypatch.setitem(__builtins__, "input", lambda *args, **kwargs: "yes")
     reset(Args())
     assert not DB.keys()
 
 
 def test_force_reset(factory):
-
     class Args:
         force = True
 

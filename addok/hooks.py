@@ -7,7 +7,7 @@ blocked_plugins = set([])
 
 
 def load():
-    for ep in iter_entry_points('addok.ext'):
+    for ep in iter_entry_points("addok.ext"):
         register(ep.load(), ep.name)
 
 
@@ -15,20 +15,22 @@ def register(module, name=None):
     if name is None:
         name = module.__name__
     if name in blocked_plugins:
-        print('Requested registration of plugin {} but this plugin is '
-              'blocked'.format(name))
+        print(
+            "Requested registration of plugin {} but this plugin is "
+            "blocked".format(name)
+        )
         return
     plugins[name] = module
 
 
 def spec(func):
-
     def caller(*args, **kwargs):
         for plugin in plugins.copy().values():
             try:
                 getattr(plugin, func.__name__)(*args, **kwargs)
             except AttributeError:
                 pass
+
     return caller
 
 

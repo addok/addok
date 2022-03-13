@@ -11,7 +11,7 @@ from addok.pairs import pair_key
 
 
 def edge_ngram_key(s):
-    return 'n|{}'.format(s)
+    return "n|{}".format(s)
 
 
 def index_edge_ngrams(pipe, token):
@@ -25,7 +25,6 @@ def deindex_edge_ngrams(token):
 
 
 class EdgeNgramIndexer:
-
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
         if config.INDEX_EDGE_NGRAMS:  # Allow to disable for mass indexing.
@@ -50,14 +49,14 @@ def only_commons_try_autocomplete_collector(helper):
     if helper.only_commons:
         autocomplete(helper, helper.tokens, skip_commons=True)
         if not helper.bucket_empty:
-            helper.debug('Only common terms. Return.')
+            helper.debug("Only common terms. Return.")
             return True
 
 
 def no_meaningful_but_common_try_autocomplete_collector(helper):
     if not helper.meaningful and helper.common:
         # Only commons terms, try to reduce with autocomplete.
-        helper.debug('Only commons, trying autocomplete')
+        helper.debug("Only commons, trying autocomplete")
         autocomplete(helper, helper.common)
         helper.meaningful = helper.common[:1]
         if not helper.pass_should_match_threshold:
@@ -70,7 +69,7 @@ def autocomplete_meaningful_collector(helper):
     if helper.bucket_overflow:
         return
     if not helper.autocomplete:
-        helper.debug('Autocomplete not active. Abort.')
+        helper.debug("Autocomplete not active. Abort.")
         return
     if helper.geohash_key:
         autocomplete(helper, helper.meaningful, use_geohash=True)
@@ -78,31 +77,31 @@ def autocomplete_meaningful_collector(helper):
 
 
 def autocomplete(helper, tokens, skip_commons=False, use_geohash=False):
-    helper.debug('Autocompleting %s', helper.last_token)
+    helper.debug("Autocompleting %s", helper.last_token)
     keys = [t.db_key for t in tokens if not t.is_last]
     pair_keys = [pair_key(t) for t in tokens if not t.is_last]
     key = edge_ngram_key(helper.last_token)
     autocomplete_tokens = DB.sinter(pair_keys + [key])
     if not autocomplete_tokens:
-        helper.debug('No candidates. Aborting.')
+        helper.debug("No candidates. Aborting.")
         return
     token_keys = [dbkeys.token_key(t.decode()) for t in autocomplete_tokens]
     if len(tokens) == 1:
-        helper.debug('Ordering candidates by max score')
+        helper.debug("Ordering candidates by max score")
         autocomplete_tokens = scripts.order_by_max_score(keys=token_keys)
     else:
-        helper.debug('Ordering candidates by frequency')
+        helper.debug("Ordering candidates by frequency")
         autocomplete_tokens = scripts.order_by_frequency(keys=token_keys)
-    helper.debug('Found tokens to autocomplete [%s, …]',
-                 b', '.join(autocomplete_tokens[:10]))
+    helper.debug(
+        "Found tokens to autocomplete [%s, …]", b", ".join(autocomplete_tokens[:10])
+    )
     for token in autocomplete_tokens:
         key = token.decode()
-        if skip_commons\
-           and token_key_frequency(key) > config.COMMON_THRESHOLD:
-            helper.debug('Skip common token to autocomplete %s', key)
+        if skip_commons and token_key_frequency(key) > config.COMMON_THRESHOLD:
+            helper.debug("Skip common token to autocomplete %s", key)
             continue
         if not helper.bucket_overflow or helper.last_token in helper.not_found:
-            helper.debug('Trying to extend bucket. Autocomplete %s', key)
+            helper.debug("Trying to extend bucket. Autocomplete %s", key)
             extra_keys = [key]
             if use_geohash and helper.geohash_key:
                 extra_keys.append(helper.geohash_key)
@@ -113,26 +112,27 @@ def index_ngram_keys(*keys):
     pipe = DB.pipeline(transaction=False)
     for key in keys:
         key = key.decode()
-        _, token = key.split('|')
+        _, token = key.split("|")
         if token.isdigit():
             continue
         index_edge_ngrams(pipe, token)
     try:
         pipe.execute()
     except redis.RedisError as e:
-        msg = 'Error while generating ngrams:\n{}'.format(str(e))
+        msg = "Error while generating ngrams:\n{}".format(str(e))
         raise ValueError(msg)
     return keys
 
 
 def create_edge_ngrams(*args):
-    pattern = '{}*'.format(dbkeys.TOKEN_PREFIX)
-    parallelize(index_ngram_keys, DB.scan_iter(match=pattern),
-                chunk_size=10000, throttle=1000)
+    pattern = "{}*".format(dbkeys.TOKEN_PREFIX)
+    parallelize(
+        index_ngram_keys, DB.scan_iter(match=pattern), chunk_size=10000, throttle=1000
+    )
 
 
 def register_command(subparsers):
-    parser = subparsers.add_parser('ngrams', help='Create edge ngrams.')
+    parser = subparsers.add_parser("ngrams", help="Create edge ngrams.")
     parser.set_defaults(func=create_edge_ngrams)
 
 
@@ -141,7 +141,7 @@ def do_AUTOCOMPLETE(cmd, s):
     s = list(preprocess_query(s))[0]
     keys = [k.decode() for k in DB.smembers(edge_ngram_key(s))]
     print(white(keys))
-    print(magenta('({} elements)'.format(len(keys))))
+    print(magenta("({} elements)".format(len(keys))))
 
 
 def register_shell_command(cmd):

@@ -18,7 +18,7 @@ class RedisProxy:
         return getattr(self.instance, name)
 
     def next_id(self):
-        next_id = self.incr('_id_sequence')
+        next_id = self.incr("_id_sequence")
         return hashids.encode(next_id)
 
 
@@ -28,11 +28,11 @@ DB = RedisProxy()
 @config.on_load
 def connect():
     params = config.REDIS.copy()
-    params.update(config.REDIS.get('indexes', {}))
+    params.update(config.REDIS.get("indexes", {}))
     DB.connect(
-        host=params.get('host'),
-        port=params.get('port'),
-        db=params.get('db'),
-        password=params.get('password'),
-        unix_socket_path=params.get('unix_socket_path'),
+        host=params.get("host"),
+        port=params.get("port"),
+        db=params.get("db"),
+        password=params.get("password"),
+        unix_socket_path=params.get("unix_socket_path"),
     )

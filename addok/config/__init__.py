@@ -21,12 +21,12 @@ class Config(dict):
         self._post_load_func = []
         self.loaded = False
         self.plugins = [
-            'addok.shell',
-            'addok.http.base',
-            'addok.batch',
-            'addok.pairs',
-            'addok.fuzzy',
-            'addok.autocomplete',
+            "addok.shell",
+            "addok.http.base",
+            "addok.batch",
+            "addok.pairs",
+            "addok.fuzzy",
+            "addok.autocomplete",
         ]
         super().__init__()
         self.extend_from_object(default)
@@ -46,15 +46,14 @@ class Config(dict):
         self.post_process()
         plugins = []
         for name, plugin in hooks.plugins.items():  # pragma: no cover
-            if name.startswith('addok.'):
+            if name.startswith("addok."):
                 version = VERSION  # Core plugin.
             elif pkg_resources:
-                version = pkg_resources.get_distribution(
-                                plugin.__package__).version
+                version = pkg_resources.get_distribution(plugin.__package__).version
             else:
-                version = '?'
-            plugins.append('{}=={}'.format(name, version))
-        print('Loaded plugins:\n{}'.format(', '.join(plugins)))
+                version = "?"
+            plugins.append("{}=={}".format(name, version))
+        print("Loaded plugins:\n{}".format(", ".join(plugins)))
 
     def on_load(self, func):
         self._post_load_func.append(func)
@@ -71,24 +70,25 @@ class Config(dict):
             hooks.register(plugin)
 
     def load_local(self):
-        path = (os.environ.get('ADDOK_CONFIG_MODULE')
-                or os.path.join('/etc', 'addok', 'addok.conf'))
+        path = os.environ.get("ADDOK_CONFIG_MODULE") or os.path.join(
+            "/etc", "addok", "addok.conf"
+        )
         if not os.path.exists(path):
             print('No local config file found in "{}".'.format(path))
             return
 
-        d = imp.new_module('config')
+        d = imp.new_module("config")
         d.__file__ = path
         try:
             with open(path) as config_file:
-                exec(compile(config_file.read(), path, 'exec'), d.__dict__)
+                exec(compile(config_file.read(), path, "exec"), d.__dict__)
         except (IOError, SyntaxError) as e:
             from addok.helpers import red
-            print(red('Unable to import {} from '
-                      'ADDOK_CONFIG_MODULE'.format(path)))
+
+            print(red("Unable to import {} from " "ADDOK_CONFIG_MODULE".format(path)))
             sys.exit(e)
         else:
-            print('Loaded local config from', path)
+            print("Loaded local config from", path)
             self.extend_from_object(d)
 
     def __getattr__(self, key):
@@ -102,38 +102,39 @@ class Config(dict):
         if self.SYNONYMS_PATH:
             warnings.warn(
                 "SYNONYMS_PATH is deprecated, use SYNONYMS_PATHS instead",
-                DeprecationWarning)
+                DeprecationWarning,
+            )
             self.SYNONYMS_PATHS.append(self.SYNONYMS_PATH)
         self.FIELDS.extend(self.EXTRA_FIELDS)
         for field in self.FIELDS:
-            key = field['key']
-            if (field.get('type') == 'housenumbers' or
-                    key == 'housenumbers'):
+            key = field["key"]
+            if field.get("type") == "housenumbers" or key == "housenumbers":
                 self.HOUSENUMBERS_FIELD = key
-                field['type'] = 'housenumbers'
-            elif field.get('type') == 'name' or key == 'name':
+                field["type"] = "housenumbers"
+            elif field.get("type") == "name" or key == "name":
                 self.NAME_FIELD = key
-                field['type'] = 'name'
-            elif field.get('type') == 'id':
+                field["type"] = "name"
+            elif field.get("type") == "id":
                 self.ID_FIELD = key
         for func in self._post_load_func:
             func()
 
     def resolve(self):
         for key in list(self.keys()):
-            if key.endswith('_PYPATHS'):
+            if key.endswith("_PYPATHS"):
                 self.resolve_paths(key)
-            elif key.endswith('_PYPATH'):
+            elif key.endswith("_PYPATH"):
                 self.resolve_path(key)
 
     def resolve_path(self, key):
         from addok.helpers import import_by_path
-        self[key[:-len('_PYPATH')]] = import_by_path(self[key])
+
+        self[key[: -len("_PYPATH")]] = import_by_path(self[key])
 
     def resolve_paths(self, key):
         from addok.helpers import import_by_path
-        self[key[:-len('_PYPATHS')]] = [import_by_path(path)
-                                        for path in self[key]]
+
+        self[key[: -len("_PYPATHS")]] = [import_by_path(path) for path in self[key]]
 
 
 config = Config()

@@ -13,8 +13,19 @@ from .config import config
 from .core import Result, Search, compute_geohash_key, reverse
 from .db import DB
 from .ds import get_document
-from .helpers import (blue, cyan, green, haversine_distance, keys, km_to_score,
-                      magenta, red, scripts, white, yellow)
+from .helpers import (
+    blue,
+    cyan,
+    green,
+    haversine_distance,
+    keys,
+    km_to_score,
+    magenta,
+    red,
+    scripts,
+    white,
+    yellow,
+)
 from .helpers.index import token_frequency
 from .helpers.search import preprocess_query
 from .helpers.text import compare_str
@@ -27,11 +38,13 @@ except ImportError:
 
 class Cmd(cmd.Cmd):
 
-    intro = (white('\nWelcome to the Addok shell o/\n') +
-             magenta('Type HELP or ? to list commands.\n') +
-             magenta('Type QUIT or ctrl-C or ctrl-D to quit.\n'))
-    prompt = '> '
-    HISTORY_FILE = '.addok_shell_history'
+    intro = (
+        white("\nWelcome to the Addok shell o/\n")
+        + magenta("Type HELP or ? to list commands.\n")
+        + magenta("Type QUIT or ctrl-C or ctrl-D to quit.\n")
+    )
+    prompt = "> "
+    HISTORY_FILE = ".addok_shell_history"
 
     def __init__(self):
         self._init_history_file()
@@ -50,18 +63,19 @@ class Cmd(cmd.Cmd):
         try:
             readline.write_history_file(self.history_file)
         except FileNotFoundError:
-            print(red('Unable to write history file to '
-                      '{}.'.format(self.history_file)))
+            print(
+                red("Unable to write history file to " "{}.".format(self.history_file))
+            )
 
     @property
     def history_file(self):
-        return os.path.join(os.path.expanduser('~'), self.HISTORY_FILE)
+        return os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
 
     def error(self, message):
         print(red(message))
 
     def default(self, line):
-        if line == 'EOF':
+        if line == "EOF":
             return self.quit()
         return self.do_SEARCH(line)
 
@@ -79,12 +93,12 @@ class Cmd(cmd.Cmd):
         return super().completenames(text.upper(), *ignored)
 
     def get_names(self):
-        special = ['do_help', 'do_QUIT']
+        special = ["do_help", "do_QUIT"]
         return [n for n in super().get_names() if n not in special]
 
     def postcmd(self, stop, line):
-        if line != 'EOF':
-            print(yellow('-' * 80))
+        if line != "EOF":
+            print(yellow("-" * 80))
         return super().postcmd(stop, line)
 
     @classmethod
@@ -93,9 +107,9 @@ class Cmd(cmd.Cmd):
             name = command.__name__
         if doc is None:
             doc = command.__doc__
-        if name.startswith('do_'):
+        if name.startswith("do_"):
             name = name[3:]
-        name = 'do_' + name.upper()
+        name = "do_" + name.upper()
         setattr(cls, name, command)
         attr = getattr(cls, name)
         attr.__doc__ = doc
@@ -110,31 +124,34 @@ class Cmd(cmd.Cmd):
     def do_help(self, command):
         """Display this help message."""
         if command:
-            doc = getattr(self, 'do_' + command).__doc__
-            print(cyan(doc.replace(' ' * 8, '')))
+            doc = getattr(self, "do_" + command).__doc__
+            print(cyan(doc.replace(" " * 8, "")))
         else:
-            print(magenta('Available commands:'))
+            print(magenta("Available commands:"))
             print(magenta('Type "HELP <command>" to get more info.'))
             names = self.get_names()
             names.sort()
             for name in names:
-                if name[:3] != 'do_':
+                if name[:3] != "do_":
                     continue
                 doc = getattr(self, name).__doc__
-                doc = doc.split('\n')[0]
-                print('{} {}'.format(yellow(name[3:]),
-                                     cyan(doc.replace(' ' * 8, ' ')
-                                             .replace('\n', ''))))
+                doc = doc.split("\n")[0]
+                print(
+                    "{} {}".format(
+                        yellow(name[3:]),
+                        cyan(doc.replace(" " * 8, " ").replace("\n", "")),
+                    )
+                )
 
     @staticmethod
     def _match_option(key, string):
-        matchs = re.findall('{}[= ][^ ]*'.format(key), string)
+        matchs = re.findall("{}[= ][^ ]*".format(key), string)
         option = None
         if matchs:
             option = matchs[0]
-            string = string.replace(option, '')
-            option = option.replace(key, '')
-        return string.strip(), option.strip(' =') if option else option
+            string = string.replace(option, "")
+            option = option.replace(key, "")
+        return string.strip(), option.strip(" =") if option else option
 
     def _search(self, query, verbose=False, bucket=False, count=1):
         limit = 10
@@ -142,14 +159,14 @@ class Cmd(cmd.Cmd):
         lat = None
         lon = None
         filters = {}
-        if 'AUTOCOMPLETE' in query:
-            query, autocomplete = self._match_option('AUTOCOMPLETE', query)
+        if "AUTOCOMPLETE" in query:
+            query, autocomplete = self._match_option("AUTOCOMPLETE", query)
             autocomplete = bool(int(autocomplete))
-        if 'LIMIT' in query:
-            query, limit = self._match_option('LIMIT', query)
+        if "LIMIT" in query:
+            query, limit = self._match_option("LIMIT", query)
             limit = int(limit)
-        if 'CENTER' in query:
-            query, center = self._match_option('CENTER', query)
+        if "CENTER" in query:
+            query, center = self._match_option("CENTER", query)
             lat, lon = center.split()
             lat = float(lat)
             lon = float(lon)
@@ -159,8 +176,7 @@ class Cmd(cmd.Cmd):
                 query, value = self._match_option(name, query)
                 if value:
                     filters[name.lower()] = value.strip()
-        helper = Search(limit=limit, verbose=verbose,
-                        autocomplete=autocomplete)
+        helper = Search(limit=limit, verbose=verbose, autocomplete=autocomplete)
         start = time.time()
         for i in range(0, count):
             results = helper(query, lat=lat, lon=lon, **filters)
@@ -172,19 +188,27 @@ class Cmd(cmd.Cmd):
 
         def format_scores(result):
             if verbose or bucket:
-                return (', '.join('{}: {}/{}'.format(k, round(v[0], 4), v[1])
-                                  for k, v in result._scores.items()))
+                return ", ".join(
+                    "{}: {}/{}".format(k, round(v[0], 4), v[1])
+                    for k, v in result._scores.items()
+                )
             else:
                 return result.score
 
         for result in results:
-            print('{} ({} | {})'.format(white(result),
-                                        blue(result._id),
-                                        blue(format_scores(result))))
+            print(
+                "{} ({} | {})".format(
+                    white(result), blue(result._id), blue(format_scores(result))
+                )
+            )
         formatter = red if duration > 50 else green
-        print('{} — {} — {}'.format(formatter("{} ms".format(duration)),
-                                    magenta("{} run(s)".format(count)),
-                                    cyan('{} results'.format(len(results)))))
+        print(
+            "{} — {} — {}".format(
+                formatter("{} ms".format(duration)),
+                magenta("{} run(s)".format(count)),
+                cyan("{} results".format(len(results))),
+            )
+        )
 
     def do_QUIT(self, *args):
         """Quit this shell. Also ctrl-C or Ctrl-D."""
@@ -210,7 +234,7 @@ class Cmd(cmd.Cmd):
         """Run a search many times to benchmark it.
         BENCH [100] rue des Lilas"""
         try:
-            count = int(re.match(r'^(\d+).*', query).group(1))
+            count = int(re.match(r"^(\d+).*", query).group(1))
         except AttributeError:
             count = 100
         self._search(query, count=count)
@@ -220,8 +244,8 @@ class Cmd(cmd.Cmd):
         INTERSECT rue des lilas [LIMIT 100]"""
         start = time.time()
         limit = 100
-        if 'LIMIT' in words:
-            words, limit = words.split('LIMIT')
+        if "LIMIT" in words:
+            words, limit = words.split("LIMIT")
             limit = int(limit)
         tokens = [keys.token_key(w) for w in preprocess_query(words)]
         DB.zinterstore(words, tokens)
@@ -229,7 +253,7 @@ class Cmd(cmd.Cmd):
         DB.delete(words)
         for id_, score in results:
             r = Result(id_)
-            print('{} {} {}'.format(white(r), blue(r._id), cyan(score)))
+            print("{} {} {}".format(white(r), blue(r._id), cyan(score)))
         duration = round((time.time() - start) * 1000, 1)
         print(magenta("({} in {} ms)".format(len(results), duration)))
 
@@ -237,30 +261,34 @@ class Cmd(cmd.Cmd):
         """Print some useful infos from Redis DB."""
         info = DB.info()
         keys = [
-            'keyspace_misses', 'keyspace_hits', 'used_memory_human',
-            'total_commands_processed', 'total_connections_received',
-            'connected_clients']
+            "keyspace_misses",
+            "keyspace_hits",
+            "used_memory_human",
+            "total_commands_processed",
+            "total_connections_received",
+            "connected_clients",
+        ]
         for key in keys:
-            print('{}: {}'.format(white(key), blue(info[key])))
-        nb_of_redis_db = int(DB.config_get('databases')['databases'])
+            print("{}: {}".format(white(key), blue(info[key])))
+        nb_of_redis_db = int(DB.config_get("databases")["databases"])
         for db_index in range(nb_of_redis_db - 1):
-            db_name = 'db{}'.format(db_index)
+            db_name = "db{}".format(db_index)
             if db_name in info:
-                label = white('nb keys (db {})'.format(db_index))
-                print('{}: {}'.format(label, blue(info[db_name]['keys'])))
+                label = white("nb keys (db {})".format(db_index))
+                print("{}: {}".format(label, blue(info[db_name]["keys"])))
 
     def do_DBKEY(self, key):
         """Print raw content of a DB key.
         DBKEY g|u09tyzfe"""
         type_ = DB.type(key).decode()
-        if type_ == 'set':
+        if type_ == "set":
             out = DB.smembers(key)
-        elif type_ == 'string':
+        elif type_ == "string":
             out = DB.get(key)
         else:
-            out = 'Unsupported type {}'.format(type_)
-        print('type:', magenta(type_))
-        print('value:', white(out))
+            out = "Unsupported type {}".format(type_)
+        print("type:", magenta(type_))
+        print("value:", white(out))
 
     def do_GEODISTANCE(self, s):
         """Compute geodistance from a result to a point.
@@ -268,7 +296,7 @@ class Cmd(cmd.Cmd):
         try:
             _id, lat, lon = s.split()
         except:
-            return self.error('Malformed query. Use: ID lat lon')
+            return self.error("Malformed query. Use: ID lat lon")
         try:
             result = Result(keys.document_key(_id))
         except ValueError as e:
@@ -276,12 +304,12 @@ class Cmd(cmd.Cmd):
         center = (float(lat), float(lon))
         km = haversine_distance((float(result.lat), float(result.lon)), center)
         score = km_to_score(km)
-        print('km: {} | score: {}'.format(white(km), blue(score)))
+        print("km: {} | score: {}".format(white(km), blue(score)))
 
     def do_GEOHASHTOGEOJSON(self, geoh):
         """Build GeoJSON corresponding to geohash given as parameter.
         GEOHASHTOGEOJSON u09vej04 [NEIGHBORS 0|1|2]"""
-        geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
+        geoh, with_neighbors = self._match_option("NEIGHBORS", geoh)
         bbox = geohash.bbox(geoh)
         try:
             with_neighbors = int(with_neighbors)
@@ -295,27 +323,29 @@ class Cmd(cmd.Cmd):
                 if with_neighbors > depth:
                     expand(bbox, neighbor, depth + 1)
                 else:
-                    if other['n'] > bbox['n']:
-                        bbox['n'] = other['n']
-                    if other['s'] < bbox['s']:
-                        bbox['s'] = other['s']
-                    if other['e'] > bbox['e']:
-                        bbox['e'] = other['e']
-                    if other['w'] < bbox['w']:
-                        bbox['w'] = other['w']
+                    if other["n"] > bbox["n"]:
+                        bbox["n"] = other["n"]
+                    if other["s"] < bbox["s"]:
+                        bbox["s"] = other["s"]
+                    if other["e"] > bbox["e"]:
+                        bbox["e"] = other["e"]
+                    if other["w"] < bbox["w"]:
+                        bbox["w"] = other["w"]
 
         if with_neighbors > 0:
             expand(bbox, geoh, 0)
 
         geojson = {
             "type": "Polygon",
-            "coordinates": [[
-                [bbox['w'], bbox['n']],
-                [bbox['e'], bbox['n']],
-                [bbox['e'], bbox['s']],
-                [bbox['w'], bbox['s']],
-                [bbox['w'], bbox['n']]
-            ]]
+            "coordinates": [
+                [
+                    [bbox["w"], bbox["n"]],
+                    [bbox["e"], bbox["n"]],
+                    [bbox["e"], bbox["s"]],
+                    [bbox["w"], bbox["s"]],
+                    [bbox["w"], bbox["n"]],
+                ]
+            ],
         }
         print(white(json.dumps(geojson)))
 
@@ -325,19 +355,19 @@ class Cmd(cmd.Cmd):
         try:
             lat, lon = map(float, latlon.split())
         except ValueError:
-            print(red('Invalid lat and lon {}'.format(latlon)))
+            print(red("Invalid lat and lon {}".format(latlon)))
         else:
             print(white(geohash.encode(lat, lon, config.GEOHASH_PRECISION)))
 
     def do_GEOHASHMEMBERS(self, geoh):
         """Return members of a geohash and its neighbors.
         GEOHASHMEMBERS u09vej04 [NEIGHBORS 0]"""
-        geoh, with_neighbors = self._match_option('NEIGHBORS', geoh)
-        key = compute_geohash_key(geoh, with_neighbors != '0')
+        geoh, with_neighbors = self._match_option("NEIGHBORS", geoh)
+        key = compute_geohash_key(geoh, with_neighbors != "0")
         if key:
             for id_ in DB.smembers(key):
                 r = Result(id_)
-                print('{} {}'.format(white(r), blue(r._id)))
+                print("{} {}".format(white(r), blue(r._id)))
 
     def do_GET(self, _id):
         """Get document from index with its id.
@@ -348,16 +378,20 @@ class Cmd(cmd.Cmd):
         for key, value in doc.items():
             if key == config.HOUSENUMBERS_FIELD:
                 continue
-            print('{} {}'.format(white(key), magenta(value)))
-        if doc.get('housenumbers'):
+            print("{} {}".format(white(key), magenta(value)))
+        if doc.get("housenumbers"):
+
             def sorter(v):
                 try:
-                    return int(re.match(r'^\d+', v['raw']).group())
+                    return int(re.match(r"^\d+", v["raw"]).group())
                 except AttributeError:
                     return -1
-            housenumbers = sorted(doc['housenumbers'].values(), key=sorter)
-            print(white('housenumbers'),
-                  magenta(', '.join(v['raw'] for v in housenumbers)))
+
+            housenumbers = sorted(doc["housenumbers"].values(), key=sorter)
+            print(
+                white("housenumbers"),
+                magenta(", ".join(v["raw"] for v in housenumbers)),
+            )
 
     def do_FREQUENCY(self, word):
         """Return word frequency in index.
@@ -369,8 +403,8 @@ class Cmd(cmd.Cmd):
             print(
                 white(token),
                 blue(DB.zscore(keys.token_key(token), keys.document_key(_id))),
-                blue(DB.zrevrank(keys.token_key(token),
-                     keys.document_key(_id))))
+                blue(DB.zrevrank(keys.token_key(token), keys.document_key(_id))),
+            )
 
     def do_INDEX(self, _id):
         """Get index details for a document by its id.
@@ -379,7 +413,7 @@ class Cmd(cmd.Cmd):
         if not doc:
             return self.error('id "{}" not found'.format(_id))
         for field in config.FIELDS:
-            key = field['key']
+            key = field["key"]
             if key in doc:
                 self._print_field_index_details(doc[key], _id)
 
@@ -396,20 +430,23 @@ class Cmd(cmd.Cmd):
         REVERSE 48.1234 2.9876"""
         lat, lon = latlon.split()
         for r in reverse(float(lat), float(lon)):
-            print('{} ({} | {} km | {})'.format(white(r), blue(r.score),
-                                                blue(r.distance), blue(r._id)))
+            print(
+                "{} ({} | {} km | {})".format(
+                    white(r), blue(r.score), blue(r.distance), blue(r._id)
+                )
+            )
 
     def do_TOKENIZE(self, string):
         """Inspect how a string is tokenized before being indexed.
         TOKENIZE Rue des Lilas"""
-        print(white(' '.join(indexed_string(string))))
+        print(white(" ".join(indexed_string(string))))
 
     def do_STRDISTANCE(self, s):
         """Print the distance score between two strings. Use | as separator.
         STRDISTANCE rue des lilas|porte des lilas"""
-        s = s.split('|')
+        s = s.split("|")
         if not len(s) == 2:
-            print(red('Malformed string. Use | between the two strings.'))
+            print(red("Malformed string. Use | between the two strings."))
             return
         one, two = s
         print(white(compare_str(one, two)))
@@ -421,11 +458,11 @@ class Cmd(cmd.Cmd):
             for name in self.complete_CONFIG():
                 self.do_CONFIG(name)
             return
-        value = getattr(config, name.upper(), 'Not found.')
+        value = getattr(config, name.upper(), "Not found.")
         print(blue(name), white(format_config(value)))
 
     def complete_CONFIG(self, text=None, *ignored):
-        text = text or ''
+        text = text or ""
         return [a for a in config.keys() if a.startswith(text) and a.isupper()]
 
     def do_SCRIPT(self, args):
@@ -435,20 +472,20 @@ class Cmd(cmd.Cmd):
         try:
             name, keys_count, *args = args.split()
         except ValueError:
-            print(red('Not enough arguments'))
+            print(red("Not enough arguments"))
             return
         try:
             keys_count = int(keys_count)
         except ValueError:
-            print(red('You must pass the number of keys as first argument'))
-            self.do_HELP('SCRIPT')
+            print(red("You must pass the number of keys as first argument"))
+            self.do_HELP("SCRIPT")
             return
         keys = args[:keys_count]
         args = args[keys_count:]
         try:
             output = getattr(scripts, name)(keys=keys, args=args)
         except AttributeError:
-            print(red('No script named {}'.format(name)))
+            print(red("No script named {}".format(name)))
             return
         except DB.Error as e:
             print(red(e))
@@ -461,14 +498,14 @@ class Cmd(cmd.Cmd):
 
 
 def format_config(value):
-    out = ''
+    out = ""
     if isinstance(value, (list, tuple)):
         for item in value:
             out += format_config(item)
-    elif type(value).__name__ == 'function':
-        out = '\n{}.{}'.format(str(value.__module__), value.__name__)
+    elif type(value).__name__ == "function":
+        out = "\n{}.{}".format(str(value.__module__), value.__name__)
     else:
-        out = '\n{}'.format(value)
+        out = "\n{}".format(value)
     return out
 
 
@@ -484,16 +521,17 @@ def pyinvoke(args=None):
     except ImportError:
         print(red('Import is not installed. Type "pip install ipython"'))
     else:
-        start_ipython(argv=[], user_ns={'DB': DB, 'config': config,
-                                        'get_document': get_document})
+        start_ipython(
+            argv=[], user_ns={"DB": DB, "config": config, "get_document": get_document}
+        )
 
 
 def register_command(subparsers):
-    parser = subparsers.add_parser('shell',
-                                   help='Run a shell to inspect Addok')
+    parser = subparsers.add_parser("shell", help="Run a shell to inspect Addok")
     parser.set_defaults(func=invoke)
-    parser = subparsers.add_parser('pyshell',
-                                   help='Run a python shell with Addok config')
+    parser = subparsers.add_parser(
+        "pyshell", help="Run a python shell with Addok config"
+    )
     parser.set_defaults(func=pyinvoke)
 
 

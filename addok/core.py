@@ -11,13 +11,14 @@ from .helpers.text import ascii
 
 REDIS_UNIQUE_ID = str(uuid.uuid4())  # Really unique id for tmp values in redis.
 
+
 def compute_geohash_key(geoh, with_neighbors=True):
     if with_neighbors:
         neighbors = geohash.expand(geoh)
         neighbors = [dbkeys.geohash_key(n) for n in neighbors]
     else:
         neighbors = [geoh]
-    key = 'gx|{}'.format(geoh)
+    key = "gx|{}".format(geoh)
     total = DB.sunionstore(key, neighbors)
     if not total:
         # No need to keep it.
@@ -29,7 +30,6 @@ def compute_geohash_key(geoh, with_neighbors=True):
 
 
 class Result:
-
     def __init__(self, _id):
         self.housenumber = None
         self._scores = {}
@@ -47,7 +47,7 @@ class Result:
         self._doc = doc
 
     def __getattr__(self, key):
-        if key == '_id':
+        if key == "_id":
             # result._id should load the id whatever the real field used.
             key = config.ID_FIELD
         if key not in self._cache:
@@ -58,23 +58,24 @@ class Result:
         return self._cache[key]
 
     def __str__(self):
-        return (str(self.labels[0]) if self.labels
-                else self._rawattr(config.NAME_FIELD)[0])
+        return (
+            str(self.labels[0]) if self.labels else self._rawattr(config.NAME_FIELD)[0]
+        )
 
     def _rawattr(self, key):
-        value = self._doc.get(key, '')
+        value = self._doc.get(key, "")
         if not isinstance(value, (tuple, list)):
             value = [value]
         return value
 
     def __repr__(self):
-        return '<{} - {} ({})>'.format(str(self), self._id, self.score)
+        return "<{} - {} ({})>".format(str(self), self._id, self.score)
 
     @property
     def keys(self):
-        keys = ['housenumber'] + list(self._doc.keys())
+        keys = ["housenumber"] + list(self._doc.keys())
         # housenumbers are too verbose for a given street.
-        yield from (key for key in keys if key != 'housenumbers')
+        yield from (key for key in keys if key != "housenumbers")
 
     def update(self, data):
         self._doc.update(data)
@@ -92,7 +93,7 @@ class Result:
 
     @property
     def score(self):
-        if self._score != '':
+        if self._score != "":
             return float(self._score)
         score, _max = zip(*self._scores.values())
         return sum(score) / sum(_max)
@@ -103,7 +104,7 @@ class Result:
 
     @property
     def str_distance(self):
-        return self._scores.get('str_distance', [0.0])[0]
+        return self._scores.get("str_distance", [0.0])[0]
 
     @classmethod
     def from_id(self, _id):
@@ -112,7 +113,6 @@ class Result:
 
 
 class BaseHelper:
-
     def __init__(self, verbose):
         self._start = time.time()
         self._debug = []
@@ -121,7 +121,7 @@ class BaseHelper:
 
     def debug(self, *args):
         s = args[0] % args[1:]
-        s = '[{}] {}'.format(str((time.time() - self._start) * 1000)[:5], s)
+        s = "[{}] {}".format(str((time.time() - self._start) * 1000)[:5], s)
         self._debug.append(s)
 
     def report(self):  # pragma: no cover
@@ -133,8 +133,9 @@ class Search(BaseHelper):
 
     MAX_MEANINGFUL = 10
 
-    def __init__(self, match_all=False, fuzzy=1, limit=10, autocomplete=True,
-                 verbose=False):
+    def __init__(
+        self, match_all=False, fuzzy=1, limit=10, autocomplete=True, verbose=False
+    ):
         super().__init__(verbose=verbose)
         self.match_all = match_all
         self.fuzzy = fuzzy
@@ -154,21 +155,21 @@ class Search(BaseHelper):
         self.housenumbers = []
         self.keys = []
         self.matched_keys = set([])
-        self.check_housenumber = filters.get('type') in [None, "housenumber"]
-        self.only_housenumber = filters.get('type') == "housenumber"
-        self.filters = [dbkeys.filter_key(k, v.strip())
-                        for k, v in filters.items() if v.strip()]
+        self.check_housenumber = filters.get("type") in [None, "housenumber"]
+        self.only_housenumber = filters.get("type") == "housenumber"
+        self.filters = [
+            dbkeys.filter_key(k, v.strip()) for k, v in filters.items() if v.strip()
+        ]
         self.query = ascii(query.strip())
         for func in config.SEARCH_PREPROCESSORS:
             func(self)
-        self.debug('Taken tokens: %s', self.meaningful)
-        self.debug('Common tokens: %s', self.common)
-        self.debug('Housenumbers token: %s', self.housenumbers)
-        self.debug('Not found tokens: %s', self.not_found)
-        self.debug('Filters: %s', ['{}={}'.format(k, v)
-                                   for k, v in filters.items()])
+        self.debug("Taken tokens: %s", self.meaningful)
+        self.debug("Common tokens: %s", self.common)
+        self.debug("Housenumbers token: %s", self.housenumbers)
+        self.debug("Not found tokens: %s", self.not_found)
+        self.debug("Filters: %s", ["{}={}".format(k, v) for k, v in filters.items()])
         for collector in config.RESULTS_COLLECTORS:
-            self.debug('** %s **', collector.__name__.upper())
+            self.debug("** %s **", collector.__name__.upper())
             if collector(self):
                 break
         return list(self.render())
@@ -179,19 +180,18 @@ class Search(BaseHelper):
             geoh = geohash.encode(self.lat, self.lon, config.GEOHASH_PRECISION)
             self._geohash_key = compute_geohash_key(geoh)
             if self._geohash_key:
-                self.debug('Computed geohash key %s', self._geohash_key)
+                self.debug("Computed geohash key %s", self._geohash_key)
             else:
-                self.debug('Empty geohash key, deleting %s', self._geohash_key)
+                self.debug("Empty geohash key, deleting %s", self._geohash_key)
         return self._geohash_key
 
     def render(self):
         self.convert()
         self._sorted_bucket = list(self.results.values())
         self._sorted_bucket.sort(key=lambda r: r.score, reverse=True)
-        for result in self._sorted_bucket[:self.wanted]:
+        for result in self._sorted_bucket[: self.wanted]:
             if result.score < config.MIN_SCORE:
-                self.debug('Score too low (%s), removing `%s`', result.score,
-                           result)
+                self.debug("Score too low (%s), removing `%s`", result.score, result)
                 continue
             yield result
 
@@ -213,26 +213,24 @@ class Search(BaseHelper):
         return set(ids)
 
     def add_to_bucket(self, keys, limit=None):
-        self.debug('Adding to bucket with keys %s', keys)
-        self.matched_keys.update([k for k in keys
-                                  if k.startswith(dbkeys.TOKEN_PREFIX)])
+        self.debug("Adding to bucket with keys %s", keys)
+        self.matched_keys.update([k for k in keys if k.startswith(dbkeys.TOKEN_PREFIX)])
         limit = limit or (config.BUCKET_MAX - len(self.bucket))
         self.bucket.update(self.intersect(keys, limit))
-        self.debug('%s ids in bucket so far', len(self.bucket))
+        self.debug("%s ids in bucket so far", len(self.bucket))
 
     def new_bucket(self, keys, limit=0):
-        self.debug('New bucket with keys %s and limit %s', keys, limit)
-        self.matched_keys = set([k for k in keys
-                                 if k.startswith(dbkeys.TOKEN_PREFIX)])
+        self.debug("New bucket with keys %s and limit %s", keys, limit)
+        self.matched_keys = set([k for k in keys if k.startswith(dbkeys.TOKEN_PREFIX)])
         self.bucket = self.intersect(keys, limit)
-        self.debug('%s ids in bucket so far', len(self.bucket))
+        self.debug("%s ids in bucket so far", len(self.bucket))
 
     def convert(self):
-        self.debug('Computing results')
+        self.debug("Computing results")
         ids = [i for i in self.bucket if i not in self.results]
         if ids:
             documents = get_documents(*ids)
-            self.debug('Done getting results data')
+            self.debug("Done getting results data")
             for _id, doc in documents:
                 result = Result(doc)
                 for processor in config.SEARCH_RESULT_PROCESSORS:
@@ -241,7 +239,7 @@ class Search(BaseHelper):
                         break
                 else:
                     self.results[_id] = result
-        self.debug('Done computing results')
+        self.debug("Done computing results")
 
     @property
     def bucket_full(self):
@@ -262,15 +260,22 @@ class Search(BaseHelper):
 
     @property
     def cream(self):
-        return len([r for _id, r in self.results.items()
-                    if r.str_distance >= config.MATCH_THRESHOLD])
+        return len(
+            [
+                r
+                for _id, r in self.results.items()
+                if r.str_distance >= config.MATCH_THRESHOLD
+            ]
+        )
 
     def has_cream(self):
-        if (self.bucket_empty
-           or self.bucket_overflow
-           or len(self.bucket) > config.BUCKET_MIN):
+        if (
+            self.bucket_empty
+            or self.bucket_overflow
+            or len(self.bucket) > config.BUCKET_MIN
+        ):
             return False
-        self.debug('Checking cream.')
+        self.debug("Checking cream.")
         self.convert()
         return self.cream > 0
 
@@ -284,7 +289,6 @@ class Search(BaseHelper):
 
 
 class Reverse(BaseHelper):
-
     def __call__(self, lat, lon, limit=1, **filters):
         self.lat = lat
         self.lon = lon
@@ -292,8 +296,8 @@ class Reverse(BaseHelper):
         self.results = []
         self.wanted = limit
         self.fetched = []
-        self.check_housenumber = filters.get('type') in [None, "housenumber"]
-        self.only_housenumber = filters.get('type') == "housenumber"
+        self.check_housenumber = filters.get("type") in [None, "housenumber"]
+        self.only_housenumber = filters.get("type") == "housenumber"
         self.filters = [dbkeys.filter_key(k, v) for k, v in filters.items()]
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
@@ -313,7 +317,7 @@ class Reverse(BaseHelper):
         return new
 
     def fetch(self, hashes):
-        self.debug('Fetching %s', hashes)
+        self.debug("Fetching %s", hashes)
         for h in hashes:
             k = dbkeys.geohash_key(h)
             self.intersect(k)
@@ -338,13 +342,27 @@ class Reverse(BaseHelper):
                 self.results.append(result)
                 self.debug(result, result.distance, result.score)
         self.results.sort(key=lambda r: r.score, reverse=True)
-        return self.results[:self.wanted]
+        return self.results[: self.wanted]
 
 
-def search(query, match_all=False, fuzzy=1, limit=10, autocomplete=False,
-           lat=None, lon=None, verbose=False, **filters):
-    helper = Search(match_all=match_all, fuzzy=fuzzy, limit=limit,
-                    verbose=verbose, autocomplete=autocomplete)
+def search(
+    query,
+    match_all=False,
+    fuzzy=1,
+    limit=10,
+    autocomplete=False,
+    lat=None,
+    lon=None,
+    verbose=False,
+    **filters
+):
+    helper = Search(
+        match_all=match_all,
+        fuzzy=fuzzy,
+        limit=limit,
+        verbose=verbose,
+        autocomplete=autocomplete,
+    )
     return helper(query, lat=lat, lon=lon, **filters)
 
 

@@ -18,38 +18,35 @@ def run(args):
 
 
 def reset(args):
-    if args.force or input('Type "yes" to delete ALL data: ') == 'yes':
+    if args.force or input('Type "yes" to delete ALL data: ') == "yes":
         DB.flushdb()
         DS.flushdb()
-        print('All data has been deleted.')
+        print("All data has been deleted.")
     else:
-        print('Nothing has been deleted.')
+        print("Nothing has been deleted.")
 
 
 def register_command(subparsers):
-    parser = subparsers.add_parser('batch', help='Batch import documents')
-    parser.add_argument('filepath', nargs='*',
-                        help='Path to file to process')
+    parser = subparsers.add_parser("batch", help="Batch import documents")
+    parser.add_argument("filepath", nargs="*", help="Path to file to process")
     parser.set_defaults(func=run)
-    parser = subparsers.add_parser('reset',
-                                   help='Delete ALL indexes and documents')
-    parser.add_argument('--force', help='Do not ask for confirm',
-                        action='store_true')
+    parser = subparsers.add_parser("reset", help="Delete ALL indexes and documents")
+    parser.add_argument("--force", help="Do not ask for confirm", action="store_true")
     parser.set_defaults(func=reset)
 
 
 def process_file(filepath):
-    print('Import from file', filepath)
+    print("Import from file", filepath)
     _, ext = os.path.splitext(filepath)
     if not os.path.exists(filepath):
-        sys.stderr.write('File not found: {}'.format(filepath))
+        sys.stderr.write("File not found: {}".format(filepath))
         sys.exit(1)
     config.INDEX_EDGE_NGRAMS = False  # Run command "ngrams" instead.
     batch(config.BATCH_FILE_LOADER(filepath))
 
 
 def process_stdin(stdin):
-    print('Import from stdin')
+    print("Import from stdin")
     batch(stdin)
 
 
@@ -66,6 +63,9 @@ def process_documents(*docs):
 
 
 def batch(iterable):
-    parallelize(process_documents, iterable,
-                chunk_size=config.BATCH_CHUNK_SIZE,
-                throttle=timedelta(seconds=1))
+    parallelize(
+        process_documents,
+        iterable,
+        chunk_size=config.BATCH_CHUNK_SIZE,
+        throttle=timedelta(seconds=1),
+    )

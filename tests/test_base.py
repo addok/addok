@@ -7,12 +7,13 @@ from addok import db, ds
 
 
 def test_connection_port_is_not_default_one():
-    assert db.DB.connection_pool.connection_kwargs['db'] == 14
-    assert ds._DB.connection_pool.connection_kwargs['db'] == 15
+    assert db.DB.connection_pool.connection_kwargs["db"] == 14
+    assert ds._DB.connection_pool.connection_kwargs["db"] == 15
 
 
 def test_config_on_load_is_called_on_config_load():
     from addok.config import Config
+
     config = Config()
 
     @config.on_load
@@ -35,21 +36,23 @@ def test_local_config_has_been_loaded(config):
 
 
 def test_config_does_not_fail_if_local_path_does_not_exist(capsys):
-    os.environ['ADDOK_CONFIG_MODULE'] = 'dummy/path.py'
+    os.environ["ADDOK_CONFIG_MODULE"] = "dummy/path.py"
     from addok.config import Config
+
     config = Config()
     config.load()
     out, err = capsys.readouterr()
-    assert 'No local config file found' in out
-    os.environ['ADDOK_CONFIG_MODULE'] = ''
+    assert "No local config file found" in out
+    os.environ["ADDOK_CONFIG_MODULE"] = ""
 
 
 def test_config_load_exit_if_local_file_is_invalid():
-    path = str(Path(__file__).parent / 'invalid_config.py')
-    os.environ['ADDOK_CONFIG_MODULE'] = path
+    path = str(Path(__file__).parent / "invalid_config.py")
+    os.environ["ADDOK_CONFIG_MODULE"] = path
     from addok.config import Config
+
     config = Config()
     with pytest.raises(SystemExit) as err:
         config.load()
-        assert 'Unable to import' in err
-    os.environ['ADDOK_CONFIG_MODULE'] = ''
+        assert "Unable to import" in err
+    os.environ["ADDOK_CONFIG_MODULE"] = ""

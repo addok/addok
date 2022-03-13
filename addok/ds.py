@@ -4,7 +4,6 @@ from addok.helpers import keys
 
 
 class RedisStore:
-
     def fetch(self, *keys):
         pipe = _DB.pipeline(transaction=False)
         for key in keys:
@@ -46,13 +45,13 @@ def on_load():
     # Do not create connection if not using this store class.
     if config.DOCUMENT_STORE == RedisStore:
         params = config.REDIS.copy()
-        params.update(config.REDIS.get('documents', {}))
+        params.update(config.REDIS.get("documents", {}))
         _DB.connect(
-            host=params.get('host'),
-            port=params.get('port'),
-            db=params.get('db'),
-            password=params.get('password'),
-            unix_socket_path=params.get('unix_socket_path'),
+            host=params.get("host"),
+            port=params.get("port"),
+            db=params.get("db"),
+            password=params.get("password"),
+            unix_socket_path=params.get("unix_socket_path"),
         )
 
 
@@ -65,9 +64,9 @@ def store_documents(docs):
         if config.ID_FIELD not in doc:
             doc[config.ID_FIELD] = DB.next_id()
         key = keys.document_key(doc[config.ID_FIELD])
-        if doc.get('_action') in ['delete', 'update']:
+        if doc.get("_action") in ["delete", "update"]:
             to_remove.append(key)
-        if doc.get('_action') in ['index', 'update', None]:
+        if doc.get("_action") in ["index", "update", None]:
             to_upsert.append((key, config.DOCUMENT_SERIALIZER.dumps(doc)))
         yield doc
     if to_remove:

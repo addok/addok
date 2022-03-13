@@ -7,13 +7,15 @@ from addok.ds import get_document
 
 from . import iter_pipe, keys, yielder
 
-VALUE_SEPARATOR = '|~|'
+VALUE_SEPARATOR = "|~|"
 
 
 def preprocess(s):
     if s not in _CACHE:
         _CACHE[s] = list(iter_pipe(s, config.PROCESSORS))
     return _CACHE[s]
+
+
 _CACHE = {}
 
 
@@ -57,18 +59,18 @@ def index_documents(docs):
     for doc in docs:
         if not doc:
             continue
-        if doc.get('_action') in ['delete', 'update']:
+        if doc.get("_action") in ["delete", "update"]:
             key = keys.document_key(doc[config.ID_FIELD]).encode()
             known_doc = get_document(key)
             if known_doc:
                 deindex_document(known_doc)
-        if doc.get('_action') in ['index', 'update', None]:
+        if doc.get("_action") in ["index", "update", None]:
             index_document(pipe, doc)
         yield doc
     try:
         pipe.execute()
     except redis.RedisError as e:
-        msg = 'Error while importing document:\n{}\n{}'.format(doc, str(e))
+        msg = "Error while importing document:\n{}\n{}".format(doc, str(e))
         raise ValueError(msg)
 
 
@@ -107,21 +109,19 @@ def deindex_geohash(key, lat, lon):
 
 
 class FieldsIndexer:
-
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
-        importance = (float(doc.get('importance', 0.0))
-                      * config.IMPORTANCE_WEIGHT)
+        importance = float(doc.get("importance", 0.0)) * config.IMPORTANCE_WEIGHT
         for field in config.FIELDS:
-            name = field['key']
+            name = field["key"]
             values = doc.get(name)
             if not values:
-                if not field.get('null', True):
+                if not field.get("null", True):
                     # A mandatory field is null.
-                    raise ValueError('{} must not be null'.format(name))
+                    raise ValueError("{} must not be null".format(name))
                 continue
             if name != config.HOUSENUMBERS_FIELD:
-                boost = field.get('boost', config.DEFAULT_BOOST)
+                boost = field.get("boost", config.DEFAULT_BOOST)
                 if callable(boost):
                     boost = boost(doc)
                 boost = boost + importance
@@ -134,7 +134,7 @@ class FieldsIndexer:
     @staticmethod
     def deindex(db, key, doc, tokens, **kwargs):
         for field in config.FIELDS:
-            name = field['key']
+            name = field["key"]
             if name == config.HOUSENUMBERS_FIELD:
                 continue
             values = doc.get(name)
@@ -146,33 +146,30 @@ class FieldsIndexer:
 
 
 class GeohashIndexer:
-
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
-        index_geohash(pipe, key, doc['lat'], doc['lon'])
+        index_geohash(pipe, key, doc["lat"], doc["lon"])
 
     @staticmethod
     def deindex(db, key, doc, tokens, **kwargs):
-        deindex_geohash(key, doc['lat'], doc['lon'])
+        deindex_geohash(key, doc["lat"], doc["lon"])
 
 
 class HousenumbersIndexer:
-
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
-        housenumbers = doc.get('housenumbers', {})
+        housenumbers = doc.get("housenumbers", {})
         for number, data in housenumbers.items():
-            index_geohash(pipe, key, data['lat'], data['lon'])
+            index_geohash(pipe, key, data["lat"], data["lon"])
 
     @staticmethod
     def deindex(db, key, doc, tokens, **kwargs):
-        housenumbers = doc.get('housenumbers', {})
+        housenumbers = doc.get("housenumbers", {})
         for token, data in housenumbers.items():
-            deindex_geohash(key, data['lat'], data['lon'])
+            deindex_geohash(key, data["lat"], data["lon"])
 
 
 class FiltersIndexer:
-
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
         for name in config.FILTERS:
@@ -183,8 +180,11 @@ class FiltersIndexer:
                 for value in values:
                     pipe.sadd(keys.filter_key(name, value), key)
         # Special case for housenumber type, because it's not a real type
-        if "type" in config.FILTERS and config.HOUSENUMBERS_FIELD \
-           and doc.get(config.HOUSENUMBERS_FIELD):
+        if (
+            "type" in config.FILTERS
+            and config.HOUSENUMBERS_FIELD
+            and doc.get(config.HOUSENUMBERS_FIELD)
+        ):
             pipe.sadd(keys.filter_key("type", "housenumber"), key)
 
     @staticmethod
@@ -208,10 +208,10 @@ def prepare_housenumbers(doc):
         return
     housenumbers = doc.get(config.HOUSENUMBERS_FIELD)
     if housenumbers:
-        doc['housenumbers'] = {}
+        doc["housenumbers"] = {}
         for number, data in housenumbers.items():
             # Housenumber may have multiple tokens (eg.: "dix huit").
-            token = ''.join(list(preprocess(number)))
-            data['raw'] = number
-            doc['housenumbers'][token] = data
+            token = "".join(list(preprocess(number)))
+            data["raw"] = number
+            doc["housenumbers"][token] = data
     return doc

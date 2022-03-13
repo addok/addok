@@ -20,13 +20,14 @@ def load_file(filepath):
 
 def load_msgpack_file(filepath):
     import msgpack  # We don't want to make it a required dependency.
-    with open(filepath, mode='rb') as f:
-        for line in msgpack.Unpacker(f, encoding='utf-8'):
+
+    with open(filepath, mode="rb") as f:
+        for line in msgpack.Unpacker(f, encoding="utf-8"):
             yield line
 
 
 def load_csv_file(filepath):
-    with open(filepath, newline='') as csvfile:
+    with open(filepath, newline="") as csvfile:
         dialect = csv.Sniffer().sniff(csvfile.read(1024))
         csvfile.seek(0)
         reader = csv.DictReader(csvfile, dialect=dialect)
@@ -49,7 +50,7 @@ def import_by_path(path):
     """
     if not isinstance(path, str):
         return path
-    module_path, *name = path.rsplit('.', 1)
+    module_path, *name = path.rsplit(".", 1)
     func = import_module(module_path)
     if name:
         func = getattr(func, name[0])
@@ -61,6 +62,7 @@ def yielder(func):
     def wrapper(pipe):
         for item in pipe:
             yield func(item)
+
     return wrapper
 
 
@@ -78,7 +80,7 @@ def haversine_distance(point1, point2):
     # Haversine formula.
     dlon = lon2 - lon1
     dlat = lat2 - lat1
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * asin(sqrt(a))
 
     # 6367 km is the radius of the Earth.
@@ -89,61 +91,60 @@ def haversine_distance(point1, point2):
 def km_to_score(km):
     # Score between 0 and 0.1 (close to 0 km will be close to 0.1, and 100 and
     # above will be 0).
-    return 0.0 if km > 100 else exp(-(km / 50.0) ** 2)
+    return 0.0 if km > 100 else exp(-((km / 50.0) ** 2))
 
 
 COLORS = {
-    'red': '31',
-    'green': '32',
-    'yellow': '33',
-    'blue': '34',
-    'magenta': '35',
-    'cyan': '36',
-    'white': '37',
-    'reset': '39'
+    "red": "31",
+    "green": "32",
+    "yellow": "33",
+    "blue": "34",
+    "magenta": "35",
+    "cyan": "36",
+    "white": "37",
+    "reset": "39",
 }
 
 
 def colorText(s, color):
     # color should be a string from COLORS
-    return '\033[%sm%s\033[%sm' % (COLORS[color], s, COLORS['reset'])
+    return "\033[%sm%s\033[%sm" % (COLORS[color], s, COLORS["reset"])
 
 
 def red(s):
-    return colorText(s, 'red')
+    return colorText(s, "red")
 
 
 def green(s):
-    return colorText(s, 'green')
+    return colorText(s, "green")
 
 
 def yellow(s):
-    return colorText(s, 'yellow')
+    return colorText(s, "yellow")
 
 
 def blue(s):
-    return colorText(s, 'blue')
+    return colorText(s, "blue")
 
 
 def magenta(s):
-    return colorText(s, 'magenta')
+    return colorText(s, "magenta")
 
 
 def cyan(s):
-    return colorText(s, 'cyan')
+    return colorText(s, "cyan")
 
 
 def white(s):
-    return colorText(s, 'white')
+    return colorText(s, "white")
 
 
 class Bar(ProgressBar):
-    animation = '{spinner}'
-    template = '{prefix} {animation} Done: {done} | Elapsed: {elapsed}'
+    animation = "{spinner}"
+    template = "{prefix} {animation} Done: {done} | Elapsed: {elapsed}"
 
 
 class ChunkedPool(Pool):
-
     def imap_unordered(self, func, iterable, chunksize):
         """Customized version of imap_unordered.
 
@@ -160,15 +161,19 @@ class ChunkedPool(Pool):
         """
         assert self._state == RUN
         task_batches = Pool._get_tasks(func, iterable, chunksize)
-        result = IMapUnorderedIterator(self if PYTHON_VERSION >= (3, 8) else self._cache)
-        tasks = ((result._job, i, func, chunk, {})
-                 for i, (_, chunk) in enumerate(task_batches))
+        result = IMapUnorderedIterator(
+            self if PYTHON_VERSION >= (3, 8) else self._cache
+        )
+        tasks = (
+            (result._job, i, func, chunk, {})
+            for i, (_, chunk) in enumerate(task_batches)
+        )
         self._taskqueue.put((tasks, result._set_length))
         return result
 
 
 def parallelize(func, iterable, chunk_size, **bar_kwargs):
-    bar = Bar(prefix='Processing…', **bar_kwargs)
+    bar = Bar(prefix="Processing…", **bar_kwargs)
     with ChunkedPool(processes=config.BATCH_WORKERS) as pool:
         for chunk in pool.imap_unordered(func, iterable, chunk_size):
             bar(step=len(chunk))

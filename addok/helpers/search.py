@@ -28,7 +28,7 @@ def set_should_match_threshold(helper):
 def select_tokens(helper):
     tokens = []
     for token in helper.tokens:
-        if token.kind == 'housenumber':
+        if token.kind == "housenumber":
             helper.housenumbers.append(token)
             continue  # Remove from tokens (housenumbers are not indexed).
         elif token.is_common:
@@ -42,5 +42,5 @@ def select_tokens(helper):
     helper.common.sort(key=lambda x: x.frequency)
     helper.meaningful.sort(key=lambda x: x.frequency)
     # Sanity limit.
-    helper.common.extend(helper.meaningful[helper.MAX_MEANINGFUL:])
-    helper.meaningful = helper.meaningful[:helper.MAX_MEANINGFUL]
+    helper.common.extend(helper.meaningful[helper.MAX_MEANINGFUL :])
+    helper.meaningful = helper.meaningful[: helper.MAX_MEANINGFUL]

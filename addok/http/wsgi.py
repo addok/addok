@@ -17,9 +17,10 @@ hooks.register_http_endpoint(api)
 
 def simple(args):
     from wsgiref.simple_server import make_server
+
     httpd = make_server(args.host, int(args.port), application)
     print("Serving HTTP on {}:{}…".format(args.host, args.port))
     try:
         httpd.serve_forever()
     except (KeyboardInterrupt, EOFError):
-        print('Bye!')
+        print("Bye!")
