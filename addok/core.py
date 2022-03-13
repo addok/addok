@@ -155,6 +155,7 @@ class Search(BaseHelper):
         self.keys = []
         self.matched_keys = set([])
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
+        self.only_housenumber = filters.get('type') == "housenumber"
         self.filters = [dbkeys.filter_key(k, v.strip())
                         for k, v in filters.items() if v.strip()]
         self.query = ascii(query.strip())
@@ -235,8 +236,11 @@ class Search(BaseHelper):
             for _id, doc in documents:
                 result = Result(doc)
                 for processor in config.SEARCH_RESULT_PROCESSORS:
-                    processor(self, result)
-                self.results[_id] = result
+                    valid = processor(self, result)
+                    if valid is False:
+                        break
+                else:
+                    self.results[_id] = result
         self.debug('Done computing results')
 
     @property
@@ -289,6 +293,7 @@ class Reverse(BaseHelper):
         self.wanted = limit
         self.fetched = []
         self.check_housenumber = filters.get('type') in [None, "housenumber"]
+        self.only_housenumber = filters.get('type') == "housenumber"
         self.filters = [dbkeys.filter_key(k, v) for k, v in filters.items()]
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
@@ -325,9 +330,13 @@ class Reverse(BaseHelper):
         for _id in self.keys:
             result = Result(_id)
             for processor in config.REVERSE_RESULT_PROCESSORS:
-                processor(self, result)
-            self.results.append(result)
-            self.debug(result, result.distance, result.score)
+                valid = processor(self, result)
+                if valid is False:
+                    self.debug("Result removed by processor: %s", result)
+                    break
+            else:
+                self.results.append(result)
+                self.debug(result, result.distance, result.score)
         self.results.sort(key=lambda r: r.score, reverse=True)
         return self.results[:self.wanted]
 

@@ -272,15 +272,19 @@ def test_filters_are_stripped(factory):
     assert city['id'] not in ids
 
 
-def test_housenumber_type_can_be_filtered(factory):
-    street_without_housenumber = factory(name="avenue de Paris", type="street")
-    street_with_housenumber = factory(name="rue de Paris", type="street",
-                                      housenumbers={'11': {'lat': '48.3254',
-                                                           'lon': '2.256'}})
-    results = search("paris", type="housenumber")
+def test_housenumber_type_should_enforce_housenumber_match(factory):
+    without_housenumber = factory(name="avenue de Paris", type="street")
+    with_wrong_housenumber = factory(name="boulevard de Paris", type="street",
+                                     housenumbers={'12': {'lat': '48.3254',
+                                                          'lon': '2.256'}})
+    with_housenumber = factory(name="rue de Paris", type="street",
+                               housenumbers={'11': {'lat': '48.3254',
+                                                    'lon': '2.256'}})
+    results = search("11 paris", type="housenumber")
     ids = [r.id for r in results]
-    assert street_with_housenumber['id'] in ids
-    assert street_without_housenumber['id'] not in ids
+    assert with_housenumber['id'] in ids
+    assert without_housenumber['id'] not in ids
+    assert with_wrong_housenumber['id'] not in ids
 
 
 def test_filter_indexes_multiple_values(factory):

@@ -23,10 +23,6 @@ def make_labels(helper, result):
 
 
 def match_housenumber(helper, result):
-    _match_housenumber(helper, result, helper.tokens)
-
-
-def _match_housenumber(helper, result, tokens):
     if not helper.check_housenumber:
         return
     # Housenumber may have multiple tokens (eg. "dix huit"), we join
@@ -38,6 +34,10 @@ def _match_housenumber(helper, result, tokens):
         result.housenumber = data.pop('raw')
         result.type = 'housenumber'
         result.update(data)
+    if helper.only_housenumber and not result.housenumber:
+        helper.debug(
+            'Cannot match housenumber (%s), removing `%s`', result.housenumber, result)
+        return False
 
 
 def score_by_importance(helper, result):
@@ -115,10 +115,14 @@ def load_closer(helper, result):
     candidates = []
     if result.housenumbers:
         candidates = list(result.housenumbers.values())
-    candidates.append({'raw': None, 'lat': result.lat, 'lon': result.lon})
+    if not helper.only_housenumber:
+        candidates.append({'raw': None, 'lat': result.lat, 'lon': result.lon})
     candidates.sort(key=sort)
     closer = candidates[0]
     if closer['raw']:  # Means a housenumber is closer than street center.
         result.housenumber = closer.pop('raw')
         result.type = 'housenumber'
         result.update(closer)
+    if helper.only_housenumber and not result.housenumber:
+        helper.debug('Removing non housenumber match `%s`', result)
+        return False
