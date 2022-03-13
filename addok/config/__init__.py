@@ -2,6 +2,8 @@ import os
 import imp
 import importlib
 import sys
+import warnings
+
 try:
     import pkg_resources
 except ImportError:  # pragma: no cover
@@ -96,6 +98,12 @@ class Config(dict):
         self[key] = value
 
     def post_process(self):
+        # Retrocompat
+        if self.SYNONYMS_PATH:
+            warnings.warn(
+                "SYNONYMS_PATH is deprecated, use SYNONYMS_PATHS instead",
+                DeprecationWarning)
+            self.SYNONYMS_PATHS.append(self.SYNONYMS_PATH)
         self.FIELDS.extend(self.EXTRA_FIELDS)
         for field in self.FIELDS:
             key = field['key']

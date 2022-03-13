@@ -97,21 +97,19 @@ normalize = yielder(_normalize)
 @config.on_load
 def load_synonyms():
     config.SYNONYMS = {}
-    path = config.SYNONYMS_PATH
-    if not path:
-        return  # pragma: no cover
-    with Path(path).open() as f:
-        for line in f:
-            if line.startswith('#'):
-                continue
-            synonyms, wanted = line.split('=>')
-            wanted = wanted.strip()
-            synonyms = synonyms.split(',')
-            for synonym in synonyms:
-                synonym = synonym.strip()
-                if not synonym:
+    for path in config.SYNONYMS_PATHS:
+        with Path(path).open() as f:
+            for line in f:
+                if line.startswith('#'):
                     continue
-                config.SYNONYMS[synonym] = wanted
+                synonyms, wanted = line.split('=>')
+                wanted = wanted.strip()
+                synonyms = synonyms.split(',')
+                for synonym in synonyms:
+                    synonym = synonym.strip()
+                    if not synonym:
+                        continue
+                    config.SYNONYMS[synonym] = wanted
 
 
 def synonymize(tokens):

@@ -178,10 +178,10 @@ Define the time (in ms) to log a slow query.
     SLOW_QUERIES = False  # Inactive
     SLOW_QUERIES = 500  # Will log every query longer than 500 ms
 
-#### SYNONYMS_PATH (path)
-Path to the synonym file. Synonyms file are in the format `av, ave => avenue`.
+#### SYNONYMS_PATHS (list of paths)
+Paths to synonym files. Synonyms files are in the format `av, ave => avenue`.
 
-    SYNONYMS_PATH = '/path/to/synonyms.txt'
+    SYNONYMS_PATHS = ['/path/to/synonyms.txt']
 
 ## Advanced settings
 
