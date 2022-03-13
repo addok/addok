@@ -15,10 +15,7 @@ def register(module, name=None):
     if name is None:
         name = module.__name__
     if name in blocked_plugins:
-        print(
-            "Requested registration of plugin {} but this plugin is "
-            "blocked".format(name)
-        )
+        print("Requested registration of plugin {name} but this plugin is blocked")
         return
     plugins[name] = module
 
@@ -34,9 +31,10 @@ def spec(func):
     return caller
 
 
-def block(name_or_module):
+def block(name_or_module, reason=""):
     if not isinstance(name_or_module, str):
         name_or_module = name_or_module.__name__
+    print(f"Blocking plugin {name_or_module}: {reason}")
     if name_or_module in plugins:
         del plugins[name_or_module]
     blocked_plugins.add(name_or_module)
