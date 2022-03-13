@@ -1,6 +1,17 @@
 ## dev
 
-- Add `load_csv_file` batch loader
+- Added `load_csv_file` batch loader
+- Fixed `type=housenumber` also returning other results in some cases (#478)
+- Fixed ordering of housenumbers with non alpha-num chars (#656)
+- Added `ID_FIELD` to control which field is used as document `_id`
+- `config.SYNONYMS_PATH` is now `config.SYNONYMS_PATHS` and is a list to allow
+  multiple files
+- Fixed non unique id accross multiple docker sharing same Redis instance (#607)
+- Added more variants for `lat` and `lon` params and better control their values (#592)
+- Better ordering of candidates in case of autocomplete (#494)
+- By default, use more common chars when building fuzzy variants
+- Added python >= 3.8 compat
+
 
 ## 1.1.0-rc1
 
@@ -9,7 +20,7 @@
 - `autocomplete` and `fuzzy` are not adding any more their collectors automagically,
   instead they are now hard coded in the default config; if you haven't changed
   `RESULTS_COLLECTORS_PYPATHS` in your local config this should not impact you,
-  otherwise, see "Updating" below.
+  otherwise, see "Upgrading" below.
 - Added a slow queries logger (see [config](config.md#slow_queries-integer) for usage)
 
 ### Upgrading to 1.1.0-rc1
