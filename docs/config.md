@@ -125,6 +125,7 @@ an indexed field. Available keys:
   in the index, for example one usually define a greater boost for *name* field
   than for *city* field (default: 1)
 - **null**: define if the field can be null (default: True)
+- **type**: optional type, can be `name` or `id`, to define NAME_FIELD or ID_FIELD
 
 ```
 FIELDS = [
@@ -140,6 +141,9 @@ FIELDS = [
 You can access any fields from your original data source here. For example, `doc.get('type')` refers to the `type` property defined in the BAN json file.
 
 Warning: Indexes are computed during the import. If you already imported data, you need to reset and reimport it after you modified this configuration file.
+
+If you want to control the `id` of the document, for example in order to override documents at reindex, either add a field `_id` in the document,
+or define one of the indexed fields with `type: "id"`.
 
 #### FILTERS (list)
 A list of fields to be indexed as available filters. Keep in mind that every

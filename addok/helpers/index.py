@@ -58,7 +58,7 @@ def index_documents(docs):
         if not doc:
             continue
         if doc.get('_action') in ['delete', 'update']:
-            key = keys.document_key(doc['_id']).encode()
+            key = keys.document_key(doc[config.ID_FIELD]).encode()
             known_doc = get_document(key)
             if known_doc:
                 deindex_document(known_doc)
@@ -73,7 +73,7 @@ def index_documents(docs):
 
 
 def index_document(pipe, doc, **kwargs):
-    key = keys.document_key(doc['_id'])
+    key = keys.document_key(doc[config.ID_FIELD])
     tokens = {}
     for indexer in config.INDEXERS:
         try:
@@ -84,7 +84,7 @@ def index_document(pipe, doc, **kwargs):
 
 
 def deindex_document(doc, **kwargs):
-    key = keys.document_key(doc['_id'])
+    key = keys.document_key(doc[config.ID_FIELD])
     tokens = []
     for indexer in config.INDEXERS:
         indexer.deindex(DB, key, doc, tokens, **kwargs)

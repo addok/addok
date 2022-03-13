@@ -114,6 +114,8 @@ class Config(dict):
             elif field.get('type') == 'name' or key == 'name':
                 self.NAME_FIELD = key
                 field['type'] = 'name'
+            elif field.get('type') == 'id':
+                self.ID_FIELD = key
         for func in self._post_load_func:
             func()
 

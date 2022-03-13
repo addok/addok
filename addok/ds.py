@@ -62,9 +62,9 @@ def store_documents(docs):
     for doc in docs:
         if not doc:
             continue
-        if '_id' not in doc:
-            doc['_id'] = DB.next_id()
-        key = keys.document_key(doc['_id'])
+        if config.ID_FIELD not in doc:
+            doc[config.ID_FIELD] = DB.next_id()
+        key = keys.document_key(doc[config.ID_FIELD])
         if doc.get('_action') in ['delete', 'update']:
             to_remove.append(key)
         if doc.get('_action') in ['index', 'update', None]:

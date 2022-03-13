@@ -315,3 +315,11 @@ def test_create_edge_ngrams(config):
     assert not DB.exists('n|28')
     assert len(DB.keys()) == 13
     assert len(ds._DB.keys()) == 1
+
+
+def test_index_document_with_custom_id(config):
+    config.ID_FIELD = "custom"
+    doc = DOC.copy()
+    doc["custom"] = "custom_id"
+    index_document(doc)
+    assert ds._DB.exists('d|custom_id')

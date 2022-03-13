@@ -47,6 +47,9 @@ class Result:
         self._doc = doc
 
     def __getattr__(self, key):
+        if key == '_id':
+            # result._id should load the id whatever the real field used.
+            key = config.ID_FIELD
         if key not in self._cache:
             # By convention, in case of multiple values, first value is default
             # value, others are aliases.

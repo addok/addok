@@ -125,6 +125,7 @@ FIELDS = [
     {'key': 'housenumbers'},
     {'key': 'context'},
 ]
+ID_FIELD = '_id'
 
 # Sometimes you only want to add some fields keeping the default ones.
 EXTRA_FIELDS = []
