@@ -11,5 +11,7 @@ testall:
 	cd ../addok-fr && py.test --quiet
 	cd ../addok-csv && py.test --quiet
 	cd ../addok-sqlite-store && py.test --quiet
-pypi:
-	python setup.py sdist bdist_wheel upload
+dist:
+	python setup.py sdist bdist_wheel
+upload:
+	twine upload dist/*
