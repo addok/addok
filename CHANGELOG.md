@@ -1,3 +1,8 @@
+## 1.0.3
+
+- make it work with python >= 3.8
+- upgrade python deps
+
 ## 1.0.2
 
 - allow to connect to Redis through unix socket
