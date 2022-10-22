@@ -29,6 +29,10 @@ If you have changed `RESULTS_COLLECTORS_PYPATHS` in your local config file, make
 sure to add manually `fuzzy` and `autocomplete` ones. Check the
 [config doc](config.md) for an example.
 
+## 1.0.3
+
+- make it work with python >= 3.8
+- upgrade python deps
 
 ## 1.0.2
 
