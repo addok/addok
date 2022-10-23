@@ -33,7 +33,7 @@ with open('requirements.txt', encoding='utf-8') as reqs:
     install_requires = [l for l in reqs.read().split('\n') if is_pkg(l)]
 
 if sys.platform == 'darwin':
-    install_requires.append('gnureadline==6.3.3')
+    install_requires.append('gnureadline==8.1.2')
 
 try:
     from Cython.Distutils import build_ext
