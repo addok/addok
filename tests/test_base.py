@@ -56,3 +56,13 @@ def test_config_load_exit_if_local_file_is_invalid():
         config.load()
         assert "Unable to import" in err
     os.environ["ADDOK_CONFIG_MODULE"] = ""
+
+
+def test_config_on_load_consume_env_vars():
+    from addok.config import Config
+
+    os.environ["ADDOK_BATCH_WORKERS"] = "13"
+    config = Config()
+
+    config.load()
+    assert config.BATCH_WORKERS == 13
