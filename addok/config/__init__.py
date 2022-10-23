@@ -39,6 +39,7 @@ class Config(dict):
             hooks.load()  # pragma: no cover
         hooks.preconfigure(self)
         self.load_local()
+        self.load_from_env()
         hooks.configure(self)
         self.resolve()
         self.post_process()
@@ -88,6 +89,16 @@ class Config(dict):
         else:
             print('Loaded local config from', path)
             self.extend_from_object(d)
+
+    def load_from_env(self):
+        for key, value in self.items():
+            if key.isupper():
+                env_key = "ADDOK_" + key
+                typ = type(value)
+                if typ in (list, tuple, set):
+                    real_type, typ = typ, lambda x: real_type(x.split(","))
+                if env_key in os.environ:
+                    self[key] = typ(os.environ[env_key])
 
     def __getattr__(self, key):
         return self.get(key)
