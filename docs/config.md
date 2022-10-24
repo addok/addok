@@ -22,6 +22,14 @@ You can also use the `--config` argument when running the `addok` command line.
 
 The default config file is in `addok/config/default.py`.
 
+## Using env vars
+
+Any specific config key can be declared using an env var, using the key itself,
+prefixed by `ADDOK_`. For example, to override `BATCH_WORKERS`, one may do
+something like this:
+
+    ADDOK_BATCH_WORKERS=12 addok batch
+
 ## Environment settings
 
 Some settings are used to define how addok will deal with the system it's
