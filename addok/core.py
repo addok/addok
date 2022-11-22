@@ -133,11 +133,8 @@ class Search(BaseHelper):
 
     MAX_MEANINGFUL = 10
 
-    def __init__(
-        self, match_all=False, fuzzy=1, limit=10, autocomplete=True, verbose=False
-    ):
+    def __init__(self, fuzzy=1, limit=10, autocomplete=True, verbose=False):
         super().__init__(verbose=verbose)
-        self.match_all = match_all
         self.fuzzy = fuzzy
         self.wanted = limit
         self.autocomplete = autocomplete
@@ -347,7 +344,6 @@ class Reverse(BaseHelper):
 
 def search(
     query,
-    match_all=False,
     fuzzy=1,
     limit=10,
     autocomplete=False,
@@ -357,7 +353,6 @@ def search(
     **filters
 ):
     helper = Search(
-        match_all=match_all,
         fuzzy=fuzzy,
         limit=limit,
         verbose=verbose,
