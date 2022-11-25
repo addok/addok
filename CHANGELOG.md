@@ -11,6 +11,9 @@
 - Better ordering of candidates in case of autocomplete (#494)
 - By default, use more common chars when building fuzzy variants
 - Added python >= 3.8 compat
+- Restore legacy scoring algorithm (#746): the new experimental scoring must be
+  activated manually, replacing `addok.helpers.results.score_by_ngram_distance` with
+  `addok.helpers.results.score_by_str_distance` in `SEARCH_RESULT_PROCESSORS_PYPATHS`
 
 
 ## 1.1.0-rc1
