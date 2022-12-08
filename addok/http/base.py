@@ -7,7 +7,7 @@ import time
 import falcon
 
 from addok.config import config
-from addok.core import reverse, search
+from addok.core import reverse, search, health
 from addok.helpers.text import EntityTooLarge
 
 notfound_logger = None
@@ -191,9 +191,16 @@ class Reverse(View):
         self.render(req, resp, results, filters=filters, limit=limit)
 
 
+class Health(View):
+    def on_get(self, req, resp, **kwargs):
+        results = health()
+        self.json(req, resp, results)
+
+
 def register_http_endpoint(api):
     api.add_route("/search", Search())
     api.add_route("/reverse", Reverse())
+    api.add_route("/health", Health())
 
 
 def register_command(subparsers):
