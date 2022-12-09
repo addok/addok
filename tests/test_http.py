@@ -219,3 +219,8 @@ def test_search_should_catch_out_of_range_lon(client):
         "description": 'The "lon" parameter is invalid. out of range',
         "title": "Invalid parameter",
     }
+
+def test_health_should_return_ok(client):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json['status'] == "HEALTHY"
