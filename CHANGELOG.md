@@ -1,5 +1,9 @@
 ## dev
 
+- Added `/health` endpoint to monitor Addok (#750)
+
+## 1.1.0-rc2
+
 - Added `load_csv_file` batch loader
 - Fixed `type=housenumber` also returning other results in some cases (#478)
 - Fixed ordering of housenumbers with non alpha-num chars (#656)
