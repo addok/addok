@@ -194,7 +194,11 @@ class Reverse(View):
 
 class Health(View):
     def on_get(self, req, resp):
-        return self.json(req, resp, {"status": "HEALTHY", "redis_version": DB.info().get("redis_version")})
+        return self.json(
+            req,
+            resp,
+            {"status": "HEALTHY", "redis_version": DB.info().get("redis_version")},
+        )
 
 
 def register_http_endpoint(api):
