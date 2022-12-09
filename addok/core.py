@@ -342,15 +342,6 @@ class Reverse(BaseHelper):
         return self.results[: self.wanted]
 
 
-class Health(BaseHelper):
-    def __call__(self):
-        self.result = DB.info()
-        return {
-            'status': 'HEALTHY',
-            'redis': self.result
-        }
-
-
 def search(
     query,
     fuzzy=1,
@@ -373,8 +364,3 @@ def search(
 def reverse(lat, lon, limit=1, verbose=False, **filters):
     helper = Reverse(verbose=verbose)
     return helper(lat, lon, limit, **filters)
-
-
-def health(verbose=False):
-    helper = Health(verbose=verbose)
-    return helper()
