@@ -58,7 +58,7 @@ Check that the installation is successful so far by running this command:
 If you see no error but the list of addok commands, congratulations, you can proceed!
 
 If not, keep courage, try to read the error message, go back through previous steps and
-check that everything has been done successfuly. And if you are lost, [create an issue the addok
+check that everything has been done successfully. And if you are lost, [create an issue the addok
 tracker](https://github.com/addok/addok/issues) to ask for help.
 
 ## Create a local configuration file
@@ -289,5 +289,5 @@ Congratulations!
   You'll be able to check all the configuration keys and be sure they have the
   expected values.
 
-- If your searchs are returning nothing at all or very weird results, it may be that you have
+- If your searches are returning nothing at all or very weird results, it may be that you have
   indexed with a different configuration than the one you are using when searching.

@@ -81,7 +81,7 @@ To use Redis through a Unix socket, use `unix_socket_path` key.
 
 #### LOG_DIR (path)
 Path to the directory Addok will write its log and history files. Can also
-be overriden from the environment variable `ADDOK_LOG_DIR`.
+be overridden from the environment variable `ADDOK_LOG_DIR`.
 
     LOG_DIR = 'path/to/dir'
 
@@ -167,7 +167,7 @@ The licence of the data returned by the API. Can be a simple string, or a dict.
     LICENCE = {'source': 'licence', 'source2': 'licence2'}
 
 #### LOG_QUERIES (boolean)
-Turn this to `True` to log every query received and firt result if any. *Note:
+Turn this to `True` to log every query received and first result if any. *Note:
 only the queries are logged, not any of the other received data.*
 
     LOG_QUERIES = False
@@ -240,7 +240,7 @@ This may impact performances a lot.
     BUCKET_MAX = 100
 
 #### COMMON_THRESHOLD (int)
-Above this treshold, terms are considered commons, and thus with less importance
+Above this threshold, terms are considered commons, and thus with less importance
 in the search algorithm.
 
     COMMON_THRESHOLD = 10000
@@ -277,7 +277,7 @@ The max inherent score of geographical distance to the provided center (if any) 
     GEO_DISTANCE_WEIGHT = 0.1
 
 #### INTERSECT_LIMIT (int)
-Above this treshold, we avoid intersecting sets.
+Above this threshold, we avoid intersecting sets.
 
     INTERSECT_LIMIT = 100000
 

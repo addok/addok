@@ -17,10 +17,10 @@ REDIS = {
 BUCKET_MIN = 10
 BUCKET_MAX = 100
 
-# Above this treshold, terms are considered commons.
+# Above this threshold, terms are considered commons.
 COMMON_THRESHOLD = 10000
 
-# Above this treshold, we avoid intersecting sets.
+# Above this threshold, we avoid intersecting sets.
 INTERSECT_LIMIT = 100000
 
 # Min score considered matching the query.
@@ -160,7 +160,7 @@ SLOW_QUERIES = False  # False or time in ms to consider query as slow
 
 INDEX_EDGE_NGRAMS = True
 
-# surrouding letters on a standard keyboard (default french azerty)
+# surrounding letters on a standard keyboard (default french azerty)
 FUZZY_KEY_MAP = {
     "a": "ezqop",
     "z": "aqse",
