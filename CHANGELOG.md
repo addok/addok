@@ -10,7 +10,7 @@
 - Added `ID_FIELD` to control which field is used as document `_id`
 - `config.SYNONYMS_PATH` is now `config.SYNONYMS_PATHS` and is a list to allow
   multiple files
-- Fixed non unique id accross multiple docker sharing same Redis instance (#[607](https://github.com/etalab/addok/issues/607))
+- Fixed non unique id across multiple docker sharing same Redis instance (#[607](https://github.com/etalab/addok/issues/607))
 - Added more variants for `lat` and `lon` params and better control their values (#[592](https://github.com/etalab/addok/issues/592))
 - Better ordering of candidates in case of autocomplete (#[494](https://github.com/etalab/addok/issues/494))
 - By default, use more common chars when building fuzzy variants

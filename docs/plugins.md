@@ -18,7 +18,7 @@ Check each plugin home page to have specific documentation.
   (better typo tolerance).
 - [addok-csv](https://github.com/addok/addok-csv): add a CSV endpoint to your Addok server (for batch
   geocoding of CSV files)
-- [addok-psql](https://github.com/addok/addok-psql): import from PosgreSQL database into Addok.
+- [addok-psql](https://github.com/addok/addok-psql): import from PostgreSQL database into Addok.
 - [addok-trigrams](https://github.com/addok/addok-trigrams): alternative index algorithm based on trigrams.
 - [addok-sqlite-store](https://github.com/addok/addok-sqlite-store): store documents into SQLite.
 
