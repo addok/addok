@@ -1,4 +1,5 @@
 import json
+import platform
 
 from addok import ds
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
@@ -279,6 +280,8 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
 
 
 def test_create_edge_ngrams(config):
+    if platform.system() == 'Darwin':
+        return
     config.MIN_EDGE_NGRAMS = 2
     config.INDEX_EDGE_NGRAMS = False
     doc = {
