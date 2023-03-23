@@ -1,28 +1,28 @@
 ## dev
 
-- Added `/health` endpoint to monitor Addok (#[750](https://github.com/etalab/addok/issues/750))
+- Added `/health` endpoint to monitor Addok (#[750](https://github.com/addok/addok/issues/750))
 
 ## 1.1.0-rc2
 
 - Added `load_csv_file` batch loader
-- Fixed `type=housenumber` also returning other results in some cases (#[478](https://github.com/etalab/addok/issues/478))
-- Fixed ordering of housenumbers with non alpha-num chars (#[656](https://github.com/etalab/addok/issues/656))
+- Fixed `type=housenumber` also returning other results in some cases (#[478](https://github.com/addok/addok/issues/478))
+- Fixed ordering of housenumbers with non alpha-num chars (#[656](https://github.com/addok/addok/issues/656))
 - Added `ID_FIELD` to control which field is used as document `_id`
 - `config.SYNONYMS_PATH` is now `config.SYNONYMS_PATHS` and is a list to allow
   multiple files
-- Fixed non unique id across multiple docker sharing same Redis instance (#[607](https://github.com/etalab/addok/issues/607))
-- Added more variants for `lat` and `lon` params and better control their values (#[592](https://github.com/etalab/addok/issues/592))
-- Better ordering of candidates in case of autocomplete (#[494](https://github.com/etalab/addok/issues/494))
+- Fixed non unique id across multiple docker sharing same Redis instance (#[607](https://github.com/addok/addok/issues/607))
+- Added more variants for `lat` and `lon` params and better control their values (#[592](https://github.com/addok/addok/issues/592))
+- Better ordering of candidates in case of autocomplete (#[494](https://github.com/addok/addok/issues/494))
 - By default, use more common chars when building fuzzy variants
 - Added python >= 3.8 compat
-- Restore legacy scoring algorithm (#[746](https://github.com/etalab/addok/issues/746)): the new experimental scoring must be
+- Restore legacy scoring algorithm (#[746](https://github.com/addok/addok/issues/746)): the new experimental scoring must be
   activated manually, replacing `addok.helpers.results.score_by_ngram_distance` with
   `addok.helpers.results.score_by_str_distance` in `SEARCH_RESULT_PROCESSORS_PYPATHS`
 
 
 ## 1.1.0-rc1
 
-- Faster new scoring algorithm (#[431](https://github.com/etalab/addok/issues/431))
+- Faster new scoring algorithm (#[431](https://github.com/addok/addok/issues/431))
 - Upgraded Falcon to 1.4.1
 - `autocomplete` and `fuzzy` are not adding any more their collectors automagically,
   instead they are now hard coded in the default config; if you haven't changed
@@ -97,46 +97,46 @@ in the documentation.
 
 ## 0.5.0
 - Expose housenumber parent name in result geojson
-- add support for housenumber payload ([#134](https://github.com/etalab/addok/issues/134))
-- Fix clean_query being too much greedy for "cs" ([#125](https://github.com/etalab/addok/issues/125)
+- add support for housenumber payload ([#134](https://github.com/addok/addok/issues/134))
+- Fix clean_query being too much greedy for "cs" ([#125](https://github.com/addok/addok/issues/125)
 - also accept long for longitude
 - replace "s/s" in French preprocessing
 - fix autocomplete querystring casting to boolean
-- Always add housenumber in label candidates if set ([#120](https://github.com/etalab/addok/issues/120))
-- make CSVView more hackable by plugins ([#116][https://github.com/etalab/addok/issues/116))
+- Always add housenumber in label candidates if set ([#120](https://github.com/addok/addok/issues/120))
+- make CSVView more hackable by plugins ([#116][https://github.com/addok/addok/issues/116))
 
 
 ## 0.4.0
-- fix filters not taken into account in manual scan ([#105](https://github.com/etalab/addok/issues/105))
+- fix filters not taken into account in manual scan ([#105](https://github.com/addok/addok/issues/105))
 - added experimental list support for document values
-- Added MIN_EDGE_NGRAMS and MAX_EDGE_NGRAMS settings ([#102](https://github.com/etalab/addok/issues/102))
+- Added MIN_EDGE_NGRAMS and MAX_EDGE_NGRAMS settings ([#102](https://github.com/addok/addok/issues/102))
 - documented MAKE_LABELS setting
 - Allow to pass functions as PROCESSORS, instead of path
 - remove raw housenumbers returned in result properties
-- do not consider filter if column is empty, in csv ([#109](https://github.com/etalab/addok/issues/109))
-- allow to pass lat and lon to define columns to be used for geo preference, in csv ([#110](https://github.com/etalab/addok/issues/110))
-- replace "s/" by "sur" in French preprocessing ([#107](https://github.com/etalab/addok/issues/107))
+- do not consider filter if column is empty, in csv ([#109](https://github.com/addok/addok/issues/109))
+- allow to pass lat and lon to define columns to be used for geo preference, in csv ([#110](https://github.com/addok/addok/issues/110))
+- replace "s/" by "sur" in French preprocessing ([#107](https://github.com/addok/addok/issues/107))
 - fix server failing when document was missing `importance` value
 - refuse to load if `ADDOK_CONFIG_MODULE` is given but not found
 - allow to set ADDOK_CONFIG_MODULE with command line parameter `--config`
-- mention request parameters in geojson ([#113](https://github.com/etalab/addok/issues/113))
+- mention request parameters in geojson ([#113](https://github.com/addok/addok/issues/113))
 
 
 ## 0.3.1
 
-- fix single character wrongly glued to housenumber ([#99](https://github.com/etalab/addok/issues/99))
+- fix single character wrongly glued to housenumber ([#99](https://github.com/addok/addok/issues/99))
 
 ## 0.3.0
 
-- use housenumber id as result id, when given ([#38](https://github.com/etalab/addok/issues/38))
-- shell: warn when requested id does not exist ([#75](https://github.com/etalab/addok/issues/75))
+- use housenumber id as result id, when given ([#38](https://github.com/addok/addok/issues/38))
+- shell: warn when requested id does not exist ([#75](https://github.com/addok/addok/issues/75))
 - print filters in debug mode
-- added filters to CSV endpoint ([#67](https://github.com/etalab/addok/issues/67))
-- also accept `lng` as parameter ([#88](https://github.com/etalab/addok/issues/88))
-- add `/get/` endpoint ([#87](https://github.com/etalab/addok/issues/87))
+- added filters to CSV endpoint ([#67](https://github.com/addok/addok/issues/67))
+- also accept `lng` as parameter ([#88](https://github.com/addok/addok/issues/88))
+- add `/get/` endpoint ([#87](https://github.com/addok/addok/issues/87))
 - display distance in meters (not kilometers)
 - add distance in single `/reverse/` call
-- workaround python badly sniffing csv file with only one column ([#90](https://github.com/etalab/addok/issues/90))
-- add housenumber in csv results ([#91](https://github.com/etalab/addok/issues/91))
-- CSV: renamed "result_address" to "result_label" ([#92](https://github.com/etalab/addok/issues/92))
+- workaround python badly sniffing csv file with only one column ([#90](https://github.com/addok/addok/issues/90))
+- add housenumber in csv results ([#91](https://github.com/addok/addok/issues/91))
+- CSV: renamed "result_address" to "result_label" ([#92](https://github.com/addok/addok/issues/92))
 - no BOM by default in UTF-8
