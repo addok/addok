@@ -1,4 +1,4 @@
-## dev
+## 1.1.0
 
 - Added `/health` endpoint to monitor Addok (#[750](https://github.com/addok/addok/issues/750))
 
