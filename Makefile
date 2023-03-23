@@ -4,7 +4,7 @@ develop:
 test:
 	py.test
 testcoverage:
-	py.test --cov=addok/
+	py.test --cov-report lcov --cov=addok/
 testall:
 	py.test --quiet
 	cd ../addok-france && py.test --quiet
