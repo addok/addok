@@ -279,7 +279,6 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
     index_document(doc)
     assert not DB.exists("w|cergy")
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="currently fails on macOS")
 def test_create_edge_ngrams(config):
     config.MIN_EDGE_NGRAMS = 2
     config.INDEX_EDGE_NGRAMS = False
