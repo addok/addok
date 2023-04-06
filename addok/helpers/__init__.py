@@ -1,5 +1,6 @@
 import csv
 import sys
+from itertools import islice
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
@@ -174,7 +175,18 @@ class ChunkedPool(Pool):
 
 def parallelize(func, iterable, chunk_size, **bar_kwargs):
     bar = Bar(prefix="Processing…", **bar_kwargs)
-    with ChunkedPool(processes=config.BATCH_WORKERS) as pool:
-        for chunk in pool.imap_unordered(func, iterable, chunk_size):
+
+    if sys.platform == "darwin":
+        while True:
+            chunk = list(islice(iterable, chunk_size))
+            if not chunk:
+                bar.finish()
+                break
+
+            func(*chunk)
             bar(step=len(chunk))
-        bar.finish()
+    else:
+        with ChunkedPool(processes=config.BATCH_WORKERS) as pool:
+            for chunk in pool.imap_unordered(func, iterable, chunk_size):
+                bar(step=len(chunk))
+            bar.finish()
