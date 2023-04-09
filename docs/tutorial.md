@@ -8,9 +8,9 @@ You need sudo grants on this server, and it must be connected to Internet.
 ## Install system dependencies
 
     sudo apt update
-    sudo apt install redis-server python3.6 python3.6-dev python-virtualenv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt install redis-server python3 python3-dev python-virtualenv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
 
-Note: any version of python above or equal to 3.5 is OK.
+Note: any version of python above or equal to 3.7 is OK.
 
 ## Create a Unix user
 
