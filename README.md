@@ -19,4 +19,5 @@ For discussions, please use the [discourse Geocommun forum](https://forum.geocom
 Powered by Python and Redis.
 
 [![PyPi version](https://img.shields.io/pypi/v/addok.svg)](https://pypi.python.org/pypi/addok/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/addok)
 [![Coverage Status](https://coveralls.io/repos/addok/addok/badge.svg?branch=master&service=github)](https://coveralls.io/github/addok/addok?branch=master)
