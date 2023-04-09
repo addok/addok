@@ -1,5 +1,6 @@
 ## 1.1.0
 
+- Drop Python 3.6 support (end of life since 23 Dec 2021)
 - Added `/health` endpoint to monitor Addok (#[750](https://github.com/addok/addok/issues/750))
 
 ## 1.1.0-rc2
