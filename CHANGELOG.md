@@ -1,3 +1,9 @@
+## 1.1.1
+
+- Make `addok ngrams` work again on macOS
+- Disable multiprocessing on macOS (affect only ngrams generation)
+- Update `redis` to 4.5.4 and `hiredis` to `2.2.2`
+
 ## 1.1.0
 
 - Drop Python 3.6 support (end of life since 23 Dec 2021)
