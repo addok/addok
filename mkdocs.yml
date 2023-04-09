@@ -1,20 +1,20 @@
 site_name: Addok
 nav:
-- index.md
-- Installation: install.md
-- Tutorial: tutorial.md
-- Configuration: config.md
-- Tuning Redis: redis.md
-- Plugins: plugins.md
-- Import: import.md
-- HTTP API: api.md
-- Shell: shell.md
-- Fabric: fabric.md
-- Concepts: concepts.md
-- Advanced: advanced.md
-- Examples: examples.md
-- FAQ: faq.md
-- Changelog: changelog.md
+  - index.md
+  - Installation: install.md
+  - Tutorial: tutorial.md
+  - Configuration: config.md
+  - Tuning Redis: redis.md
+  - Plugins: plugins.md
+  - Import: import.md
+  - HTTP API: api.md
+  - Shell: shell.md
+  - Fabric: fabric.md
+  - Concepts: concepts.md
+  - Advanced: advanced.md
+  - Examples: examples.md
+  - FAQ: faq.md
+  - Changelog: changelog.md
 theme: readthedocs
-repo_url: https://github.com/etalab/addok
+repo_url: https://github.com/addok/addok
 site_description: Search engine for address. Only address.

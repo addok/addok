@@ -2,6 +2,8 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
+import editdistance
+from ngram import NGram
 from unidecode import unidecode
 
 from addok.config import config
@@ -9,7 +11,6 @@ from addok.db import DB
 from addok.helpers import keys, yielder
 from addok.helpers.index import token_frequency
 
-import editdistance
 
 PATTERN = re.compile(r"[\w]+", re.U | re.X)
 
@@ -159,6 +160,16 @@ def ngrams(text, n=3):
     # same ngrams whether at the start, the middle or the end of the string.
     text = " " + text + " "
     return set([text[i : i + n] for i in range(0, len(text) - (n - 1))])
+
+
+def compare_ngrams(left, right, N=2, pad_len=0):
+    left = ascii(left)
+    right = ascii(right)
+    if len(left) == 1 and len(right) == 1:
+        # NGram.compare returns 0.0 for 1 letter comparison, even if letters
+        # are equal.
+        return 1.0 if left == right else 0.0
+    return NGram.compare(left, right, N=N, pad_len=pad_len)
 
 
 def compare_str(left, right):

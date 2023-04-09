@@ -165,7 +165,7 @@ def test_search_should_not_split_querystring_on_commas(client, factory):
     assert resp.json["query"] == "18, rue des avions"
 
 
-def test_query_string_lenght_should_be_checked(client, config):
+def test_query_string_length_should_be_checked(client, config):
     config.QUERY_MAX_LENGTH = 10
     resp = client.get("/search/", query_string={"q": "this is too long"})
     assert resp.status_code == 413
@@ -191,7 +191,7 @@ def test_geojson_should_have_document_type_as_key(client, factory):
     resp = client.get("/search/", query_string={"q": "rue de foobar"})
     properties = resp.json["features"][0]["properties"]
     assert properties["name"] == "rue de foobar"
-    assert properties["foo"] == "bar"  # Not overrided.
+    assert properties["foo"] == "bar"  # Not overridden.
 
 
 def test_search_should_catch_invalid_lat(client):
@@ -219,3 +219,8 @@ def test_search_should_catch_out_of_range_lon(client):
         "description": 'The "lon" parameter is invalid. out of range',
         "title": "Invalid parameter",
     }
+
+def test_health_should_return_ok(client):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json['status'] == "HEALTHY"

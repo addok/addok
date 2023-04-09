@@ -1,4 +1,6 @@
 import json
+import sys
+import pytest
 
 from addok import ds
 from addok.autocomplete import create_edge_ngrams, index_edge_ngrams
@@ -276,7 +278,6 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
     }
     index_document(doc)
     assert not DB.exists("w|cergy")
-
 
 def test_create_edge_ngrams(config):
     config.MIN_EDGE_NGRAMS = 2

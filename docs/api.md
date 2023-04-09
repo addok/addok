@@ -93,4 +93,4 @@ Parameters:
 - every filter that has been declared in the [config](config.md) is available as
   parameters
 
-Same response format as the `/search/` enpoint.
+Same response format as the `/search/` endpoint.

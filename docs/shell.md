@@ -109,7 +109,7 @@ Do a reverse search. Args: lat lon.
 
 #### SEARCH
 Issue a search (default command, can be omitted; arguments between `[]` are
-optionnal):
+optional):
 
     SEARCH rue des Lilas [CENTER lat lon] [LIMIT 10] [AUTOCOMPLETE 0]
 

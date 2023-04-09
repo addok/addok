@@ -14,11 +14,9 @@ to around 2000 searches per second.
 Check the [documentation](http://addok.readthedocs.org/en/latest/) and a
 [demo](http://adresse.data.gouv.fr/map) with French data.
 
-For discussions, please use the [discourse Geocommun forum](https://forum.geocommuns.fr/c/adresses/addok-le-geocodeur/17). Discussions are mostly French, but English is very welcome. 
+For discussions, please use the [discourse Geocommun forum](https://forum.geocommuns.fr/c/adresses/addok-le-geocodeur/17). Discussions are mostly French, but English is very welcome.
 
 Powered by Python and Redis.
 
-[![Build Status](https://travis-ci.org/addok/addok.svg?branch=master)](https://travis-ci.org/addok/addok)
-[![Requirements Status](https://requires.io/github/addok/addok/requirements.svg?branch=master)](https://requires.io/github/addok/addok/requirements/?branch=master)
 [![PyPi version](https://img.shields.io/pypi/v/addok.svg)](https://pypi.python.org/pypi/addok/)
 [![Coverage Status](https://coveralls.io/repos/addok/addok/badge.svg?branch=master&service=github)](https://coveralls.io/github/addok/addok?branch=master)
