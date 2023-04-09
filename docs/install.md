@@ -3,17 +3,17 @@
 ## Dependencies
 
 - Redis
-- python >= 3.4
+- python >= 3.7
 
 ## Install using a virtualenv
 
 1. Install dependencies:
 
-        sudo apt-get install redis-server python3.5 python3.5-dev python-pip python-virtualenv
+        sudo apt-get install redis-server python3 python3-dev python-pip python-virtualenv
 
 1. create a virtualenv:
 
-        virtualenv addok --python=/usr/bin/python3.5
+        virtualenv addok --python=/usr/bin/python3
 
 1. active virtualenv:
 
