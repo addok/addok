@@ -108,6 +108,16 @@ def deindex_geohash(key, lat, lon):
     DB.srem(geok, key)
 
 
+def check_type_and_transform_to_array(name, values):
+    # Transform to array
+    if isinstance(values, (float, int, str)):
+        values = [values]
+    # Check type
+    if not all(isinstance(item, (float, int, str)) for item in values):
+        raise ValueError("{} must be of type float, integer or string (or an array of these types)".format(name))
+    return values
+
+
 class FieldsIndexer:
     @staticmethod
     def index(pipe, key, doc, tokens, **kwargs):
@@ -125,8 +135,7 @@ class FieldsIndexer:
                 if callable(boost):
                     boost = boost(doc)
                 boost = boost + importance
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
+                values = check_type_and_transform_to_array(name, values)
                 for value in values:
                     extract_tokens(tokens, str(value), boost=boost)
         index_tokens(pipe, tokens, key, **kwargs)
@@ -139,8 +148,7 @@ class FieldsIndexer:
                 continue
             values = doc.get(name)
             if values:
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
+                values = check_type_and_transform_to_array(name, values)
                 for value in values:
                     tokens.extend(deindex_field(key, value))
 
@@ -175,8 +183,7 @@ class FiltersIndexer:
         for name in config.FILTERS:
             values = doc.get(name)
             if values:
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
+                values = check_type_and_transform_to_array(name, values)
                 for value in values:
                     pipe.sadd(keys.filter_key(name, value), key)
         # Special case for housenumber type, because it's not a real type
@@ -192,8 +199,7 @@ class FiltersIndexer:
         for name in config.FILTERS:
             values = doc.get(name)
             if values:
-                if not isinstance(values, (list, tuple)):
-                    values = [values]
+                values = check_type_and_transform_to_array(name, values)
                 for value in values:
                     db.srem(keys.filter_key(name, value), key)
         if "type" in config.FILTERS:

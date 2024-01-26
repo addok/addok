@@ -279,6 +279,24 @@ def test_doc_with_null_value_should_not_be_index_if_not_allowed(config):
     index_document(doc)
     assert not DB.exists("w|cergy")
 
+
+def test_doc_with_array_of_array_value_should_not_be_index_if_not_allowed(config):
+    config.FIELDS = [
+        {"key": "name", "null": False},
+        {"key": "city"},
+    ]
+    doc = {
+        "id": "xxxx",
+        "_id": "yyyy",
+        "lat": "49.32545",
+        "lon": "4.2565",
+        "name": [["Lilas"]],
+        "city": "Cergy",
+    }
+    index_document(doc)
+    assert not DB.exists("w|cergy")
+
+
 def test_create_edge_ngrams(config):
     config.MIN_EDGE_NGRAMS = 2
     config.INDEX_EDGE_NGRAMS = False
