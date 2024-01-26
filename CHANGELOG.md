@@ -1,3 +1,7 @@
+## 1.1.2 (2024-01-26)
+
+- Improve values handling in index and deindex methods (#798)
+
 ## 1.1.1
 
 - Make `addok ngrams` work again on macOS
