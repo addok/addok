@@ -36,6 +36,9 @@ GEOHASH_PRECISION = 7
 MIN_EDGE_NGRAMS = 3
 MAX_EDGE_NGRAMS = 20
 
+# Maximum entries stored by preprocess LRU cache
+PREPROCESS_CACHE_SIZE = 10000
+
 SYNONYMS_PATHS = []
 
 # Pipeline stream to be used.
