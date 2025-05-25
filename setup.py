@@ -35,27 +35,6 @@ with open('requirements.txt', encoding='utf-8') as reqs:
 if sys.platform == 'darwin':
     install_requires.append('gnureadline==8.1.2')
 
-try:
-    from Cython.Distutils import build_ext
-    CYTHON = True
-except ImportError:
-    sys.stdout.write('\nNOTE: Cython not installed. Addok will '
-                     'still work fine, but may run a bit slower.\n\n')
-    CYTHON = False
-    cmdclass = {}
-    ext_modules = []
-else:
-    ext_modules = [
-        Extension('addok.' + ext, [path.join('addok', ext + '.py')])
-        for ext in list_modules(path.join(here, 'addok'))]
-
-    ext_modules.extend([
-        Extension('addok.helpers.' + ext,
-                  [path.join('addok', 'helpers', ext + '.py')])
-        for ext in list_modules(path.join(here, 'addok', 'helpers'))])
-
-    cmdclass = {'build_ext': build_ext}
-
 VERSION = (1, 1, 2)
 
 __author__ = 'Yohan Boniface'
@@ -93,10 +72,8 @@ setup(
     install_requires=install_requires,
     extras_require={'test': ['pytest'], 'docs': 'mkdocs'},
     include_package_data=True,
-    ext_modules=ext_modules,
     entry_points={
         'console_scripts': ['addok=addok.bin:main'],
         'pytest11': ['addok=addok.pytest'],
     },
-    cmdclass=cmdclass,
 )

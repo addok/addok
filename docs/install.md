@@ -23,21 +23,6 @@
 
         pip install addok
 
-### Using Cython (optional)
-
-For a performance boost, you can use Cython:
-
-```bash
-pip install cython
-pip install --no-binary :all: falcon
-pip install --no-binary :all: addok
-```
-
-Note: this is not recommended for development.
-
-Note: `--no-binary` option is only available for recent `pip` versions,
-to make sure you're running the latest, run `pip install -U pip`.
-
 ## What to do next?
 Now you certainly want to [configure Addok](config.md), install
 [plugins](plugins.md) or directly [import data](import.md).
