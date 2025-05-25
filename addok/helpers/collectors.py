@@ -159,11 +159,19 @@ def _extract_manytomany_relations(tokens):
 
 def _compute_onetomany_relations(tokens):
     relations = defaultdict(list)
+    # Memoize DB.sismember results by preloading token pairs
+    pair_cache = {
+        token: {
+            t.decode() if isinstance(t, bytes) else t
+            for t in DB.smembers(pair_key(token))
+        }
+        for token in tokens
+    }
     for token in tokens:
         for other in tokens:
             if other == token:
                 continue
-            if token in relations[other] or DB.sismember(pair_key(token), other):
+            if token in relations[other] or other in pair_cache[token]:
                 relations[token].append(other)
     return relations
 

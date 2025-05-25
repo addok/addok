@@ -1,5 +1,6 @@
 from addok.helpers.collectors import _extract_manytomany_relations
 from addok.helpers.text import Token
+from addok.helpers.collectors import _compute_onetomany_relations
 
 
 def test_extract_manytomany_relations(factory, config):
@@ -10,6 +11,17 @@ def test_extract_manytomany_relations(factory, config):
     tokens = [Token(s) for s in "rue de paris porte 506 fecamp".split()]
     groups = _extract_manytomany_relations(tokens)
     assert groups == [{Token("fecamp"), Token("paris")}]
+
+
+def test_compute_onetomany_relations(factory, config):
+    config.COMMON_THRESHOLD = 2
+    factory(name="rue de Paris", city="Fecamp")
+    factory(name="rue de la porte")
+    factory(name="rue de dieppe", housenumbers={"506": {"lat": 1, "lon": 2}})
+    tokens = [Token(s) for s in "rue de paris porte 506 fecamp".split()]
+    relations = _compute_onetomany_relations(tokens)
+    assert Token("fecamp") in relations[Token("paris")]
+    assert Token("paris") in relations[Token("fecamp")]
 
 
 def test_extract_manytomany_relations_2(factory, config):
