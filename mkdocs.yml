@@ -9,7 +9,6 @@ nav:
   - Import: import.md
   - HTTP API: api.md
   - Shell: shell.md
-  - Fabric: fabric.md
   - Concepts: concepts.md
   - Advanced: advanced.md
   - Examples: examples.md
