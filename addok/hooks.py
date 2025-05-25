@@ -1,13 +1,21 @@
 from collections import OrderedDict
-from importlib.metadata import entry_points
+from importlib.metadata import entry_points, PackageNotFoundError
 
 plugins = OrderedDict()
 blocked_plugins = set([])
 
-
 def load():
-    for ep in entry_points.select(group="addok.ext"):
-        register(ep.load(), ep.name)
+    try:
+        eps = entry_points()
+        # Python ≥ 3.10
+        if hasattr(eps, "select"):
+            selected = eps.select(group="addok.ext")
+        else:  # Python 3.9
+            selected = eps.get("addok.ext", [])
+        for ep in selected:
+            register(ep.load(), ep.name)
+    except PackageNotFoundError:
+        pass
 
 
 def register(module, name=None):
