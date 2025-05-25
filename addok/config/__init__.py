@@ -4,10 +4,8 @@ import types
 import sys
 import warnings
 
-try:
-    import pkg_resources
-except ImportError:  # pragma: no cover
-    pkg_resources = None
+
+from importlib.metadata import version as get_version, PackageNotFoundError
 
 from addok import hooks, VERSION
 from . import default
@@ -49,10 +47,11 @@ class Config(dict):
         for name, plugin in hooks.plugins.items():  # pragma: no cover
             if name.startswith("addok."):
                 version = VERSION  # Core plugin.
-            elif pkg_resources:
-                version = pkg_resources.get_distribution(plugin.__package__).version
             else:
-                version = "?"
+                try:
+                    version = get_version(plugin.__package__)
+                except PackageNotFoundError:
+                    version = "?"
             plugins.append("{}=={}".format(name, version))
         print("Loaded plugins:\n{}".format(", ".join(plugins)))
 
