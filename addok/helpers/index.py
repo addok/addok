@@ -1,5 +1,6 @@
 import geohash
 import redis
+from functools import lru_cache
 
 from addok.config import config
 from addok.db import DB
@@ -10,13 +11,9 @@ from . import iter_pipe, keys, yielder
 VALUE_SEPARATOR = "|~|"
 
 
+@lru_cache(maxsize=getattr(config, "PREPROCESS_CACHE_SIZE", 10000))
 def preprocess(s):
-    if s not in _CACHE:
-        _CACHE[s] = list(iter_pipe(s, config.PROCESSORS))
-    return _CACHE[s]
-
-
-_CACHE = {}
+    return tuple(iter_pipe(s, config.PROCESSORS))
 
 
 def token_key_frequency(key):
