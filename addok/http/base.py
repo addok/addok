@@ -167,7 +167,7 @@ class Search(View):
                 **filters
             )
         except EntityTooLarge as e:
-            raise falcon.HTTPPayloadTooLarge(title=str(e))
+            raise falcon.HTTPContentTooLarge(title=str(e))
         timer = int((time.perf_counter() - timer) * 1000)
         if not results:
             log_notfound(query)

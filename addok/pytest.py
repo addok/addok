@@ -132,6 +132,23 @@ def app():
     return application
 
 
+@pytest.fixture
+def client(app):
+    """Provide a Falcon test client accepting dict query strings."""
+    from falcon import testing
+    from urllib.parse import urlencode
+
+    class _Client(testing.TestClient):
+        def get(self, path, **kwargs):
+            qs = kwargs.get("query_string")
+            if isinstance(qs, dict):
+                # simulate the behavior of pytest-falcon which accepted dicts
+                kwargs["query_string"] = urlencode(qs, doseq=True)
+            return super().get(path, **kwargs)
+
+    return _Client(app)
+
+
 class MonkeyPatchWrapper(object):
     def __init__(self, monkeypatch, wrapped_object):
         super().__setattr__("monkeypatch", monkeypatch)

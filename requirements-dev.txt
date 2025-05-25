@@ -1,6 +1,5 @@
 pytest~=8.3
 pytest-cov~=6.1
-pytest-falcon==0.4.2
 mkdocs==1.4.3
 twine==6.1.0
 wheel==0.45.1

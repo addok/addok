@@ -158,7 +158,7 @@ def test_geojson_should_keep_housenumber_parent_name(client, factory):
 
 def test_search_should_not_split_querystring_on_commas(client, factory):
     factory(name="rue des avions", housenumbers={"18": {"lat": "48.22", "lon": "2.22"}})
-    # Pass query string as a string, not to let pytest-falcon urlencode it.
+    # Pass query string as a string to avoid additional encoding by the test client.
     resp = client.get("/search/", query_string="q=18, rue des avions")
     props = resp.json["features"][0]["properties"]
     assert props["label"] == "18 rue des avions"
