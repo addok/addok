@@ -1,13 +1,12 @@
 from collections import OrderedDict
-
-from pkg_resources import iter_entry_points
+from importlib.metadata import entry_points
 
 plugins = OrderedDict()
 blocked_plugins = set([])
 
 
 def load():
-    for ep in iter_entry_points("addok.ext"):
+    for ep in entry_points.select(group="addok.ext"):
         register(ep.load(), ep.name)
 
 
