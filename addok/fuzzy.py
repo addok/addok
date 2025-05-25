@@ -51,7 +51,9 @@ def make_fuzzy(word, max=1):
             del neighbor[i]
             neighbors.append("".join(neighbor))
 
-    return sorted(set(neighbors), key=lambda x: neighbors.index(x))
+    # Order-preserving deduplication of neighbors
+    neighbors = list(dict.fromkeys(neighbors))
+    return neighbors
 
 
 def fuzzy_collector(helper):
