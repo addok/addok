@@ -1,6 +1,6 @@
 import os
-import imp
 import importlib
+import types
 import sys
 import warnings
 
@@ -78,7 +78,7 @@ class Config(dict):
             print('No local config file found in "{}".'.format(path))
             return
 
-        d = imp.new_module("config")
+        d = types.ModuleType("config")
         d.__file__ = path
         try:
             with open(path) as config_file:
