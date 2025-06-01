@@ -4,7 +4,7 @@ import sys
 from codecs import open  # To use a consistent encoding
 from os import path
 
-from setuptools import Extension, find_packages, setup
+from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 
@@ -35,7 +35,7 @@ with open('requirements.txt', encoding='utf-8') as reqs:
 if sys.platform == 'darwin':
     install_requires.append('gnureadline==8.2.13')
 
-VERSION = (1, 1, 2)
+VERSION = (1, 2, 0)
 
 __author__ = 'Yohan Boniface'
 __contact__ = "yohan.boniface@data.gouv.fr"

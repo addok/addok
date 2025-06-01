@@ -1,3 +1,12 @@
+## 1.2.0 (2025-06-01)
+
+- Add Python 3.12 and 3.13 support
+- Update `falcon` to 4.0.2
+- Update multiple small dependencies
+- Some minor code improvements
+- Drop Cython support
+- Drop Python 3.7 and 3.8 support (end of life since 27 Jun 2023 and 7 Oct 2024)
+
 ## 1.1.2 (2024-01-26)
 
 - Improve values handling in index and deindex methods (#798)
