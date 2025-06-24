@@ -81,7 +81,7 @@ def index_document(pipe, doc, **kwargs):
         try:
             indexer.index(pipe, key, doc, tokens, **kwargs)
         except ValueError as e:
-            print(e)
+            print("Error while importing document:\n{}\n{}".format(doc, str(e)))
             return  # Do not index.
 
 
@@ -89,7 +89,11 @@ def deindex_document(doc, **kwargs):
     key = keys.document_key(doc[config.ID_FIELD])
     tokens = []
     for indexer in config.INDEXERS:
-        indexer.deindex(DB, key, doc, tokens, **kwargs)
+        try:
+            indexer.deindex(DB, key, doc, tokens, **kwargs)
+        except ValueError as e:
+            print("Error while importing document:\n{}\n{}".format(doc, str(e)))
+            return  # Do not deindex.
 
 
 def index_geohash(pipe, key, lat, lon):
