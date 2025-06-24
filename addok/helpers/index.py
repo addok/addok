@@ -81,7 +81,7 @@ def index_document(pipe, doc, **kwargs):
         try:
             indexer.index(pipe, key, doc, tokens, **kwargs)
         except ValueError as e:
-            print("Error while importing document:\n{}\n{}".format(doc, str(e)))
+            print("Error while indexing document:\n{}\n{}".format(doc, str(e)))
             return  # Do not index.
 
 
@@ -92,7 +92,7 @@ def deindex_document(doc, **kwargs):
         try:
             indexer.deindex(DB, key, doc, tokens, **kwargs)
         except ValueError as e:
-            print("Error while importing document:\n{}\n{}".format(doc, str(e)))
+            print("Error while deindexing document:\n{}\n{}".format(doc, str(e)))
             return  # Do not deindex.
 
 
