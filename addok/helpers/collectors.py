@@ -148,7 +148,7 @@ def extend_results_extrapoling_relations(helper):
     # Sort by average frequency. Needed since we are going to break the loop and we want determinism.
     relations = sorted(
         _extract_manytomany_relations(tokens),
-        key=lambda r: sum(t.frequency for t in r) / len(r)
+        key=lambda r: sum(t.frequency for t in r) / len(r) if len(r) > 0 else 0
     )
 
     for relation in relations:
