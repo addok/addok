@@ -9,7 +9,8 @@ import falcon
 from addok.config import config
 from addok.core import reverse, search
 from addok.db import DB
-from addok.helpers.text import EntityTooLarge
+from addok.helpers.text import EntityTooLarge, keys
+from addok.ds import get_document
 
 notfound_logger = None
 query_logger = None
@@ -194,6 +195,8 @@ class Reverse(View):
 
 class Health(View):
     def on_get(self, req, resp):
+        get_document(keys.document_key('dummy').encode())
+
         return self.json(
             req,
             resp,
