@@ -142,8 +142,16 @@ def extend_results_extrapoling_relations(helper):
     """
     if not helper.bucket_dry:
         return  # No need.
+
     tokens = set(helper.meaningful + helper.common)
-    for relation in _extract_manytomany_relations(tokens):
+
+    # Sort by average frequency. Needed since we are going to break the loop and we want determinism.
+    relations = sorted(
+        _extract_manytomany_relations(tokens),
+        key=lambda r: sum(t.frequency for t in r) / len(r)
+    )
+
+    for relation in relations:
         helper.add_to_bucket([t.db_key for t in relation])
         if helper.bucket_overflow:
             break
