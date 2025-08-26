@@ -35,7 +35,7 @@ with open('requirements.txt', encoding='utf-8') as reqs:
 if sys.platform == 'darwin':
     install_requires.append('gnureadline==8.2.13')
 
-VERSION = (1, 2, 0)
+VERSION = (1, 2, 1)
 
 __author__ = 'Yohan Boniface'
 __contact__ = "yohan.boniface@data.gouv.fr"

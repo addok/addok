@@ -1,3 +1,7 @@
+## 1.2.1 (2025-08-26)
+
+- Make results more deterministic (#[899](https://github.com/addok/addok/pull/899))
+
 ## 1.2.0 (2025-06-01)
 
 - Add Python 3.12 and 3.13 support
