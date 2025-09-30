@@ -58,6 +58,18 @@ def test_search_filters_can_be_combined(client, factory):
     assert feature["properties"]["type"] == "street"
 
 
+def test_search_supports_multi_value_filter_via_http(client, factory):
+    factory(name="rue de Paris", type="street")
+    factory(name="Paris", type="city")
+    resp = client.get(
+        "/search/", query_string={"q": "paris", "type": "street+city"}
+    )
+    assert resp.json["type"] == "FeatureCollection"
+    assert len(resp.json["features"]) == 2
+    types = {feature["properties"]["type"] for feature in resp.json["features"]}
+    assert types == {"street", "city"}
+
+
 def test_centered_search_should_return_center(client, factory):
     factory(name="rue de Paris", type="street")
     resp = client.get("/search/", query_string={"q": "paris", "lat": "44", "lon": "4"})
