@@ -266,6 +266,27 @@ def test_search_can_be_filtered(factory):
     assert city["id"] not in ids
 
 
+def test_search_supports_multi_value_filter(factory):
+    street = factory(name="rue de Paris", type="street")
+    city = factory(name="Paris", type="city")
+    locality = factory(name="Grenelle", type="locality") # Non wanted result
+    results = search("paris", type="street+city")
+    ids = {r.id for r in results}
+    assert street["id"] in ids
+    assert city["id"] in ids
+
+
+def test_search_multi_filter_combination_with_other_filters(factory):
+    street_75000 = factory(name="rue de Paris", type="street", postcode="75000")
+    street_77000 = factory(name="avenue de Paris", type="street", postcode="77000")
+    city = factory(name="Paris", type="city", postcode="75000")
+    results = search("paris", type="street+city", postcode="75000")
+    ids = {r.id for r in results}
+    assert street_75000["id"] in ids
+    assert city["id"] in ids
+    assert street_77000["id"] not in ids
+
+
 def test_filters_are_stripped(factory):
     street = factory(name="rue de Paris", type="street")
     city = factory(name="Paris", type="city")
