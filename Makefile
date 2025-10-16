@@ -14,6 +14,6 @@ testall:
 clean:
 	rm -rf dist/ build/
 dist: test
-	python setup.py sdist bdist_wheel
+	python -m build
 upload:
 	twine upload dist/*
