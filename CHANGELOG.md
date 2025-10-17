@@ -1,3 +1,14 @@
+## Unreleased
+
+### Developer changes
+
+- Modernize Python packaging to use `pyproject.toml` (PEP 621) instead of `setup.py`
+- Migrate all dependencies to `pyproject.toml`
+- Migrate pytest and coverage configuration to `pyproject.toml`
+- Remove legacy configuration files: `pytest.ini`, `.coveragerc`, `requirements.txt`, `requirements-dev.txt`
+- Update build process to use `python -m build` instead of `python setup.py sdist bdist_wheel`
+- Update development setup: use `pip install -e .[dev]` instead of `pip install -r requirements-dev.txt`
+
 ## 1.2.1 (2025-08-26)
 
 - Make results more deterministic (#[899](https://github.com/addok/addok/pull/899))
