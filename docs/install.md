@@ -23,6 +23,12 @@
 
         pip install addok
 
+    **For production environments**, it's recommended to install the performance optimization extras:
+
+        pip install addok[perf]
+
+    This installs `hiredis`, a fast C parser for Redis that significantly improves performance.
+
 ## What to do next?
 Now you certainly want to [configure Addok](config.md), install
 [plugins](plugins.md) or directly [import data](import.md).
