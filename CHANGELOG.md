@@ -2,6 +2,8 @@
 
 ### Breaking changes
 
+- Update `redis` to 6.4.0 and `hiredis` to 3.3.0 for Redis 8 compatibility
+- Minimum Redis version requirement increased from 5.0 to 7.2 (required by redis-py 6.x)
 - `hiredis` is now an optional dependency for performance optimization. Install with `pip install addok[perf]` to enable it. Addok will work without it but with slightly reduced Redis performance.
 
 ### Changes
