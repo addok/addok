@@ -7,7 +7,9 @@ blocked_plugins = set([])
 def load():
     try:
         eps = entry_points()
-        # Python ≥ 3.10
+        # Python ≥ 3.10: entry_points() returns an object with select() method
+        # Python 3.9: entry_points() returns a dict-like object
+        # In Python 3.14, the old dict-like API has been removed
         if hasattr(eps, "select"):
             selected = eps.select(group="addok.ext")
         else:  # Python 3.9
