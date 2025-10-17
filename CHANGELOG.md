@@ -1,13 +1,13 @@
 ## Unreleased
 
-### Developer changes
+### Breaking changes
 
-- Modernize Python packaging to use `pyproject.toml` (PEP 621) instead of `setup.py`
-- Migrate all dependencies to `pyproject.toml`
-- Migrate pytest and coverage configuration to `pyproject.toml`
-- Remove legacy configuration files: `pytest.ini`, `.coveragerc`, `requirements.txt`, `requirements-dev.txt`
-- Update build process to use `python -m build` instead of `python setup.py sdist bdist_wheel`
-- Update development setup: use `pip install -e .[dev]` instead of `pip install -r requirements-dev.txt`
+- `hiredis` is now an optional dependency for performance optimization. Install with `pip install addok[perf]` to enable it. Addok will work without it but with slightly reduced Redis performance.
+
+### Changes
+
+- Modernize Python packaging to use `pyproject.toml` (PEP 621)
+- Development dependencies moved to optional `[dev]` group: use `pip install -e .[dev]` for development setup
 
 ## 1.2.1 (2025-08-26)
 
