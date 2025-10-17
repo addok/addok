@@ -31,21 +31,21 @@ dependencies = [
     "ngram==4.0.3",
     "progressist==0.1.0",
     "python-geohash==0.8.5",
-    "redis==5.3.0",
+    "redis==6.4.0",
     "unidecode==1.4.0",
     "gnureadline==8.2.13; sys_platform == 'darwin'",
 ]
 
 [project.optional-dependencies]
 perf = [
-    "hiredis==3.2.1",
+    "hiredis==3.3.0",
 ]
 dev = [
     "pytest~=8.3",
     "pytest-cov~=6.1",
     "mkdocs==1.4.3",
     "twine==6.1.0",
-    "hiredis==3.2.1",
+    "hiredis==3.3.0",
 ]
 
 [project.urls]
