@@ -8,6 +8,7 @@
 
 ### Changes
 
+- Add Python 3.14 support
 - Modernize Python packaging to use `pyproject.toml` (PEP 621)
 - Development dependencies moved to optional `[dev]` group: use `pip install -e .[dev]` for development setup
 
