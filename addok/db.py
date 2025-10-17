@@ -25,14 +25,23 @@ class RedisProxy:
 DB = RedisProxy()
 
 
-@config.on_load
-def connect():
+def get_redis_params():
+    """Extract Redis connection parameters from config.
+    
+    Returns:
+        Dict with connection parameters (host, port, db, password, unix_socket_path)
+    """
     params = config.REDIS.copy()
     params.update(config.REDIS.get("indexes", {}))
-    DB.connect(
-        host=params.get("host"),
-        port=params.get("port"),
-        db=params.get("db"),
-        password=params.get("password"),
-        unix_socket_path=params.get("unix_socket_path"),
-    )
+    return {
+        "host": params.get("host"),
+        "port": params.get("port"),
+        "db": params.get("db"),
+        "password": params.get("password"),
+        "unix_socket_path": params.get("unix_socket_path"),
+    }
+
+
+@config.on_load
+def connect():
+    DB.connect(**get_redis_params())

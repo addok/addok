@@ -173,14 +173,17 @@ class ChunkedPool(Pool):
         return result
 
 
-def _worker_init():
+def _worker_init(redis_params):
     """Initialize Redis connection in worker processes for multiprocessing.
-    
+
     This is required for Python 3.14+ where the connection object doesn't
     get properly inherited by child processes.
+
+    Args:
+        redis_params: Dict with Redis connection parameters (host, port, db, etc.)
     """
-    from addok.db import connect
-    connect()
+    from addok.db import DB
+    DB.connect(**redis_params)
 
 
 def parallelize(func, iterable, chunk_size, **bar_kwargs):
@@ -196,7 +199,15 @@ def parallelize(func, iterable, chunk_size, **bar_kwargs):
             func(*chunk)
             bar(step=len(chunk))
     else:
-        with ChunkedPool(processes=config.BATCH_WORKERS, initializer=_worker_init) as pool:
+        # Prepare Redis connection parameters for worker processes
+        from addok.db import get_redis_params
+        redis_params = get_redis_params()
+
+        with ChunkedPool(
+            processes=config.BATCH_WORKERS,
+            initializer=_worker_init,
+            initargs=(redis_params,)
+        ) as pool:
             for chunk in pool.imap_unordered(func, iterable, chunk_size):
                 bar(step=len(chunk))
             bar.finish()
