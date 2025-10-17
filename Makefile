@@ -1,6 +1,5 @@
 develop:
-	pip install -e .
-	pip install -r requirements-dev.txt
+	pip install -e .[dev]
 test:
 	py.test
 testcoverage:
@@ -14,6 +13,6 @@ testall:
 clean:
 	rm -rf dist/ build/
 dist: test
-	python setup.py sdist bdist_wheel
+	python -m build
 upload:
 	twine upload dist/*

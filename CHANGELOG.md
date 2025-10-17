@@ -1,3 +1,14 @@
+## Unreleased
+
+### Breaking changes
+
+- `hiredis` is now an optional dependency for performance optimization. Install with `pip install addok[perf]` to enable it. Addok will work without it but with slightly reduced Redis performance.
+
+### Changes
+
+- Modernize Python packaging to use `pyproject.toml` (PEP 621)
+- Development dependencies moved to optional `[dev]` group: use `pip install -e .[dev]` for development setup
+
 ## 1.2.1 (2025-08-26)
 
 - Make results more deterministic (#[899](https://github.com/addok/addok/pull/899))

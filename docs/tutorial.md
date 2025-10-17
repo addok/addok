@@ -46,10 +46,11 @@ you will need to run again this last line.
 
 ## Install addok and plugins
 
-    pip install addok addok-fr addok-france
+    pip install addok[perf] addok-fr addok-france
 
-Note: if you want batch CSV support on the HTTP API, also install the plugin
-`addok-csv`.
+Note: 
+- The `[perf]` extra installs `hiredis` for better Redis performance. It's optional but recommended for production.
+- If you want batch CSV support on the HTTP API, also install the plugin `addok-csv`.
 
 Check that the installation is successful so far by running this command:
 
