@@ -163,7 +163,7 @@ class BaseHelper:
         key = dbkeys.filter_key(filter_name, normalized_value)
 
         if not DB.exists(key):
-            self.debug('MultiFilter created: %s=%s', filter_name, normalized_value)
+            self.debug(f'MultiFilter created: {filter_name}={normalized_value}')
             keys = [dbkeys.filter_key(filter_name, v)
                     for v in normalized_value.split('+')]
             DB.sunionstore(key, keys)
@@ -171,7 +171,7 @@ class BaseHelper:
         # Persist large filters to avoid recomputation, expire small ones
         if DB.scard(key) > 100000:
             DB.persist(key)
-            self.debug('MultiFilter persistent: %s=%s', filter_name, normalized_value)
+            self.debug(f'MultiFilter persistent: {filter_name}={normalized_value}')
         else:
             DB.expire(key, 10)
 
@@ -225,7 +225,7 @@ class BaseHelper:
         key = f"combined:{key_hash}"
 
         if not DB.exists(key):
-            self.debug('Combined filter: %s', filter_string)
+            self.debug(f'Combined filter: {filter_string}')
             DB.sinterstore(key, filter_keys)
 
         DB.expire(key, 10)
