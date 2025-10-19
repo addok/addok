@@ -156,7 +156,7 @@ class BaseHelper:
         Args:
             filter_name: The filter field name (e.g., "type")
             normalized_value: Normalized filter value (e.g., "city+street")
-            
+
         Returns:
             The Redis key for the combined filter
         """
@@ -174,29 +174,8 @@ class BaseHelper:
             self.debug('MultiFilter persistent: %s=%s', filter_name, normalized_value)
         else:
             DB.expire(key, 10)
-        
+
         return key
-
-    def _combine_filters(self):
-        """Combine multiple filters with AND logic using Redis SINTERSTORE.
-
-        When multiple filters are present (e.g., type=street AND postcode=75000),
-        this creates a temporary intersection key for better performance.
-
-        Returns:
-            List containing a single combined filter key
-        """
-        # Use a stable hash instead of repr() for the cache key
-        filter_string = '|'.join(sorted(self.filters))
-        key_hash = hashlib.md5(filter_string.encode()).hexdigest()
-        key = f"combined:{key_hash}"
-
-        if not DB.exists(key):
-            self.debug('Combined filter: %s', filter_string)
-            DB.sinterstore(key, self.filters)
-
-        DB.expire(key, 10)
-        return [key]
 
     def _build_filters(self, filters):
         """Build filter keys with normalized multi-value support.
