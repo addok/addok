@@ -6,6 +6,11 @@
 - Minimum Redis version requirement increased from 5.0 to 7.2 (required by redis-py 6.x)
 - `hiredis` is now an optional dependency for performance optimization. Install with `pip install addok[perf]` to enable it. Addok will work without it but with slightly reduced Redis performance.
 
+### New features
+
+- **Multi-value filters with OR logic**: Filters now support multiple values using the `+` separator (e.g., `?type=street+city`). This allows searching for documents matching any of the specified values. Multi-value filters work on both `/search/` and `/reverse/` endpoints.
+- Add `MAX_FILTER_VALUES` configuration option to control the maximum number of values allowed in a multi-value filter (default: 10)
+
 ### Changes
 
 - Add Python 3.14 support

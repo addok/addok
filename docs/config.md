@@ -309,6 +309,15 @@ Min score used to consider a result may *match* the query.
 
     MATCH_THRESHOLD = 0.9
 
+#### MAX_FILTER_VALUES (int)
+Maximum number of values allowed in a multi-value filter (e.g., `type=street+city+locality`).
+This limit prevents performance issues and potential abuse when using OR filters.
+
+    MAX_FILTER_VALUES = 10
+
+For example, with `MAX_FILTER_VALUES = 10`, a query like `?type=v1+v2+v3+...+v15` will only
+consider the first 10 unique values after deduplication and sorting.
+
 #### PROCESSORS_PYPATHS (iterable of Python paths)
 Define the various functions to preprocess the text, before indexing and
 searching. It's an `iterable` of Python paths. Some functions are built in
