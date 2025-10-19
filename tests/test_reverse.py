@@ -33,6 +33,34 @@ def test_reverse_can_be_filtered(factory):
     assert results[0].type == "city"
 
 
+def test_reverse_supports_multi_value_filter(factory):
+    """Test that reverse geocoding supports multi-value filters with OR logic"""
+    street = factory(lat=48.234545, lon=5.235445, type="street")
+    city = factory(lat=48.234546, lon=5.235446, type="city")
+    locality = factory(lat=48.234547, lon=5.235447, type="locality")
+    results = reverse(lat=48.234545, lon=5.235445, type="street+city", limit=10)
+    assert len(results) == 2
+    ids = {r.id for r in results}
+    assert street["id"] in ids
+    assert city["id"] in ids
+    assert locality["id"] not in ids
+
+
+def test_reverse_multi_filter_combination(factory):
+    """Test that reverse geocoding combines multiple filters with AND logic"""
+    match1 = factory(lat=48.234545, lon=5.235445, type="street", postcode="75001")
+    match2 = factory(lat=48.234546, lon=5.235446, type="city", postcode="75001")
+    no_match = factory(lat=48.234547, lon=5.235447, type="street", postcode="75002")
+    results = reverse(
+        lat=48.234545, lon=5.235445, type="street+city", postcode="75001", limit=10
+    )
+    assert len(results) == 2
+    ids = {r.id for r in results}
+    assert match1["id"] in ids
+    assert match2["id"] in ids
+    assert no_match["id"] not in ids
+
+
 def test_reverse_should_not_return_housenumber_if_filtered(factory):
     factory(
         lat=48.234544,

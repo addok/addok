@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 import time
 
@@ -28,29 +29,6 @@ def compute_geohash_key(geoh, with_neighbors=True):
         DB.expire(key, 10)
     return key
 
-def compute_multifilter(self, filter, value):
-    "creates temporary OR filter keys if missing"
-    key = dbkeys.filter_key(filter, value)
-    DB.expire(key, 10)
-    if not DB.exists(key):
-        self.debug('MultiFilter created: %s=%s' % (filter, value))
-        keys = [dbkeys.filter_key(filter, v) for v in value.split('+')]
-        DB.sunionstore(key, keys)
-    if DB.scard(key) > 100000:
-        DB.persist(key)
-        self.debug('MultiFilter persistent: %s=%s' % (filter, value))
-    else:
-        DB.expire(key, 10)
-
-def combine_filters(self):
-    "combine filters in a new temporary pre-computed filter"
-    key = repr(self.filters)
-    DB.expire(key, 10)
-    if not DB.exists(key):
-        self.debug('Combined filter: %s' % key)
-        DB.sinterstore(key, self.filters)
-        DB.expire(key, 10)
-    return [key]
 
 class Result:
     def __init__(self, _id):
@@ -151,6 +129,129 @@ class BaseHelper:
         for msg in self._debug:
             print(msg)
 
+    def _normalize_filter_value(self, value):
+        """Normalize filter value by removing spaces, sorting, and deduplicating.
+
+        Args:
+            value: Raw filter value string (e.g., "street + city  +street")
+
+        Returns:
+            Normalized string with values sorted and deduplicated (e.g., "city+street")
+        """
+        cleaned = value.replace(' ', '+').strip()
+        # Split, remove empty strings, deduplicate, limit to config.MAX_FILTER_VALUES
+        values = [v for v in cleaned.split('+') if v]
+        unique_values = list(dict.fromkeys(values))[:config.MAX_FILTER_VALUES]
+        return '+'.join(sorted(unique_values))
+
+    def _compute_multifilter(self, filter_name, normalized_value):
+        """Create temporary OR filter keys using Redis SUNIONSTORE.
+
+        This combines multiple filter values with OR logic. For example,
+        type=street+city will match documents where type is "street" OR "city".
+
+        The resulting key is cached in Redis with an expiration time, or persisted
+        if the result set is large (>100k items).
+
+        Args:
+            filter_name: The filter field name (e.g., "type")
+            normalized_value: Normalized filter value (e.g., "city+street")
+            
+        Returns:
+            The Redis key for the combined filter
+        """
+        key = dbkeys.filter_key(filter_name, normalized_value)
+
+        if not DB.exists(key):
+            self.debug('MultiFilter created: %s=%s', filter_name, normalized_value)
+            keys = [dbkeys.filter_key(filter_name, v)
+                    for v in normalized_value.split('+')]
+            DB.sunionstore(key, keys)
+
+        # Persist large filters to avoid recomputation, expire small ones
+        if DB.scard(key) > 100000:
+            DB.persist(key)
+            self.debug('MultiFilter persistent: %s=%s', filter_name, normalized_value)
+        else:
+            DB.expire(key, 10)
+        
+        return key
+
+    def _combine_filters(self):
+        """Combine multiple filters with AND logic using Redis SINTERSTORE.
+
+        When multiple filters are present (e.g., type=street AND postcode=75000),
+        this creates a temporary intersection key for better performance.
+
+        Returns:
+            List containing a single combined filter key
+        """
+        # Use a stable hash instead of repr() for the cache key
+        filter_string = '|'.join(sorted(self.filters))
+        key_hash = hashlib.md5(filter_string.encode()).hexdigest()
+        key = f"combined:{key_hash}"
+
+        if not DB.exists(key):
+            self.debug('Combined filter: %s', filter_string)
+            DB.sinterstore(key, self.filters)
+
+        DB.expire(key, 10)
+        return [key]
+
+    def _build_filters(self, filters):
+        """Build filter keys with normalized multi-value support.
+
+        This method processes filter parameters, normalizes multi-value filters,
+        creates temporary Redis keys for OR operations, and optionally combines
+        multiple filters with AND logic.
+
+        Args:
+            filters: Dictionary of filter parameters (e.g., {"type": "street+city"})
+
+        Returns:
+            List of filter keys to use in queries
+        """
+        # Build filter keys with normalized multi-value support
+        filter_keys = []
+        for k, v in filters.items():
+            if v.strip():
+                normalized = self._normalize_filter_value(v)
+                # Check if this is a multi-value filter
+                if '+' in normalized:
+                    # Create temporary OR filter key
+                    filter_key = self._compute_multifilter(k, normalized)
+                else:
+                    # Single value filter
+                    filter_key = dbkeys.filter_key(k, normalized)
+                filter_keys.append(filter_key)
+
+        # Combine multiple filters with AND logic
+        if len(filter_keys) > 1:
+            return self._combine_filters_with_keys(filter_keys)
+
+        return filter_keys
+
+    def _combine_filters_with_keys(self, filter_keys):
+        """Combine filter keys with AND logic using Redis SINTERSTORE.
+
+        Args:
+            filter_keys: List of filter keys to combine
+
+        Returns:
+            List containing a single combined filter key
+        """
+        # Use a stable hash instead of repr() for the cache key
+        filter_string = '|'.join(sorted(filter_keys))
+        key_hash = hashlib.md5(filter_string.encode()).hexdigest()
+        key = f"combined:{key_hash}"
+
+        if not DB.exists(key):
+            self.debug('Combined filter: %s', filter_string)
+            DB.sinterstore(key, filter_keys)
+
+        DB.expire(key, 10)
+        return [key]
+
 
 class Search(BaseHelper):
 
@@ -177,8 +278,9 @@ class Search(BaseHelper):
         self.matched_keys = set([])
         self.check_housenumber = filters.get("type") in [None, "housenumber"]
         self.only_housenumber = filters.get("type") == "housenumber"
-        self.filters = [dbkeys.filter_key(k, '+'.join(sorted(v.replace(' ', '+').strip().split('+'))))
-            for k, v in filters.items() if v.strip()]
+        # Build filter keys with normalized multi-value support
+        self.filters = self._build_filters(filters)
+
         self.query = ascii(query.strip())
         for func in config.SEARCH_PREPROCESSORS:
             func(self)
@@ -189,13 +291,6 @@ class Search(BaseHelper):
 
         self.debug('Filters: %s', ['{}={}'.format(k, v)
                                    for k, v in filters.items()])
-        for k, v in filters.items():
-            v = v.replace(' ','+')
-            if '+' in v:
-                compute_multifilter(
-                    self, k, '+'.join(sorted(v.strip().split('+'))))
-        if len(self.filters) > 1:
-            self.filters = combine_filters(self)
 
         for collector in config.RESULTS_COLLECTORS:
             self.debug("** %s **", collector.__name__.upper())
@@ -327,7 +422,10 @@ class Reverse(BaseHelper):
         self.fetched = []
         self.check_housenumber = filters.get("type") in [None, "housenumber"]
         self.only_housenumber = filters.get("type") == "housenumber"
-        self.filters = [dbkeys.filter_key(k, v) for k, v in filters.items()]
+        # Build filter keys with normalized multi-value support
+        self.filters = self._build_filters(filters)
+        self.debug('Filters: %s', ['{}={}'.format(k, v)
+                                   for k, v in filters.items()])
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
         self.fetch(hashes)
