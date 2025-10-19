@@ -269,7 +269,7 @@ def test_search_can_be_filtered(factory):
 def test_search_supports_multi_value_filter(factory):
     street = factory(name="rue de Paris", type="street")
     city = factory(name="Paris", type="city")
-    locality = factory(name="Grenelle", type="locality") # Non wanted result
+    locality = factory(name="Grenelle", type="locality") # Unwanted result
     results = search("paris", type="street+city")
     ids = {r.id for r in results}
     assert street["id"] in ids
