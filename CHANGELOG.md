@@ -8,8 +8,10 @@
 
 ### Changes
 
+- Add Python 3.14 support
 - Modernize Python packaging to use `pyproject.toml` (PEP 621)
 - Development dependencies moved to optional `[dev]` group: use `pip install -e .[dev]` for development setup
+- **Enable multiprocessing on macOS**: Use `spawn` context instead of `fork` to ensure proper Redis connection handling and avoid fork-safety issues on macOS. This makes macOS behavior consistent with production Linux environments.
 
 ## 1.2.1 (2025-08-26)
 

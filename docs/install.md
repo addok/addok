@@ -3,7 +3,7 @@
 ## Dependencies
 
 - Redis >= 7.2 <= 8.0
-- python >= 3.9 <= 3.13
+- python >= 3.9 <= 3.14
 
 ## Install using a virtualenv
 
