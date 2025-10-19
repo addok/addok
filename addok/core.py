@@ -268,8 +268,7 @@ class Search(BaseHelper):
         self.debug("Housenumbers token: %s", self.housenumbers)
         self.debug("Not found tokens: %s", self.not_found)
 
-        self.debug('Filters: %s', ['{}={}'.format(k, v)
-                                   for k, v in filters.items()])
+        self.debug('Filters: %s', [f'{k}={v}' for k, v in filters.items()])
 
         for collector in config.RESULTS_COLLECTORS:
             self.debug("** %s **", collector.__name__.upper())
@@ -403,8 +402,7 @@ class Reverse(BaseHelper):
         self.only_housenumber = filters.get("type") == "housenumber"
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
-        self.debug('Filters: %s', ['{}={}'.format(k, v)
-                                   for k, v in filters.items()])
+        self.debug('Filters: %s', [f'{k}={v}' for k, v in filters.items()])
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
         hashes = self.expand([geoh])
         self.fetch(hashes)
