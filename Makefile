@@ -12,7 +12,11 @@ testall:
 	cd ../addok-sqlite-store && python -m pytest --quiet
 clean:
 	rm -rf dist/ build/
-dist: test
+dist: clean test
 	python -m build
-upload:
+upload: dist
+	@if [ -z "$$(ls dist/*.whl dist/*.tar.gz 2>/dev/null)" ]; then \
+		echo "Error: No distribution files found. Run 'make dist' first."; \
+		exit 1; \
+	fi
 	twine upload dist/*
