@@ -41,21 +41,18 @@ For example, if the plugin only deals with configuration
 (adding a PROCESSOR, changing the document store, etc), there is no need
 for that.
 
-Add this to your `setup.py`:
+Add this to your `pyproject.toml`:
 
-```python
-setup(
-    name='addok-mysuperplugin',
-    …,
-    entry_points={'addok.ext': ['mysuperplugin=relative.path.to.plugin']},
-)
+```toml
+[project.entry-points."addok.ext"]
+mysuperplugin = "relative.path.to.plugin"
 ```
 
 Say for example that the plugin structure is:
 
 ```
 mysuperplugin/
-    setup.py
+    pyproject.toml
     README.md
     mysuperplugin/
         __init__.py
@@ -65,8 +62,9 @@ mysuperplugin/
 
 If you put the hooks in `hooks.py`, then your entrypoint should be:
 
-```python
-    entry_points={'addok.ext': ['mysuperplugin=mysuperplugin.hooks']},
+```toml
+[project.entry-points."addok.ext"]
+mysuperplugin = "mysuperplugin.hooks"
 ```
 
 ### Plugins hooks

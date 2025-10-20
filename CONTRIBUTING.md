@@ -5,8 +5,10 @@ This project uses modern Python packaging with `pyproject.toml` (PEP 621).
 ## Installing for development
 
 ```bash
-pip install -e .[dev]
+pip install -e ".[dev]"
 ```
+
+> **Note:** If using zsh, you need to quote `.[dev]` to avoid glob pattern expansion errors.
 
 Or using the Makefile:
 
@@ -14,7 +16,7 @@ Or using the Makefile:
 make develop
 ```
 
-This will install the package in editable mode along with all development dependencies (pytest, pytest-cov, mkdocs, twine, wheel).
+This will install the package in editable mode along with all development dependencies (pytest, pytest-cov, mkdocs, build, twine, hiredis).
 
 ## Running tests
 
