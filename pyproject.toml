@@ -8,7 +8,7 @@ version = "1.2.1"
 description = "Search engine for address. Only address."
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Yohan Boniface", email = "yohan.boniface@data.gouv.fr"}
 ]
@@ -45,6 +45,7 @@ dev = [
     "pytest~=8.3",
     "pytest-cov~=6.1",
     "mkdocs==1.4.3",
+    "build~=1.2",
     "twine==6.1.0",
     "hiredis==3.3.0",
 ]
