@@ -31,22 +31,35 @@ def only_commons(helper):
             helper.tokens.sort(key=lambda t: t.frequency)
             keys = [t.db_key for t in helper.tokens]
             first = helper.tokens[0]
+            
             if first.frequency < config.INTERSECT_LIMIT:
+                # Case 1: Token is small enough → use Redis intersect
                 helper.debug("Under INTERSECT_LIMIT, force intersect.")
                 helper.add_to_bucket(keys)
+            elif helper.filters:
+                # Case 2: Token is large BUT we have filters to consider
+                all_keys = keys + helper.filters
+                min_filter_size = min(DB.scard(k) for k in helper.filters)
+                
+                if min_filter_size < first.frequency:
+                    # Filter is more selective than token → use Redis intersect
+                    helper.debug(
+                        "Filter (%s) more selective than token (%s), use intersect",
+                        min_filter_size, first.frequency
+                    )
+                    helper.add_to_bucket(all_keys)
+                else:
+                    # Both token and filter are large → manual scan
+                    helper.debug(
+                        "Token (%s) and filter (%s) both large, manual scan",
+                        first.frequency, min_filter_size
+                    )
+                    ids = scripts.manual_scan(keys=all_keys, args=[helper.wanted])
+                    helper.bucket.update(ids)
+                    helper.debug("%s results after scan", len(helper.bucket))
             else:
-                helper.debug("INTERSECT_LIMIT hit, manual scan")
-                if helper.filters:
-                    # Always consider filters when doing manual intersect.
-                    keys = keys + helper.filters
-                    # But, hey, can we brute force again?
-                    if any(
-                        DB.scard(k) < config.INTERSECT_LIMIT for k in helper.filters
-                    ):
-                        helper.debug("Filters under INTERSECT_LIMIT, force")
-                        helper.add_to_bucket(keys)
-                        return
-                helper.debug('manual scan on "%s"', first)
+                # Case 3: Token is large, no filter → manual scan
+                helper.debug("INTERSECT_LIMIT hit, manual scan on '%s'", first)
                 ids = scripts.manual_scan(keys=keys, args=[helper.wanted])
                 helper.bucket.update(ids)
                 helper.debug("%s results after scan", len(helper.bucket))

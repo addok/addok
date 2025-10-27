@@ -277,7 +277,11 @@ The max inherent score of geographical distance to the provided center (if any) 
     GEO_DISTANCE_WEIGHT = 0.1
 
 #### INTERSECT_LIMIT (int)
-Above this threshold, we avoid intersecting sets.
+Above this threshold, we avoid intersecting sets directly in Redis and use a manual
+scan instead. When filters are present, the system will compare the size of the
+smallest filter with the token frequency to choose the most efficient strategy:
+if a filter is smaller than the token, Redis intersection will be used regardless
+of this limit.
 
     INTERSECT_LIMIT = 100000
 
@@ -308,7 +312,6 @@ list of strings.
 Min score used to consider a result may *match* the query.
 
     MATCH_THRESHOLD = 0.9
-
 #### MAX_FILTER_VALUES (int)
 Maximum number of values allowed in a multi-value filter (e.g., `type=street+city+locality`).
 This limit prevents performance issues and potential abuse when using OR filters.
