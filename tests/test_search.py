@@ -150,6 +150,87 @@ def test_should_use_filter_if_only_common_terms(factory, config):
     assert street3["id"] not in ids
 
 
+def test_should_use_intersect_if_filter_smaller_than_token(factory, config, monkeypatch):
+    """Test that Redis intersect is used when filter is more selective than token.
+    
+    Even if token frequency exceeds INTERSECT_LIMIT, if the filter size is smaller
+    than the token frequency, we should use Redis intersection instead of manual scan.
+    """
+    config.COMMON_THRESHOLD = 2
+    config.INTERSECT_LIMIT = 2  # Very low to force manual scan normally
+    config.BUCKET_MAX = 10
+    
+    # Track which strategy was used by mocking the manual_scan script
+    manual_scan_called = []
+    from addok.helpers import scripts
+    original_manual_scan = scripts.manual_scan
+    def mock_manual_scan(*args, **kwargs):
+        manual_scan_called.append(True)
+        return original_manual_scan(*args, **kwargs)
+    monkeypatch.setattr(scripts, 'manual_scan', mock_manual_scan)
+    
+    # Create streets with common terms
+    street1 = factory(name="rue de la monnaie", city="Vitry", type="street")
+    street2 = factory(name="rue de la monnaie", city="Paris", type="street")
+    street3 = factory(name="rue de la republique", city="Lyon", type="street")
+    # Create cities (different type filter)
+    city1 = factory(name="La monnaie", type="city")
+    city2 = factory(name="La poste", type="city")
+    
+    # Search with a filter that has fewer items than the common token
+    # "la" is very common (>2), but type=city filter has only 2 items
+    results = search("la", type="city")
+    ids = [r.id for r in results]
+    
+    # Should find cities, not streets (even though "la" is in both)
+    assert city1["id"] in ids
+    assert city2["id"] in ids
+    assert street1["id"] not in ids
+    assert street2["id"] not in ids
+    
+    # Verify that manual_scan was NOT called (intersect was used instead)
+    assert not manual_scan_called, "manual_scan should not be called when filter is smaller than token"
+
+
+def test_should_use_manual_scan_if_both_token_and_filter_large(factory, config, monkeypatch):
+    """Test that manual scan is used when both token and filter are large.
+    
+    When both token frequency and filter size exceed INTERSECT_LIMIT,
+    and the filter is NOT more selective than the token, manual scan should be used.
+    """
+    config.COMMON_THRESHOLD = 2
+    config.INTERSECT_LIMIT = 2  # Very low threshold
+    config.BUCKET_MAX = 10
+    
+    # Track if manual_scan was called
+    manual_scan_called = []
+    from addok.helpers import scripts
+    original_manual_scan = scripts.manual_scan
+    def mock_manual_scan(*args, **kwargs):
+        manual_scan_called.append(True)
+        return original_manual_scan(*args, **kwargs)
+    monkeypatch.setattr(scripts, 'manual_scan', mock_manual_scan)
+    
+    # Create items to make token "la" common but with LESS frequency than filter
+    # Token "la" will have 3 occurrences
+    factory(name="La rue", city="City1", type="street")
+    factory(name="La place", city="City2", type="locality")
+    factory(name="La avenue", city="City3", type="way")
+    # Create many streets (filter will be larger: 5 items)
+    factory(name="Rue principale", city="City4", type="street")
+    factory(name="Rue secondaire", city="City5", type="street")
+    factory(name="Rue tertiaire", city="City6", type="street")
+    factory(name="Rue autre", city="City7", type="street")
+    
+    # Now: token "la" has 3 occurrences (>2), filter "street" has 5 items (>2 and >3)
+    # Both exceed INTERSECT_LIMIT but filter is LARGER than token
+    # So manual scan should be used
+    results = search("la", type="street")
+    
+    # Verify that manual_scan WAS called (filter larger than token)
+    assert manual_scan_called, "manual_scan should be called when filter is larger than token"
+
+
 def test_not_found_term_is_autocompleted(factory, config):
     config.COMMON_THRESHOLD = 3
     config.BUCKET_MAX = 3
