@@ -17,6 +17,7 @@
 - Modernize Python packaging to use `pyproject.toml` (PEP 621)
 - Development dependencies moved to optional `[dev]` group: use `pip install -e .[dev]` for development setup
 - **Enable multiprocessing on macOS**: Use `spawn` context instead of `fork` to ensure proper Redis connection handling and avoid fork-safety issues on macOS. This makes macOS behavior consistent with production Linux environments.
+- **Improved filter strategy for common tokens**: When searching with only common tokens (high frequency) and filters, the system now intelligently compares filter size with token frequency to choose the most efficient strategy (Redis intersection vs manual scan). This can significantly improve performance when using filters that are more selective than the search tokens (e.g., searching `"la"` with `type=locality` or region-based filters).
 
 ## 1.2.1 (2025-08-26)
 
