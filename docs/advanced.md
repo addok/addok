@@ -407,7 +407,9 @@ Each collector has its own heuristic, for example:
   is active.
 - `addok.helpers.collectors.no_available_tokens_abort`: no usable token
 - `addok.helpers.collectors.only_commons`: this is one of the main collectors,
-  that deals with case where we have only common tokens
+  that deals with case where we have only common tokens. It intelligently chooses
+  between Redis intersection and manual scan based on token frequency and filter
+  size, using the most selective option available
 - `addok.fuzzy.fuzzy_collector`: we'll try to extend tokens with fuzzy matching
   to find more results in case the bucket is empty
 - `addok.helpers.collectors.extend_results_extrapoling_relations`: that one tries

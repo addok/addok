@@ -23,12 +23,47 @@ The document is split into tokens (by default words but it can be trigrams when 
 
 Search is a three-steps process:
 1) we clean and put into tokens the query (with same processors as during indexation),
-2) then we try to find all candidates for a given query,
-3) finally we iterate to order results by relevance.
+2) then we try to find all candidates for a given query (the "collection" phase),
+3) finally we iterate to order results by relevance (the "scoring" phase).
+
+### The collection phase (finding candidates)
+
+This is where Addok tries to find potential matching documents. The goal is to collect a reasonable number of candidates (typically between 10 and 100) before scoring them.
+
+**How it works:**
+- Each token from your query corresponds to a Redis sorted set containing document IDs
+- Addok performs **intersections** of these sets: documents appearing in all sets are candidates
+- For example, searching "rue des lilas" intersects the sets for tokens `rue`, `de`, and `lila`
+
+**The "bucket" strategy:**
+- Addok calls this collection of candidates a "bucket"
+- It tries different combinations of tokens until the bucket contains enough results
+- If too few results → try with fewer tokens (more permissive)
+- If too many results → add more tokens or filters (more restrictive)
+- If results are good quality ("cream" = high score) → stop collecting
+
+**Optimization strategies:**
+- For **common tokens** (e.g., "rue", "de") with millions of occurrences, Redis intersection can be slow
+- When all tokens are common AND no filter/geohash is present, Addok may use a "manual scan" strategy
+- When **filters** are present, Addok intelligently compares filter size vs token frequency:
+  - If filter is smaller → use Redis intersection (faster)
+  - If both are huge → use manual scan
+- The `INTERSECT_LIMIT` configuration controls when to switch strategies (default: 100,000)
+
+**Collectors chain:**
+The collection process is controlled by a chain of "collectors" (see `RESULTS_COLLECTORS_PYPATHS` in config). Each collector applies its own heuristic based on:
+- Available tokens (meaningful vs common vs not found)
+- Bucket state (empty, dry, overflow, has cream)
+- Presence of filters or geographical bias
+- Autocomplete mode vs exact match
+
+See the [advanced documentation](advanced.md#querying-the-index) for detailed examples.
+
+### The scoring phase
 
 Through heuristics, we try to find a reasonable number of candidates (about 100) dealing with noise, typos and wrong input. Once the candidates are retrieved, they are ordered mainly by string comparisons with the original searched text.
 
-Documents importances and geographical positions may also be taken into account. Additionally, a query can be explicitly filtered by the issuer based on documents’ fields to restrain the number of potential results.
+Documents importances and geographical positions may also be taken into account. Additionally, a query can be explicitly filtered by the issuer based on documents' fields to restrain the number of potential results.
 
 
 ## HTTP API
