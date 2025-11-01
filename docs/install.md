@@ -9,13 +9,13 @@
 
 1. Install dependencies:
 
-        sudo apt-get install redis-server python3 python3-dev python-pip python-virtualenv
+        sudo apt-get install redis-server python3 python3-dev python3-pip python3-venv
 
-1. create a virtualenv:
+1. Create a virtual environment:
 
-        virtualenv addok --python=/usr/bin/python3
+        python3 -m venv addok
 
-1. active virtualenv:
+1. Activate the virtual environment:
 
         source addok/bin/activate
 
