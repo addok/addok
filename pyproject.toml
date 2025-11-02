@@ -63,7 +63,15 @@ addok = "addok.pytest"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-exclude = ["tests*"]
+exclude = [
+    "tests*",
+    "venv*",
+    "htmlcov*",
+    "site*",
+    "scripts*",
+    "prof*",
+    "debian*",
+]
 
 [tool.pytest.ini_options]
 norecursedirs = ["debian"]
