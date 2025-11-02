@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 1.3.0 (2025-11-02)
+
 ### Breaking changes
 
 - Update `redis` to 6.4.0 and `hiredis` to 3.3.0 for Redis 8 compatibility
