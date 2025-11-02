@@ -1,14 +1,28 @@
-# Geographic Boost Control
+# Geographic Search
 
-## Overview
+Advanced geographic filtering and prioritization for location-aware search results.
 
-The `geo_boost` parameter allows fine-grained control over how geographic coordinates (lat/lon) influence search results when a center point is provided.
+## Introduction
 
-## Problem Solved
+When searching with a center point (latitude/longitude), Addok provides powerful controls to influence how geographic proximity affects results. This is useful for:
+
+- **Mobile applications** - "Find nearby addresses"
+- **Map-based search** - "Only show what's visible on the map"
+- **Location-aware autocomplete** - "Prioritize local suggestions"
+- **Proximity services** - "Find the nearest pharmacy"
+
+## The Problem
 
 Previously, when searching with a center point (e.g., in Paris) for common street names like "rue victor hugo", results could be dominated by distant locations with higher importance scores, even when nearby matches existed. The geographic scoring alone (10% weight) wasn't sufficient to prioritize local results.
 
-## API Parameters
+## Solution: Two Complementary Parameters
+
+Addok provides two parameters to control geographic search behavior:
+
+1. **`geo_boost`** - How geographic proximity influences results (score, favor, or strict filtering)
+2. **`geo_radius`** - The search radius in kilometers (0-100km, adapts to geohash precision)
+
+## Parameters Reference
 
 ### `geo_boost`
 
@@ -17,7 +31,7 @@ Controls how the provided center point is used in the search.
 **Values:**
 - `score` (default): Center used only for scoring. Backward compatible behavior.
 - `favor`: Strongly prioritizes nearby results by using geohash filtering when possible, with fallback to broader search if insufficient results.
-- `strict`: Always filters by geohash (similar to reverse geocoding). Only returns results within ~500m radius (9 geohash cells at precision 7).
+- `strict`: Always filters by geohash (similar to reverse geocoding). Only returns results within the specified radius.
 
 **Example:**
 ```

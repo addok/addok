@@ -262,6 +262,15 @@ Now you should be able to issue the search with an URL like:
 
 Congratulations!
 
+## Next Steps
+
+Now that your Addok instance is running, you can explore more advanced features:
+
+- **[Geographic Search](geographic_search.md)** - Control how location influences search results with `geo_boost` and `geo_radius` parameters
+- **[HTTP API](api.md)** - Full API reference with all available parameters
+- **[Configuration](config.md)** - Fine-tune your instance settings
+- **[Plugins](plugins.md)** - Extend functionality with community plugins
+
 - - -
 
 ## Troubleshooting

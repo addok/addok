@@ -30,7 +30,7 @@ Issue a full text search.
 - every filter that has been declared in the [config](config.md) is available as
   parameters
 
-See [Geographic Boost](geo_boost.md) for detailed information about geographic filtering modes.
+See [Geographic Search](geographic_search.md) for detailed information about geographic filtering modes.
 
 ##### Multi-value filters
 
