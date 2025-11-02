@@ -1,12 +1,12 @@
 from collections import defaultdict
 from itertools import product
 
-import geohash
+import geohash as geohash_lib
 
-from addok import core
 from addok.config import config
 from addok.db import DB
 from addok.helpers import scripts
+from addok.helpers.geohash import compute_geohash_key
 from addok.pairs import pair_key
 
 
