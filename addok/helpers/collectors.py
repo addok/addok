@@ -75,6 +75,53 @@ def bucket_with_meaningful(helper):
                 helper.meaningful.append(token)
                 break  # We want only one more.
     helper.keys = [t.db_key for t in helper.meaningful]
+    
+    # Handle geo_boost modes
+    if hasattr(helper, 'geo_boost_mode'):
+        mode = helper.geo_boost_mode
+        
+        if mode == "strict":
+            # Always use geohash as filter (like reverse)
+            helper.debug("geo_boost=strict: filtering by geohash")
+            
+            if not helper.geohash_key:
+                # No documents in geohash area - return empty results
+                helper.debug("geo_boost=strict: no documents in geohash area")
+                return True  # Stop processing, bucket stays empty
+            
+            if helper.bucket_empty:
+                # In strict mode, ALWAYS include geohash, no fallback
+                helper.new_bucket(helper.keys + [helper.geohash_key])
+            else:
+                helper.add_to_bucket(helper.keys + [helper.geohash_key])
+            # Stop processing collectors - we have our strict results
+            return True
+        
+        elif mode == "favor" and helper.geohash_key:
+            # Try with geohash first, fallback without if dry
+            helper.debug("geo_boost=favor: prioritizing nearby results")
+            if helper.bucket_empty:
+                helper.new_bucket(helper.keys + [helper.geohash_key], config.BUCKET_MIN)
+                if helper.bucket_dry:
+                    # Not enough results nearby, expand search
+                    helper.debug("Not enough nearby results, expanding search area")
+                    helper.new_bucket(helper.keys, config.BUCKET_MIN)
+                elif len(helper.bucket) == config.BUCKET_MIN:
+                    helper.new_bucket(helper.keys + [helper.geohash_key])
+            else:
+                helper.add_to_bucket(helper.keys + [helper.geohash_key])
+            
+            # Check for cream with geographic context
+            if (
+                not helper.autocomplete
+                and helper.has_cream()
+                and helper.cream < config.BUCKET_MIN
+            ):
+                helper.debug("Cream found. Returning.")
+                return True
+            return
+    
+    # Default behavior (geo_boost=score or no center)
     if helper.bucket_empty:
         helper.new_bucket(helper.keys, config.BUCKET_MIN)
         if len(helper.bucket) == config.BUCKET_MIN:
@@ -107,6 +154,18 @@ def reduce_with_other_commons(helper):
 
 
 def ensure_geohash_results_are_included_if_center_is_given(helper):
+    # Skip if geo_boost=strict (already handled in bucket_with_meaningful)
+    if hasattr(helper, 'geo_boost_mode') and helper.geo_boost_mode == "strict":
+        return
+    
+    # For favor mode, be more aggressive about including nearby results
+    if hasattr(helper, 'geo_boost_mode') and helper.geo_boost_mode == "favor":
+        if helper.geohash_key and len(helper.bucket) >= helper.wanted:
+            helper.debug("geo_boost=favor: ensuring nearby results in final set")
+            helper.add_to_bucket(helper.keys + [helper.geohash_key], max(helper.wanted * 2, 20))
+        return
+    
+    # Default behavior (geo_boost=score): only when overflow
     if helper.bucket_overflow and helper.geohash_key:
         helper.debug("Bucket overflow and center, force nearby look up")
         helper.add_to_bucket(helper.keys + [helper.geohash_key], max(helper.wanted, 10))
