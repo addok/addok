@@ -270,6 +270,70 @@ def test_search_should_catch_out_of_range_lon(client):
         "title": "Invalid parameter",
     }
 
+
+def test_search_should_catch_invalid_geo_boost(client):
+    resp = client.get("/search?q=blah&lat=48.8&lon=2.3&geo_boost=invalid")
+    assert resp.status_code == 400
+    assert resp.json == {
+        "description": 'The "geo_boost" parameter is invalid. must be one of: score, favor, strict',
+        "title": "Invalid parameter",
+    }
+
+
+def test_search_should_catch_invalid_geo_radius(client):
+    resp = client.get("/search?q=blah&lat=48.8&lon=2.3&geo_radius=invalid")
+    assert resp.status_code == 400
+    assert resp.json == {
+        "description": 'The "geo_radius" parameter is invalid. invalid value',
+        "title": "Invalid parameter",
+    }
+
+
+def test_search_should_catch_negative_geo_radius(client):
+    resp = client.get("/search?q=blah&lat=48.8&lon=2.3&geo_radius=-1")
+    assert resp.status_code == 400
+    assert resp.json == {
+        "description": 'The "geo_radius" parameter is invalid. out of range (0..100 km)',
+        "title": "Invalid parameter",
+    }
+
+
+def test_search_should_catch_out_of_range_geo_radius(client):
+    resp = client.get("/search?q=blah&lat=48.8&lon=2.3&geo_radius=150")
+    assert resp.status_code == 400
+    assert resp.json == {
+        "description": 'The "geo_radius" parameter is invalid. out of range (0..100 km)',
+        "title": "Invalid parameter",
+    }
+
+
+def test_search_accepts_valid_geo_boost_score(client, factory):
+    factory(name="rue victor hugo", city="Paris", lat=48.856, lon=2.352)
+    resp = client.get("/search?q=rue victor hugo&lat=48.856&lon=2.352&geo_boost=score")
+    assert resp.status_code == 200
+    assert len(resp.json["features"]) >= 1
+
+
+def test_search_accepts_valid_geo_boost_favor(client, factory):
+    factory(name="rue victor hugo", city="Paris", lat=48.856, lon=2.352)
+    resp = client.get("/search?q=rue victor hugo&lat=48.856&lon=2.352&geo_boost=favor")
+    assert resp.status_code == 200
+    assert len(resp.json["features"]) >= 1
+
+
+def test_search_accepts_valid_geo_boost_strict(client, factory):
+    factory(name="rue victor hugo", city="Paris", lat=48.856, lon=2.352)
+    resp = client.get("/search?q=rue victor hugo&lat=48.856&lon=2.352&geo_boost=strict")
+    assert resp.status_code == 200
+    assert len(resp.json["features"]) >= 1
+
+
+def test_search_accepts_valid_geo_radius(client, factory):
+    factory(name="rue victor hugo", city="Paris", lat=48.856, lon=2.352)
+    resp = client.get("/search?q=rue victor hugo&lat=48.856&lon=2.352&geo_radius=5")
+    assert resp.status_code == 200
+
+
 def test_health_should_return_ok(client):
     resp = client.get("/health")
     assert resp.status_code == 200

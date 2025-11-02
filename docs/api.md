@@ -22,8 +22,15 @@ Issue a full text search.
 - **autocomplete**: activate or deactivate the autocompletion (default: 1)
 - **lat**/**lon**: define a center for giving priority to results close to this
   center (**lng** is also accepted instead of **lon**)
+- **geo_boost**: control how geographic center influences results (default: `score`)
+  - `score`: center used only for scoring (backward compatible)
+  - `favor`: prioritize nearby results with automatic fallback
+  - `strict`: only return results within geographic area (~500m)
+- **geo_radius**: search radius in kilometers (0-100, future feature for dynamic area control)
 - every filter that has been declared in the [config](config.md) is available as
   parameters
+
+See [Geographic Boost](geo_boost.md) for detailed information about geographic filtering modes.
 
 ##### Multi-value filters
 
