@@ -24,11 +24,38 @@ Controls how the provided center point is used in the search.
 GET /search/?q=rue victor hugo&lat=48.8566&lon=2.3522&geo_boost=favor
 ```
 
-### `geo_radius` (future extension)
+### `geo_radius`
 
-Optional parameter to control the search radius in kilometers. Currently reserved for future implementation.
+Controls the search radius in kilometers when a center point is provided. Works with all `geo_boost` modes to dynamically adjust the geographic area.
 
-**Example:**
+**Values:**
+- Numeric value between 0 and 100 (kilometers)
+- Default: `None` (uses default radius based on geohash precision)
+
+**Behavior:**
+The implementation automatically adapts to the configured `GEOHASH_PRECISION`:
+- **Precision 5** (~4.9km cells): Suitable for country-level searches
+- **Precision 6** (~1.2km cells): City-level searches
+- **Precision 7** (~153m cells): Street-level searches (default)
+- **Precision 8** (~38m cells): Building-level precision
+
+For each precision, the system calculates the appropriate number of geohash neighbor layers to approximate the requested radius:
+- **1 layer**: ~3× cell size radius (e.g., ~460m at precision 7)
+- **2 layers**: ~5× cell size radius (e.g., ~765m at precision 7)
+- **3 layers**: ~7× cell size radius (e.g., ~1070m at precision 7)
+- **4 layers**: ~9× cell size radius (e.g., ~1370m at precision 7)
+
+**Examples:**
+```bash
+# Search within 1km
+GET /search/?q=restaurant&lat=48.8566&lon=2.3522&geo_radius=1.0
+
+# Strict filter with custom radius (only results within 500m)
+GET /search/?q=pharmacy&lat=48.8566&lon=2.3522&geo_boost=strict&geo_radius=0.5
+
+# Favor nearby with wide fallback area (try 2km first)
+GET /search/?q=hotel&lat=48.8566&lon=2.3522&geo_boost=favor&geo_radius=2.0
+```
 ```
 GET /search/?q=rue victor hugo&lat=48.8566&lon=2.3522&geo_boost=favor&geo_radius=5
 ```

@@ -1,6 +1,9 @@
 from collections import defaultdict
 from itertools import product
 
+import geohash
+
+from addok import core
 from addok.config import config
 from addok.db import DB
 from addok.helpers import scripts
@@ -154,20 +157,42 @@ def reduce_with_other_commons(helper):
 
 
 def ensure_geohash_results_are_included_if_center_is_given(helper):
+    """Ensure we return results around the geographic center point.
+    
+    This collector is invoked when a center point (lat/lon) is provided,
+    typically as a fallback when other collectors haven't found enough results.
+    
+    Behavior depends on geo_boost_mode:
+    - score (default): Only used as last resort when overflow
+    - favor: More aggressive about including nearby results
+    - strict: Always geohash filter (handled earlier, skipped here)
+    
+    When geo_radius is specified, expands the geohash area to cover the
+    requested radius in kilometers.
+    """
     # Skip if geo_boost=strict (already handled in bucket_with_meaningful)
     if hasattr(helper, 'geo_boost_mode') and helper.geo_boost_mode == "strict":
         return
+    
+    # Get geo_radius if specified
+    radius_km = helper.geo_radius if hasattr(helper, 'geo_radius') else None
     
     # For favor mode, be more aggressive about including nearby results
     if hasattr(helper, 'geo_boost_mode') and helper.geo_boost_mode == "favor":
         if helper.geohash_key and len(helper.bucket) >= helper.wanted:
             helper.debug("geo_boost=favor: ensuring nearby results in final set")
+            
+            # Note: geohash_key was already computed with geo_radius in the property
+            # No need to recompute here
             helper.add_to_bucket(helper.keys + [helper.geohash_key], max(helper.wanted * 2, 20))
         return
     
     # Default behavior (geo_boost=score): only when overflow
     if helper.bucket_overflow and helper.geohash_key:
         helper.debug("Bucket overflow and center, force nearby look up")
+        
+        # Note: geohash_key was already computed with geo_radius in the property
+        # No need to recompute here
         helper.add_to_bucket(helper.keys + [helper.geohash_key], max(helper.wanted, 10))
 
 
