@@ -14,6 +14,21 @@ REDIS_UNIQUE_ID = str(uuid.uuid4())  # Really unique id for tmp values in redis.
 
 
 def compute_geohash_key(geoh, with_neighbors=True):
+    """Compute a temporary Redis key for geohash-based filtering.
+    
+    Args:
+        geoh: The geohash string
+        with_neighbors: If True, includes the 8 neighboring geohash cells
+        
+    Returns:
+        A temporary Redis key containing the union of all documents in the
+        geohash area, or False if no documents found.
+        
+    Note:
+        For geo_radius support, this could be extended to include multiple
+        levels of neighbors based on the requested radius in km.
+        Current implementation: ~0.15km per cell at precision 7.
+    """
     if with_neighbors:
         neighbors = geohash.expand(geoh)
         neighbors = [dbkeys.geohash_key(n) for n in neighbors]
@@ -243,9 +258,11 @@ class Search(BaseHelper):
         self.autocomplete = autocomplete
         self.pid = REDIS_UNIQUE_ID
 
-    def __call__(self, query, lat=None, lon=None, **filters):
+    def __call__(self, query, lat=None, lon=None, geo_boost=None, geo_radius=None, **filters):
         self.lat = lat
         self.lon = lon
+        self.geo_boost_mode = geo_boost or config.GEO_BOOST_DEFAULT
+        self.geo_radius = geo_radius
         self._geohash_key = None
         self.results = {}
         self.bucket = set([])  # No duplicates.
@@ -456,6 +473,8 @@ def search(
     autocomplete=False,
     lat=None,
     lon=None,
+    geo_boost=None,
+    geo_radius=None,
     verbose=False,
     **filters
 ):
@@ -465,7 +484,7 @@ def search(
         verbose=verbose,
         autocomplete=autocomplete,
     )
-    return helper(query, lat=lat, lon=lon, **filters)
+    return helper(query, lat=lat, lon=lon, geo_boost=geo_boost, geo_radius=geo_radius, **filters)
 
 
 def reverse(lat, lon, limit=1, verbose=False, **filters):
