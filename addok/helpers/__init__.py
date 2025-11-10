@@ -1,10 +1,13 @@
 import csv
+import os
+import pickle
 import sys
-from itertools import islice
 from functools import wraps
 from importlib import import_module
 from math import asin, cos, exp, radians, sin, sqrt
+from multiprocessing import get_context
 from multiprocessing.pool import RUN, IMapUnorderedIterator, Pool
+from types import FunctionType, ModuleType
 
 from progressist import ProgressBar
 
@@ -173,20 +176,114 @@ class ChunkedPool(Pool):
         return result
 
 
+def _get_config_overrides():
+    """Extract configuration values that differ from defaults.
+
+    Returns:
+        Dict of config keys and their overridden values (only simple serializable types).
+    """
+    # Import here to avoid circular dependencies
+    from addok.config import default as default_config
+
+    # Only propagate uppercase config keys (actual settings, not methods)
+    overrides = {}
+    for key in config.keys():
+        if not key.isupper():
+            continue
+
+        current_value = config.get(key)
+        default_value = getattr(default_config, key, None)
+
+        # Skip if values are the same
+        if current_value == default_value:
+            continue
+
+        # Skip non-serializable types (functions, classes, modules)
+        if isinstance(current_value, (FunctionType, type, ModuleType)):
+            continue
+
+        # Skip lists/dicts containing functions or classes
+        if isinstance(current_value, (list, tuple)):
+            if any(isinstance(item, (FunctionType, type, ModuleType)) for item in current_value):
+                continue
+        elif isinstance(current_value, dict):
+            if any(isinstance(v, (FunctionType, type, ModuleType)) for v in current_value.values()):
+                continue
+
+        # Test if value is pickle-serializable
+        try:
+            pickle.dumps(current_value)
+            overrides[key] = current_value
+        except (pickle.PicklingError, TypeError, AttributeError):
+            # Skip values that can't be pickled
+            pass
+
+    return overrides
+
+
+def _worker_init(redis_params, config_env_vars=None, config_overrides=None):
+    """Initialize Redis connection in worker processes for multiprocessing.
+
+    This is required for spawn context where the connection object doesn't
+    get properly inherited by child processes.
+
+    Args:
+        redis_params: Dict with Redis connection parameters (host, port, db, etc.)
+        config_env_vars: Dict of environment variables to set for configuration
+        config_overrides: Dict of config values to override after loading
+    """
+    # Import here to avoid circular dependencies and ensure fresh imports in spawned processes
+    from addok import ds
+    from addok.config import config as addok_config
+    from addok.db import DB
+
+    # Set environment variables for configuration
+    if config_env_vars:
+        for key, value in config_env_vars.items():
+            if value is not None:
+                os.environ[key] = str(value)
+
+    # Force reload of config in worker process
+    if not addok_config.loaded:
+        addok_config.load()
+
+    # Apply config overrides (for test monkeypatching)
+    if config_overrides:
+        for key, value in config_overrides.items():
+            addok_config[key] = value
+
+    # Connect to Redis with provided parameters
+    DB.connect(**redis_params['indexes'])
+
+    # Also connect document store if using Redis
+    if 'documents' in redis_params and redis_params.get('use_redis_documents'):
+        ds._DB.connect(**redis_params['documents'])
+
+
 def parallelize(func, iterable, chunk_size, **bar_kwargs):
+    """Execute func on iterable chunks using multiprocessing.
+
+    Uses 'spawn' context on macOS for fork-safety, 'fork' on Linux for speed.
+    """
+    # Import here to avoid circular dependencies
+    from addok.db import get_redis_params
+
     bar = Bar(prefix="Processing…", **bar_kwargs)
 
-    if sys.platform == "darwin":
-        while True:
-            chunk = list(islice(iterable, chunk_size))
-            if not chunk:
-                bar.finish()
-                break
+    # Prepare worker initialization parameters
+    redis_params = get_redis_params()
+    config_env_vars = {'ADDOK_CONFIG_MODULE': os.environ.get('ADDOK_CONFIG_MODULE')} if 'ADDOK_CONFIG_MODULE' in os.environ else {}
+    config_overrides = _get_config_overrides()
 
-            func(*chunk)
+    # Use 'spawn' on macOS for fork-safety, 'fork' on Linux for performance
+    context = get_context('spawn' if sys.platform == 'darwin' else 'fork')
+
+    with ChunkedPool(
+        processes=config.BATCH_WORKERS,
+        initializer=_worker_init,
+        initargs=(redis_params, config_env_vars, config_overrides),
+        context=context
+    ) as pool:
+        for chunk in pool.imap_unordered(func, iterable, chunk_size):
             bar(step=len(chunk))
-    else:
-        with ChunkedPool(processes=config.BATCH_WORKERS) as pool:
-            for chunk in pool.imap_unordered(func, iterable, chunk_size):
-                bar(step=len(chunk))
-            bar.finish()
+        bar.finish()

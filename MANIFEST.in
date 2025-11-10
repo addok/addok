@@ -1,4 +1,21 @@
 include README.md
-include requirements.txt
-recursive-include addok/resources *
 recursive-include addok/helpers/lua *
+
+# Exclude development and build artifacts
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude .DS_Store
+prune venv
+prune .venv
+prune htmlcov
+prune site
+prune scripts
+prune prof
+prune debian
+prune .pytest_cache
+exclude .coverage
+exclude coverage.lcov
+exclude *.log
+exclude *.rdb
+exclude *.db
+exclude .cli_history

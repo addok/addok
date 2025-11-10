@@ -8,9 +8,9 @@ You need sudo grants on this server, and it must be connected to Internet.
 ## Install system dependencies
 
     sudo apt update
-    sudo apt install redis-server python3 python3-dev python-virtualenv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
+    sudo apt install redis-server python3 python3-dev python3-venv build-essential git wget nginx uwsgi uwsgi-plugin-python3 bzip2
 
-Note: any version of python above or equal to 3.7 is OK.
+Note: Python 3.9 or higher is required.
 
 ## Create a Unix user
 
@@ -34,7 +34,7 @@ From now on, until we say differently, the commands are run as `addok` user.
 
 ## Create a virtualenv and activate it
 
-    python3.6 -m venv /srv/addok/venv
+    python3 -m venv /srv/addok/venv
     source /srv/addok/venv/bin/activate
 
 Note: this activation is not persistent, so if you open a new terminal window,
@@ -46,10 +46,11 @@ you will need to run again this last line.
 
 ## Install addok and plugins
 
-    pip install addok addok-fr addok-france
+    pip install addok[perf] addok-fr addok-france
 
-Note: if you want batch CSV support on the HTTP API, also install the plugin
-`addok-csv`.
+Note: 
+- The `[perf]` extra installs `hiredis` for better Redis performance. It's optional but recommended for production.
+- If you want batch CSV support on the HTTP API, also install the plugin `addok-csv`.
 
 Check that the installation is successful so far by running this command:
 

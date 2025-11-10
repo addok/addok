@@ -6,6 +6,8 @@ notes.md
 .cli_history
 addok/config/local*.py
 addok.egg-info/
+.venv/
+.venv-*/
 debian/addok
 debian/addok.postinst.debhelper
 debian/addok.postrm.debhelper

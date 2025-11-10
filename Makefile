@@ -1,19 +1,22 @@
 develop:
-	pip install -e .
-	pip install -r requirements-dev.txt
+	pip install -e ".[dev]"
 test:
-	py.test
+	python -m pytest
 testcoverage:
-	py.test --cov-report lcov --cov=addok/
+	python -m pytest --cov-report lcov --cov=addok/
 testall:
-	py.test --quiet
-	cd ../addok-france && py.test --quiet
-	cd ../addok-fr && py.test --quiet
-	cd ../addok-csv && py.test --quiet
-	cd ../addok-sqlite-store && py.test --quiet
+	python -m pytest --quiet
+	cd ../addok-france && python -m pytest --quiet
+	cd ../addok-fr && python -m pytest --quiet
+	cd ../addok-csv && python -m pytest --quiet
+	cd ../addok-sqlite-store && python -m pytest --quiet
 clean:
 	rm -rf dist/ build/
-dist: test
-	python setup.py sdist bdist_wheel
-upload:
+dist: clean test
+	python -m build
+upload: dist
+	@if [ -z "$$(ls dist/*.whl dist/*.tar.gz 2>/dev/null)" ]; then \
+		echo "Error: No distribution files found. Run 'make dist' first."; \
+		exit 1; \
+	fi
 	twine upload dist/*

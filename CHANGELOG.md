@@ -1,3 +1,30 @@
+## Unreleased
+
+## 1.3.0 (2025-11-02)
+
+### Breaking changes
+
+- Update `redis` to 6.4.0 and `hiredis` to 3.3.0 for Redis 8 compatibility
+- Minimum Redis version requirement increased from 5.0 to 7.2 (required by redis-py 6.x)
+- `hiredis` is now an optional dependency for performance optimization. Install with `pip install addok[perf]` to enable it. Addok will work without it but with slightly reduced Redis performance.
+
+### New features
+
+- **Multi-value filters with OR logic**: Filters now support multiple values using the `+` separator (e.g., `?type=street+city`). This allows searching for documents matching any of the specified values. Multi-value filters work on both `/search/` and `/reverse/` endpoints.
+- Add `MAX_FILTER_VALUES` configuration option to control the maximum number of values allowed in a multi-value filter (default: 10)
+
+### Changes
+
+- Add Python 3.14 support
+- Modernize Python packaging to use `pyproject.toml` (PEP 621)
+- Development dependencies moved to optional `[dev]` group: use `pip install -e .[dev]` for development setup
+- **Enable multiprocessing on macOS**: Use `spawn` context instead of `fork` to ensure proper Redis connection handling and avoid fork-safety issues on macOS. This makes macOS behavior consistent with production Linux environments.
+- **Improved filter strategy for common tokens**: When searching with only common tokens (high frequency) and filters, the system now intelligently compares filter size with token frequency to choose the most efficient strategy (Redis intersection vs manual scan). This can significantly improve performance when using filters that are more selective than the search tokens (e.g., searching `"la"` with `type=locality` or region-based filters).
+
+## 1.2.1 (2025-08-26)
+
+- Make results more deterministic (#[899](https://github.com/addok/addok/pull/899))
+
 ## 1.2.0 (2025-06-01)
 
 - Add Python 3.12 and 3.13 support

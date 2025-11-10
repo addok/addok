@@ -58,6 +58,18 @@ def test_search_filters_can_be_combined(client, factory):
     assert feature["properties"]["type"] == "street"
 
 
+def test_search_supports_multi_value_filter_via_http(client, factory):
+    factory(name="rue de Paris", type="street")
+    factory(name="Paris", type="city")
+    resp = client.get(
+        "/search/", query_string={"q": "paris", "type": "street+city"}
+    )
+    assert resp.json["type"] == "FeatureCollection"
+    assert len(resp.json["features"]) == 2
+    types = {feature["properties"]["type"] for feature in resp.json["features"]}
+    assert types == {"street", "city"}
+
+
 def test_centered_search_should_return_center(client, factory):
     factory(name="rue de Paris", type="street")
     resp = client.get("/search/", query_string={"q": "paris", "lat": "44", "lon": "4"})
@@ -100,6 +112,44 @@ def test_reverse_can_be_filtered(client, factory):
     assert len(resp.json["features"]) == 1
     feature = resp.json["features"][0]
     assert feature["properties"]["type"] == "city"
+
+
+def test_reverse_supports_multi_value_filter(client, factory):
+    """Test that reverse geocoding supports multi-value filters with OR logic"""
+    street = factory(name="rue des avions", lat=48.2345, lon=5.2354, type="street")
+    city = factory(name="Ville", lat=48.2345, lon=5.2354, type="city")
+    locality = factory(name="Lieu-dit", lat=48.2345, lon=5.2354, type="locality")
+    resp = client.get(
+        "/reverse/",
+        query_string={"lat": "48.2345", "lon": "5.2354", "type": "street+city", "limit": "10"},
+    )
+    assert resp.json["type"] == "FeatureCollection"
+    assert len(resp.json["features"]) == 2
+    types = {feature["properties"]["type"] for feature in resp.json["features"]}
+    assert types == {"street", "city"}
+
+
+def test_reverse_multi_filter_combination(client, factory):
+    """Test that reverse geocoding combines multiple filters with AND logic"""
+    factory(name="rue A", lat=48.2345, lon=5.2354, type="street", postcode="75001")
+    factory(name="rue B", lat=48.2345, lon=5.2354, type="street", postcode="75002")
+    factory(name="Ville C", lat=48.2345, lon=5.2354, type="city", postcode="75001")
+    resp = client.get(
+        "/reverse/",
+        query_string={
+            "lat": "48.2345",
+            "lon": "5.2354",
+            "type": "street+city",
+            "postcode": "75001",
+            "limit": "10",
+        },
+    )
+    assert resp.json["type"] == "FeatureCollection"
+    # Should only match: rue A (street+75001) and Ville C (city+75001)
+    # Should NOT match: rue B (street but wrong postcode)
+    assert len(resp.json["features"]) == 2
+    names = {feature["properties"]["name"] for feature in resp.json["features"]}
+    assert names == {"rue A", "Ville C"}
 
 
 def test_reverse_should_have_cors_headers(client, factory):

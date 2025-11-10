@@ -25,6 +25,32 @@ Issue a full text search.
 - every filter that has been declared in the [config](config.md) is available as
   parameters
 
+##### Multi-value filters
+
+Filters support multiple values with OR logic using the `+` separator. For example:
+
+```
+/search/?q=Paris&type=street+city
+```
+
+This will return results where the type is either "street" OR "city".
+
+You can combine multiple filters with AND logic:
+
+```
+/search/?q=Paris&type=street+city&postcode=75001
+```
+
+This will return results where:
+- type is "street" OR "city" (OR logic)
+- AND postcode is "75001" (AND logic between different filters)
+
+**Notes:**
+- Values are automatically deduplicated and sorted: `street+city+street` becomes `city+street`
+- Spaces around `+` are ignored: `street + city` is equivalent to `street+city`
+- Empty values are filtered out: `+street++` becomes `street`
+- The maximum number of values per filter is configurable (default: 10, see [MAX_FILTER_VALUES](config.md#max_filter_values-int))
+
 #### Response format
 
 The response format follows the [GeoCodeJSON spec](https://github.com/geocoders/geocodejson-spec).
@@ -82,7 +108,7 @@ Here is an example:
 }
 ```
 
-### /reverse/
+### /reverse/
 
 Issue a reverse geocoding.
 
@@ -92,5 +118,8 @@ Parameters:
   accepted instead of **lon**)
 - every filter that has been declared in the [config](config.md) is available as
   parameters
+
+Multi-value filters (with OR logic) are supported the same way as in `/search/`.
+See [Multi-value filters](#multi-value-filters) above for details.
 
 Same response format as the `/search/` endpoint.
