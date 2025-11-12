@@ -315,31 +315,46 @@ Min score used to consider a result may *match* the query.
 
 #### FILTERS_MULTI_VALUE_SEPARATOR (str)
 
-Separator character used to split filter values into multiple values for OR logic.
-Set to `None` to disable multi-value filter support entirely.
+Separator character used in HTTP query strings to split filter values into multiple values for OR logic.
+Set to `None` to disable separator parsing (filter values are treated as literals, but multiple parameters still work).
 
     FILTERS_MULTI_VALUE_SEPARATOR = ' '
 
-**Supported syntaxes** (when enabled):
-- Separator in parameter: `?type=street city` (decoded from `type=street+city`)
-- Multiple parameters: `?type=street&type=city`
-- Combined: `?type=street&type=city municipality`
+**Important**: This setting only affects the **HTTP API** query string parsing. When calling
+`search()` or `reverse()` functions directly in Python, use lists for multi-value filters:
+
+```python
+# HTTP API (uses separator)
+GET /search?q=Paris&type=street+city  # Parsed into ["street", "city"]
+
+# Python API (use lists directly)
+search("Paris", type=["street", "city"])  # Multi-value
+search("Paris", type="street")            # Single value (backward compatible)
+```
+
+**HTTP syntaxes:**
+
+When separator is configured (e.g., space):
+- Single parameter with separator: `?type=street+city` → `["street", "city"]`
+- Multiple parameters: `?type=street&type=city` → `["street", "city"]`
+- Combined: `?type=street&type=city+locality` → `["street", "city", "locality"]`
+
+When `separator=None`:
+- Single parameter: `?type=street+city` → `["street city"]` (treated as literal with space)
+- Multiple parameters: `?type=street&type=city` → `["street", "city"]` (still works!)
 
 **Default (space)**: Works naturally with URL encoding where `+` represents spaces.
-`?type=street+municipality` → decoded and split into `["street", "municipality"]`.
+`?type=street+municipality` → split into `["street", "municipality"]`.
 
-**Important**: With space separator, filter values cannot contain spaces.
-For values with spaces, use a different separator:
+**For filter values containing spaces**, use a different separator:
 
 ```python
 FILTERS_MULTI_VALUE_SEPARATOR = '|'   # ?type=street|municipality
-FILTERS_MULTI_VALUE_SEPARATOR = ','   # ?type=street,municipality
-FILTERS_MULTI_VALUE_SEPARATOR = None  # Disable (treats "my street" as literal)
+FILTERS_MULTI_VALUE_SEPARATOR = ','   # ?type=street,municipality  
+FILTERS_MULTI_VALUE_SEPARATOR = None  # ?type=my+street treated as "my street"
 ```
 
-Spaces around or between separators are normalized:
-- For space separator: multiple spaces between values are collapsed (`street   city` → `street city`).
-- For non-space separator (e.g., `|`): spaces around the separator are removed (`street  |  city` → `street|city`), but multiple consecutive separators are not collapsed.
+Values are automatically deduplicated, sorted, and trimmed of whitespace.
 
 #### MAX_FILTER_VALUES (int)
 
