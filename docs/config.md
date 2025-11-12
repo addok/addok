@@ -350,7 +350,7 @@ When `separator=None`:
 
 ```python
 FILTERS_MULTI_VALUE_SEPARATOR = '|'   # ?type=street|municipality
-FILTERS_MULTI_VALUE_SEPARATOR = ','   # ?type=street,municipality  
+FILTERS_MULTI_VALUE_SEPARATOR = ','   # ?type=street,municipality
 FILTERS_MULTI_VALUE_SEPARATOR = None  # ?type=my+street treated as "my street"
 ```
 
