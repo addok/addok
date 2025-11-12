@@ -337,7 +337,9 @@ FILTERS_MULTI_VALUE_SEPARATOR = ','   # ?type=street,municipality
 FILTERS_MULTI_VALUE_SEPARATOR = None  # Disable (treats "my street" as literal)
 ```
 
-Spaces around separator are normalized: `street  city` → `street city`.
+Spaces around or between separators are normalized:
+- For space separator: multiple spaces between values are collapsed (`street   city` → `street city`).
+- For non-space separator (e.g., `|`): spaces around the separator are removed (`street  |  city` → `street|city`), but multiple consecutive separators are not collapsed.
 
 #### MAX_FILTER_VALUES (int)
 
