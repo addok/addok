@@ -154,6 +154,21 @@ def test_reverse_multi_filter_combination(client, factory):
     assert names == {"rue A", "Ville C"}
 
 
+def test_reverse_multi_params_without_separator(config, client, factory):
+    """Test that reverse with multiple parameters works even when separator=None"""
+    config.FILTERS_MULTI_VALUE_SEPARATOR = None
+    
+    street = factory(name="rue Test", lat=48.2345, lon=5.2354, type="street")
+    city = factory(name="City Test", lat=48.2345, lon=5.2354, type="city")
+    locality = factory(name="Locality Test", lat=48.2345, lon=5.2354, type="locality")
+    
+    # Multiple parameters should still work with OR logic
+    resp = client.get("/reverse/?lat=48.2345&lon=5.2354&type=street&type=city&limit=10")
+    assert len(resp.json["features"]) == 2
+    types = {feature["properties"]["type"] for feature in resp.json["features"]}
+    assert types == {"street", "city"}
+
+
 def test_reverse_should_have_cors_headers(client, factory):
     factory(name="rue des avions", lat=44, lon=4)
     resp = client.get("/reverse/", query_string={"lat": "44", "lng": "4"})
@@ -283,16 +298,24 @@ def test_multi_value_filters_can_be_disabled(config, client, factory):
     """Test that multi-value filters can be completely disabled.
 
     When FILTERS_MULTI_VALUE_SEPARATOR=None, filter values are never split,
-    and multiple query parameters are not combined.
+    but multiple query parameters should still work for multi-value OR logic.
     """
     config.FILTERS_MULTI_VALUE_SEPARATOR = None
 
     factory(name="Test Item", type="foo bar")  # Literal value with space
+    factory(name="Rue Test", type="street")
+    factory(name="City Test", type="city")
 
-    # type=foo+bar → decoded as "foo bar" → not split because feature disabled
+    # type=foo+bar → decoded as "foo bar" → not split because separator disabled
     resp = client.get("/search/?q=test&type=foo+bar")
     assert len(resp.json["features"]) == 1
     assert resp.json["features"][0]["properties"]["type"] == "foo bar"
+    
+    # Multi-parameters should still work even with separator=None
+    resp = client.get("/search/?q=test&type=street&type=city")
+    assert len(resp.json["features"]) == 2
+    types = {f["properties"]["type"] for f in resp.json["features"]}
+    assert types == {"street", "city"}
 
 
 def test_multi_value_filter_with_space_separator(config, client, factory):
