@@ -14,11 +14,6 @@ from .helpers.text import ascii
 REDIS_UNIQUE_ID = str(uuid.uuid4())  # Really unique id for tmp values in redis.
 
 
-def get_filter_separator():
-    """Get the configured filter separator."""
-    return config.FILTERS_MULTI_VALUE_SEPARATOR
-
-
 def compute_geohash_key(geoh, with_neighbors=True):
     if with_neighbors:
         neighbors = geohash.expand(geoh)
@@ -135,48 +130,42 @@ class BaseHelper:
         for msg in self._debug:
             print(msg)
 
-    def _normalize_filter_value(self, value):
-        """Normalize filter value by removing spaces, sorting, and deduplicating.
+    def _normalize_filter_values(self, values):
+        """Normalize filter values by deduplicating and sorting.
 
         Args:
-            value: Raw filter value (e.g., "street  city  street")
+            values: List of filter values (e.g., ["street", "city", "street"])
 
         Returns:
-            Normalized string (e.g., "city street") or original if disabled.
+            Sorted list of unique values, limited to MAX_FILTER_VALUES
         """
-        separator = config.FILTERS_MULTI_VALUE_SEPARATOR
-        if not separator:
-            return value.strip()
+        if not values:
+            return []
 
-        # Normalize spaces around separator: "street  city" → "street city"
-        pattern = rf'\s*{re.escape(separator)}\s*'
-        cleaned = re.sub(pattern, separator, value.strip())
+        # Deduplicate while preserving order, then limit and sort
+        unique_values = list(dict.fromkeys(str(v).strip() for v in values if v))
+        return sorted(unique_values[:config.MAX_FILTER_VALUES])
 
-        # Split, deduplicate, limit, sort
-        values = [v.strip() for v in cleaned.split(separator) if v.strip()]
-        unique_values = list(dict.fromkeys(values))[:config.MAX_FILTER_VALUES]
-        return separator.join(sorted(unique_values))
-
-    def _compute_multifilter(self, filter_name, normalized_value):
+    def _compute_multifilter(self, filter_name, values):
         """Create temporary Redis key for OR filter using SUNIONSTORE.
 
-        Example: type="street city" matches documents where type is "street" OR "city".
+        Example: type=["street", "city"] matches documents where type is "street" OR "city".
         Result is cached (10s) or persisted if large (>100k items).
 
         Args:
             filter_name: Filter field name (e.g., "type")
-            normalized_value: Normalized value (e.g., "city street")
+            values: List of filter values (e.g., ["street", "city"])
 
         Returns:
             Redis key for the combined filter
         """
+        # Create a stable key based on sorted values (use | as internal separator)
+        normalized_value = '|'.join(values)
         key = dbkeys.filter_key(filter_name, normalized_value)
 
         if not DB.exists(key):
             self.debug(f'MultiFilter created: {filter_name}={normalized_value}')
-            separator = get_filter_separator()
-            keys = [dbkeys.filter_key(filter_name, v)
-                    for v in normalized_value.split(separator)]
+            keys = [dbkeys.filter_key(filter_name, v) for v in values]
             DB.sunionstore(key, keys)
 
         # Persist large filters, expire small ones
@@ -189,14 +178,16 @@ class BaseHelper:
         return key
 
     def _build_filters(self, filters):
-        """Build filter keys with normalized multi-value support.
+        """Build filter keys from list-based filter parameters.
 
-        This method processes filter parameters, normalizes multi-value filters,
-        creates temporary Redis keys for OR operations, and optionally combines
-        multiple filters with AND logic.
+        This method expects filter values as lists, but also accepts strings
+        for backward compatibility (treated as single-value lists).
+        It creates Redis keys for single or multi-value filters, and optionally
+        combines multiple filters with AND logic.
 
         Args:
-            filters: Filter parameters (e.g., {"type": "street city"})
+            filters: Dict with list or string values 
+                     (e.g., {"type": ["street", "city"]} or {"type": "street"})
 
         Returns:
             List of filter keys to use in queries
@@ -205,22 +196,29 @@ class BaseHelper:
 
         filter_keys = []
         for k, v in filters.items():
-            if not v.strip():
+            # Backward compatibility: convert string to single-value list
+            if isinstance(v, str):
+                v = [v]
+            elif not isinstance(v, (list, tuple)):
+                v = [v]
+
+            normalized_values = self._normalize_filter_values(v)
+            if not normalized_values:
                 continue
 
-            if separator:
-                normalized = self._normalize_filter_value(v)
-                if separator in normalized:
-                    # Multi-value: create OR filter key
-                    filter_key = self._compute_multifilter(k, normalized)
-                else:
-                    # Single value
-                    filter_key = dbkeys.filter_key(k, normalized)
+            # Single value: direct filter key
+            if len(normalized_values) == 1:
+                filter_key = dbkeys.filter_key(k, normalized_values[0])
+                filter_keys.append(filter_key)
+            # Multi-value: create OR filter if enabled
+            elif separator:
+                filter_key = self._compute_multifilter(k, normalized_values)
                 filter_keys.append(filter_key)
             else:
-                # Multi-value disabled
-                filter_key = dbkeys.filter_key(k, v.strip())
+                # Multi-value disabled: take first value only
+                filter_key = dbkeys.filter_key(k, normalized_values[0])
                 filter_keys.append(filter_key)
+                self.debug(f'Multi-value disabled, using only: {k}={normalized_values[0]}')
 
         # Combine with AND logic if multiple filters
         if len(filter_keys) > 1:
