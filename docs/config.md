@@ -312,14 +312,41 @@ list of strings.
 Min score used to consider a result may *match* the query.
 
     MATCH_THRESHOLD = 0.9
+
+#### FILTERS_MULTI_VALUE_SEPARATOR (str)
+
+Separator character used to split filter values into multiple values for OR logic.
+Set to `None` to disable multi-value filter support entirely.
+
+    FILTERS_MULTI_VALUE_SEPARATOR = ' '
+
+**Supported syntaxes** (when enabled):
+- Separator in parameter: `?type=street city` (decoded from `type=street+city`)
+- Multiple parameters: `?type=street&type=city`
+- Combined: `?type=street&type=city municipality`
+
+**Default (space)**: Works naturally with URL encoding where `+` represents spaces.
+`?type=street+municipality` → decoded and split into `["street", "municipality"]`.
+
+**Important**: With space separator, filter values cannot contain spaces.
+For values with spaces, use a different separator:
+
+```python
+FILTERS_MULTI_VALUE_SEPARATOR = '|'   # ?type=street|municipality
+FILTERS_MULTI_VALUE_SEPARATOR = ','   # ?type=street,municipality
+FILTERS_MULTI_VALUE_SEPARATOR = None  # Disable (treats "my street" as literal)
+```
+
+Spaces around separator are normalized: `street  city` → `street city`.
+
 #### MAX_FILTER_VALUES (int)
-Maximum number of values allowed in a multi-value filter (e.g., `type=street+city+locality`).
-This limit prevents performance issues and potential abuse when using OR filters.
+
+Maximum number of values in a multi-value filter (e.g., `type=street city locality`).
+Prevents performance issues with OR filters.
 
     MAX_FILTER_VALUES = 10
 
-For example, with `MAX_FILTER_VALUES = 10`, a query like `?type=v1+v2+v3+...+v15` will only
-consider the first 10 unique values after deduplication and sorting.
+Example: `?type=v1 v2 v3...v15` only considers the first 10 unique values.
 
 #### PROCESSORS_PYPATHS (iterable of Python paths)
 Define the various functions to preprocess the text, before indexing and
