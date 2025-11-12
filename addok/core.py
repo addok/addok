@@ -143,7 +143,8 @@ class BaseHelper:
             return []
 
         # Deduplicate while preserving order, then limit and sort
-        unique_values = list(dict.fromkeys(str(v).strip() for v in values if v))
+        # Filter after stripping to catch whitespace-only strings
+        unique_values = list(dict.fromkeys(s for s in (str(v).strip() for v in values) if s))
         return sorted(unique_values[:config.MAX_FILTER_VALUES])
 
     def _compute_multifilter(self, filter_name, values):
@@ -192,8 +193,6 @@ class BaseHelper:
         Returns:
             List of filter keys to use in queries
         """
-        separator = config.FILTERS_MULTI_VALUE_SEPARATOR
-
         filter_keys = []
         for k, v in filters.items():
             # Backward compatibility: convert string to single-value list
@@ -210,15 +209,10 @@ class BaseHelper:
             if len(normalized_values) == 1:
                 filter_key = dbkeys.filter_key(k, normalized_values[0])
                 filter_keys.append(filter_key)
-            # Multi-value: create OR filter if enabled
-            elif separator:
+            # Multi-value: create OR filter
+            else:
                 filter_key = self._compute_multifilter(k, normalized_values)
                 filter_keys.append(filter_key)
-            else:
-                # Multi-value disabled: take first value only
-                filter_key = dbkeys.filter_key(k, normalized_values[0])
-                filter_keys.append(filter_key)
-                self.debug(f'Multi-value disabled, using only: {k}={normalized_values[0]}')
 
         # Combine with AND logic if multiple filters
         if len(filter_keys) > 1:
