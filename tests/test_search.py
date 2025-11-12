@@ -351,7 +351,7 @@ def test_search_supports_multi_value_filter(factory):
     street = factory(name="rue de Paris", type="street")
     city = factory(name="Paris", type="city")
     locality = factory(name="Grenelle", type="locality") # Unwanted result
-    results = search("paris", type="street city")
+    results = search("paris", type=["street", "city"])
     ids = {r.id for r in results}
     assert street["id"] in ids
     assert city["id"] in ids
@@ -362,54 +362,22 @@ def test_search_multi_filter_combination_with_other_filters(factory):
     street_75000 = factory(name="rue de Paris", type="street", postcode="75000")
     street_77000 = factory(name="avenue de Paris", type="street", postcode="77000")
     city = factory(name="Paris", type="city", postcode="75000")
-    results = search("paris", type="street city", postcode="75000")
+    results = search("paris", type=["street", "city"], postcode="75000")
     ids = {r.id for r in results}
     assert street_75000["id"] in ids
     assert city["id"] in ids
     assert street_77000["id"] not in ids
 
 
-def test_filters_are_stripped(factory):
-    street = factory(name="rue de Paris", type="street")
-    city = factory(name="Paris", type="city")
-    results = search("paris", type="street ")
-    ids = [r.id for r in results]
-    assert street["id"] in ids
-
-
 def test_multifilter_with_duplicate_values(factory):
     """Test that duplicate values in multi-filter are deduplicated"""
     street = factory(name="rue de Paris", type="street")
     city = factory(name="Paris", type="city")
-    # "street street city" should be equivalent to "street city"
-    results = search("paris", type="street street city")
+    # Duplicate "street" should be deduplicated
+    results = search("paris", type=["street", "street", "city"])
     ids = {r.id for r in results}
     assert street["id"] in ids
     assert city["id"] in ids
-
-
-def test_multifilter_with_spaces(factory):
-    """Test that spaces in multi-filter are handled correctly"""
-    street = factory(name="rue de Paris", type="street")
-    city = factory(name="Paris", type="city")
-    locality = factory(name="Grenelle", type="locality")
-    # Multiple spaces should be normalized
-    results = search("paris", type="street   city")
-    ids = {r.id for r in results}
-    assert street["id"] in ids
-    assert city["id"] in ids
-    assert locality["id"] not in ids
-
-
-def test_multifilter_with_empty_values(factory):
-    """Test that empty values in multi-filter are ignored"""
-    street = factory(name="rue de Paris", type="street")
-    city = factory(name="Paris", type="city")
-    # " street  " should be normalized to "street"
-    results = search("paris", type=" street  ")
-    ids = {r.id for r in results}
-    assert street["id"] in ids
-    assert city["id"] not in ids
 
 
 def test_multifilter_respects_max_values(factory):
@@ -421,11 +389,11 @@ def test_multifilter_respects_max_values(factory):
     municipality = factory(name="Paris Municipality", type="municipality")
 
     # Try to use 12 values (default limit is 10), only first 10 should be used
-    filter_value = " ".join([
+    filter_value = [
         "street", "city", "locality", "municipality",
         "zone", "district", "sector", "area",
         "region", "country", "extra1", "extra2"
-    ])
+    ]
     results = search("paris", type=filter_value)
     # Should match at least the first few types created
     ids = {r.id for r in results}
@@ -438,7 +406,7 @@ def test_multifilter_case_sensitivity(factory):
     city = factory(name="Paris", type="City")
     locality = factory(name="Paris Locality", type="locality")
     # Filter values should be case-sensitive - "street" won't match "Street"
-    results = search("paris", type="Street City")
+    results = search("paris", type=["Street", "City"])
     ids = {r.id for r in results}
     assert street["id"] in ids
     assert city["id"] in ids
