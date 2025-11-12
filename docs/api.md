@@ -27,25 +27,25 @@ Issue a full text search.
 
 ##### Multi-value filters
 
-Filters support multiple values with OR logic (configurable, see [Configuration](config.md)).
+Filters support multiple values with OR logic.
 
-**Multiple values** - use space separator (default):
-
-```
-/search/?q=Paris&type=street+city
-```
-
-Returns results where type is "street" OR "city" (`+` is decoded as space in URLs).
-
-**Alternative syntax** - repeated parameters:
+**Multiple parameters:**
 
 ```
 /search/?q=Paris&type=street&type=city
 ```
 
-Both can be combined: `?type=street&type=city+municipality`
+Returns results where type is "street" OR "city".
 
-**Combining filters** - AND logic between different filters:
+**Separator in value:**
+
+```
+/search/?q=Paris&type=street+city
+```
+
+By default, values are split on spaces (`+` is decoded as space in URLs).
+
+**Combining filters with AND logic:**
 
 ```
 /search/?q=Paris&type=street+city&postcode=75001
@@ -53,14 +53,7 @@ Both can be combined: `?type=street&type=city+municipality`
 
 Returns: `(type=street OR type=city) AND postcode=75001`
 
-**Behavior:**
-- Values are deduplicated and sorted: `street city street` → `city street`
-- Spaces around separator are normalized
-- Empty values are filtered out
-- Max 10 values per filter (configurable: [MAX_FILTER_VALUES](config.md#max_filter_values-int))
-- Separator can be customized: [FILTERS_MULTI_VALUE_SEPARATOR](config.md#filters_multi_value_separator-str)
-
-**Note:** With space separator (default), filter values cannot contain spaces. Use comma or pipe separator if needed.
+For advanced configuration (custom separators, Python API usage, etc.), see [FILTERS_MULTI_VALUE_SEPARATOR](config.md#filters_multi_value_separator-str) in the configuration documentation.
 
 #### Response format
 

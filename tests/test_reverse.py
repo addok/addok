@@ -38,7 +38,7 @@ def test_reverse_supports_multi_value_filter(factory):
     street = factory(lat=48.234545, lon=5.235445, type="street")
     city = factory(lat=48.234546, lon=5.235446, type="city")
     locality = factory(lat=48.234547, lon=5.235447, type="locality")
-    results = reverse(lat=48.234545, lon=5.235445, type="street city", limit=10)
+    results = reverse(lat=48.234545, lon=5.235445, type=["street", "city"], limit=10)
     assert len(results) == 2
     ids = {r.id for r in results}
     assert street["id"] in ids
@@ -52,7 +52,7 @@ def test_reverse_multi_filter_combination(factory):
     match2 = factory(lat=48.234546, lon=5.235446, type="city", postcode="75001")
     no_match = factory(lat=48.234547, lon=5.235447, type="street", postcode="75002")
     results = reverse(
-        lat=48.234545, lon=5.235445, type="street city", postcode="75001", limit=10
+        lat=48.234545, lon=5.235445, type=["street", "city"], postcode="75001", limit=10
     )
     assert len(results) == 2
     ids = {r.id for r in results}

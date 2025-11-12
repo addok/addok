@@ -2,7 +2,8 @@
 
 ### Changes
 
-- **Multi-value filters now configurable**: Added `FILTERS_MULTI_VALUE_SEPARATOR` parameter (default: `' '`) to control or disable the multi-value filter feature introduced in 1.3.0. Set to `None` to disable.
+- **Multi-value filters refactored**: Filter parsing with `FILTERS_MULTI_VALUE_SEPARATOR` now only applies to HTTP query strings. Python API (`search()`, `reverse()`) now accepts lists directly for multi-value filters (e.g., `type=["street", "city"]`). Single string values remain supported for backward compatibility. This improves code clarity and type safety while maintaining full HTTP API compatibility.
+- **Multi-value filters now configurable**: Added `FILTERS_MULTI_VALUE_SEPARATOR` parameter (default: `' '`) to control or disable the multi-value filter feature introduced in 1.3.0. Set to `None` to disable separator parsing (multiple parameters still work).
 
 ## 1.3.0 (2025-11-02)
 

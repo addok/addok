@@ -7,7 +7,7 @@ import time
 import falcon
 
 from addok.config import config
-from addok.core import reverse, search, get_filter_separator
+from addok.core import reverse, search
 from addok.db import DB
 from addok.helpers.text import EntityTooLarge
 
@@ -86,17 +86,39 @@ class View:
     config = config
 
     def match_filters(self, req):
+        """Parse filter parameters from HTTP request.
+        
+        Handles both single and multi-value filters, converting them to lists.
+        If FILTERS_MULTI_VALUE_SEPARATOR is set, also splits string values.
+        
+        Returns:
+            Dict with filter names as keys and lists of values
+            (e.g., {"type": ["street", "city"]})
+        """
         filters = {}
+        separator = config.FILTERS_MULTI_VALUE_SEPARATOR
+        
         for name in config.FILTERS:
-            if config.FILTERS_MULTI_VALUE_SEPARATOR:
-                # Multi-value enabled: collect all parameter values
-                values = req.get_param_as_list(name)
-                if values:
-                    separator = get_filter_separator()
-                    filters[name] = separator.join(values)
+            # Get all values for this parameter (e.g., ?type=street&type=city)
+            values = req.get_param_as_list(name)
+            
+            if not values:
+                continue
+            
+            # If separator is configured, also split individual values
+            # (e.g., ?type=street city → ["street", "city"])
+            if separator:
+                expanded_values = []
+                for value in values:
+                    if separator in value:
+                        expanded_values.extend(v.strip() for v in value.split(separator) if v.strip())
+                    else:
+                        expanded_values.append(value.strip())
+                filters[name] = expanded_values
             else:
-                # Multi-value disabled: get first value only
-                req.get_param(name, store=filters)
+                # No separator: keep all values from multi-parameters, strip whitespace
+                filters[name] = [v.strip() for v in values if v.strip()]
+        
         return filters
 
     def render(
