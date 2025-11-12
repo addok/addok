@@ -7,7 +7,7 @@ import time
 import falcon
 
 from addok.config import config
-from addok.core import reverse, search
+from addok.core import reverse, search, get_filter_separator
 from addok.db import DB
 from addok.helpers.text import EntityTooLarge
 
@@ -88,7 +88,15 @@ class View:
     def match_filters(self, req):
         filters = {}
         for name in config.FILTERS:
-            req.get_param(name, store=filters)
+            if config.FILTERS_MULTI_VALUE_SEPARATOR:
+                # Multi-value enabled: collect all parameter values
+                values = req.get_param_as_list(name)
+                if values:
+                    separator = get_filter_separator()
+                    filters[name] = separator.join(values)
+            else:
+                # Multi-value disabled: get first value only
+                req.get_param(name, store=filters)
         return filters
 
     def render(

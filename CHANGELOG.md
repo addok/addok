@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Changes
+
+- **Multi-value filters now configurable**: Added `FILTERS_MULTI_VALUE_SEPARATOR` parameter (default: `' '`) to control or disable the multi-value filter feature introduced in 1.3.0. Set to `None` to disable.
+
 ## 1.3.0 (2025-11-02)
 
 ### Breaking changes

@@ -27,29 +27,40 @@ Issue a full text search.
 
 ##### Multi-value filters
 
-Filters support multiple values with OR logic using the `+` separator. For example:
+Filters support multiple values with OR logic (configurable, see [Configuration](config.md)).
+
+**Multiple values** - use space separator (default):
 
 ```
 /search/?q=Paris&type=street+city
 ```
 
-This will return results where the type is either "street" OR "city".
+Returns results where type is "street" OR "city" (`+` is decoded as space in URLs).
 
-You can combine multiple filters with AND logic:
+**Alternative syntax** - repeated parameters:
+
+```
+/search/?q=Paris&type=street&type=city
+```
+
+Both can be combined: `?type=street&type=city+municipality`
+
+**Combining filters** - AND logic between different filters:
 
 ```
 /search/?q=Paris&type=street+city&postcode=75001
 ```
 
-This will return results where:
-- type is "street" OR "city" (OR logic)
-- AND postcode is "75001" (AND logic between different filters)
+Returns: `(type=street OR type=city) AND postcode=75001`
 
-**Notes:**
-- Values are automatically deduplicated and sorted: `street+city+street` becomes `city+street`
-- Spaces around `+` are ignored: `street + city` is equivalent to `street+city`
-- Empty values are filtered out: `+street++` becomes `street`
-- The maximum number of values per filter is configurable (default: 10, see [MAX_FILTER_VALUES](config.md#max_filter_values-int))
+**Behavior:**
+- Values are deduplicated and sorted: `street city street` → `city street`
+- Spaces around separator are normalized
+- Empty values are filtered out
+- Max 10 values per filter (configurable: [MAX_FILTER_VALUES](config.md#max_filter_values-int))
+- Separator can be customized: [FILTERS_MULTI_VALUE_SEPARATOR](config.md#filters_multi_value_separator-str)
+
+**Note:** With space separator (default), filter values cannot contain spaces. Use comma or pipe separator if needed.
 
 #### Response format
 

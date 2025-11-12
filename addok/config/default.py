@@ -17,8 +17,13 @@ REDIS = {
 BUCKET_MIN = 10
 BUCKET_MAX = 100
 
-# Maximum number of values allowed in a multi-value filter (e.g., type=street+city+locality).
-# This limit prevents performance issues and potential abuse.
+# Multi-value filter configuration
+
+# Separator for splitting filter values (e.g., "street city" → ["street", "city"]).
+# Set to None to disable multi-value filters entirely.
+FILTERS_MULTI_VALUE_SEPARATOR = ' '
+
+# Maximum number of values per multi-value filter.
 MAX_FILTER_VALUES = 10
 
 # Above this threshold, terms are considered commons.
