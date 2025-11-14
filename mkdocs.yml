@@ -8,6 +8,7 @@ nav:
   - Plugins: plugins.md
   - Import: import.md
   - HTTP API: api.md
+  - Geographic Search: geographic_search.md
   - Shell: shell.md
   - Concepts: concepts.md
   - Advanced: advanced.md
