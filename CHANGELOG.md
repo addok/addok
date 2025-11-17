@@ -1,5 +1,14 @@
 ## Unreleased
 
+Empty for now.
+
+## 1.3.1 (2025-11-16)
+
+### Changes
+
+- **Multi-value filters improvements** (#[914](https://github.com/addok/addok/pull/914), #[915](https://github.com/addok/addok/pull/915)): The multi-value filter separator is now configurable via `FILTERS_MULTI_VALUE_SEPARATOR` parameter (default: `' '`). Set to `None` to disable separator parsing (multiple parameters still work). Additionally, the Python API (`search()`, `reverse()`) now accepts lists directly for multi-value filters (e.g., `type=["street", "city"]`), while the HTTP layer handles string parsing. Single string values remain supported for backward compatibility. This improves code clarity and type safety while maintaining full HTTP API compatibility.
+- **Temporary setuptools pin** (#[913](https://github.com/addok/addok/pull/913)): Added `setuptools < 81` constraint to avoid deprecation warnings from `pkg_resources`. This temporary fix will be removed in the next major version when migrating away from `pkg_resources`.
+
 ## 1.3.0 (2025-11-02)
 
 ### Breaking changes

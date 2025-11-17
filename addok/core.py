@@ -1,4 +1,5 @@
 import hashlib
+import re
 import uuid
 import time
 
@@ -129,46 +130,46 @@ class BaseHelper:
         for msg in self._debug:
             print(msg)
 
-    def _normalize_filter_value(self, value):
-        """Normalize filter value by removing spaces, sorting, and deduplicating.
+    def _normalize_filter_values(self, values):
+        """Normalize filter values by deduplicating and sorting.
 
         Args:
-            value: Raw filter value string (e.g., "street + city  +street")
+            values: List of filter values (e.g., ["street", "city", "street"])
 
         Returns:
-            Normalized string with values sorted and deduplicated (e.g., "city+street")
+            Sorted list of unique values, limited to MAX_FILTER_VALUES
         """
-        cleaned = value.replace(' ', '+').strip()
-        # Split, remove empty strings, deduplicate, limit to config.MAX_FILTER_VALUES
-        values = [v for v in cleaned.split('+') if v]
-        unique_values = list(dict.fromkeys(values))[:config.MAX_FILTER_VALUES]
-        return '+'.join(sorted(unique_values))
+        if not values:
+            return []
 
-    def _compute_multifilter(self, filter_name, normalized_value):
-        """Create temporary OR filter keys using Redis SUNIONSTORE.
+        # Deduplicate while preserving order, then limit and sort
+        # Filter after stripping to catch whitespace-only strings
+        unique_values = list(dict.fromkeys(s for s in (str(v).strip() for v in values) if s))
+        return sorted(unique_values[:config.MAX_FILTER_VALUES])
 
-        This combines multiple filter values with OR logic. For example,
-        type=street+city will match documents where type is "street" OR "city".
+    def _compute_multifilter(self, filter_name, values):
+        """Create temporary Redis key for OR filter using SUNIONSTORE.
 
-        The resulting key is cached in Redis with an expiration time, or persisted
-        if the result set is large (>100k items).
+        Example: type=["street", "city"] matches documents where type is "street" OR "city".
+        Result is cached (10s) or persisted if large (>100k items).
 
         Args:
-            filter_name: The filter field name (e.g., "type")
-            normalized_value: Normalized filter value (e.g., "city+street")
+            filter_name: Filter field name (e.g., "type")
+            values: List of filter values (e.g., ["street", "city"])
 
         Returns:
-            The Redis key for the combined filter
+            Redis key for the combined filter
         """
+        # Create a stable key based on sorted values (use | as internal separator)
+        normalized_value = '|'.join(values)
         key = dbkeys.filter_key(filter_name, normalized_value)
 
         if not DB.exists(key):
             self.debug(f'MultiFilter created: {filter_name}={normalized_value}')
-            keys = [dbkeys.filter_key(filter_name, v)
-                    for v in normalized_value.split('+')]
+            keys = [dbkeys.filter_key(filter_name, v) for v in values]
             DB.sunionstore(key, keys)
 
-        # Persist large filters to avoid recomputation, expire small ones
+        # Persist large filters, expire small ones
         if DB.scard(key) > 100000:
             DB.persist(key)
             self.debug(f'MultiFilter persistent: {filter_name}={normalized_value}')
@@ -178,33 +179,42 @@ class BaseHelper:
         return key
 
     def _build_filters(self, filters):
-        """Build filter keys with normalized multi-value support.
+        """Build filter keys from list-based filter parameters.
 
-        This method processes filter parameters, normalizes multi-value filters,
-        creates temporary Redis keys for OR operations, and optionally combines
-        multiple filters with AND logic.
+        This method expects filter values as lists, but also accepts strings
+        for backward compatibility (treated as single-value lists).
+        It creates Redis keys for single or multi-value filters, and optionally
+        combines multiple filters with AND logic.
 
         Args:
-            filters: Dictionary of filter parameters (e.g., {"type": "street+city"})
+            filters: Dict with list or string values 
+                     (e.g., {"type": ["street", "city"]} or {"type": "street"})
 
         Returns:
             List of filter keys to use in queries
         """
-        # Build filter keys with normalized multi-value support
         filter_keys = []
         for k, v in filters.items():
-            if v.strip():
-                normalized = self._normalize_filter_value(v)
-                # Check if this is a multi-value filter
-                if '+' in normalized:
-                    # Create temporary OR filter key
-                    filter_key = self._compute_multifilter(k, normalized)
-                else:
-                    # Single value filter
-                    filter_key = dbkeys.filter_key(k, normalized)
+            # Backward compatibility: convert string to single-value list
+            if isinstance(v, str):
+                v = [v]
+            elif not isinstance(v, (list, tuple)):
+                v = [v]
+
+            normalized_values = self._normalize_filter_values(v)
+            if not normalized_values:
+                continue
+
+            # Single value: direct filter key
+            if len(normalized_values) == 1:
+                filter_key = dbkeys.filter_key(k, normalized_values[0])
+                filter_keys.append(filter_key)
+            # Multi-value: create OR filter
+            else:
+                filter_key = self._compute_multifilter(k, normalized_values)
                 filter_keys.append(filter_key)
 
-        # Combine multiple filters with AND logic
+        # Combine with AND logic if multiple filters
         if len(filter_keys) > 1:
             return self._combine_filters_with_keys(filter_keys)
 

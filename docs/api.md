@@ -27,29 +27,33 @@ Issue a full text search.
 
 ##### Multi-value filters
 
-Filters support multiple values with OR logic using the `+` separator. For example:
+Filters support multiple values with OR logic.
+
+**Multiple parameters:**
+
+```
+/search/?q=Paris&type=street&type=city
+```
+
+Returns results where type is "street" OR "city".
+
+**Separator in value:**
 
 ```
 /search/?q=Paris&type=street+city
 ```
 
-This will return results where the type is either "street" OR "city".
+By default, values are split on spaces (`+` is decoded as space in URLs).
 
-You can combine multiple filters with AND logic:
+**Combining filters with AND logic:**
 
 ```
 /search/?q=Paris&type=street+city&postcode=75001
 ```
 
-This will return results where:
-- type is "street" OR "city" (OR logic)
-- AND postcode is "75001" (AND logic between different filters)
+Returns: `(type=street OR type=city) AND postcode=75001`
 
-**Notes:**
-- Values are automatically deduplicated and sorted: `street+city+street` becomes `city+street`
-- Spaces around `+` are ignored: `street + city` is equivalent to `street+city`
-- Empty values are filtered out: `+street++` becomes `street`
-- The maximum number of values per filter is configurable (default: 10, see [MAX_FILTER_VALUES](config.md#max_filter_values-int))
+For advanced configuration (custom separators, Python API usage, etc.), see [FILTERS_MULTI_VALUE_SEPARATOR](config.md#filters_multi_value_separator-str) in the configuration documentation.
 
 #### Response format
 

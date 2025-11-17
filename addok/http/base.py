@@ -87,9 +87,39 @@ class View:
     config = config
 
     def match_filters(self, req):
+        """Parse filter parameters from HTTP request.
+        
+        Handles both single and multi-value filters, converting them to lists.
+        If FILTERS_MULTI_VALUE_SEPARATOR is set, also splits string values.
+        
+        Returns:
+            Dict with filter names as keys and lists of values
+            (e.g., {"type": ["street", "city"]})
+        """
         filters = {}
+        separator = config.FILTERS_MULTI_VALUE_SEPARATOR
+        
         for name in config.FILTERS:
-            req.get_param(name, store=filters)
+            # Get all values for this parameter (e.g., ?type=street&type=city)
+            values = req.get_param_as_list(name)
+            
+            if not values:
+                continue
+            
+            # If separator is configured, also split individual values
+            # (e.g., ?type=street city → ["street", "city"])
+            if separator:
+                expanded_values = []
+                for value in values:
+                    if separator in value:
+                        expanded_values.extend(v.strip() for v in value.split(separator) if v.strip())
+                    else:
+                        expanded_values.append(value.strip())
+                filters[name] = expanded_values
+            else:
+                # No separator: keep all values from multi-parameters, strip whitespace
+                filters[name] = [v.strip() for v in values if v.strip()]
+        
         return filters
 
     def render(
