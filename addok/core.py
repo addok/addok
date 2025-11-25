@@ -265,7 +265,7 @@ class Search(BaseHelper):
         self.housenumbers = []
         self.keys = []
         self.matched_keys = set([])
-        self.check_housenumber = len(set(filters.get("type")).intersection(set([None, "housenumber"])))>0
+        self.check_housenumber = len(filters.get("type")) == 0 or len(set(filters.get("type")).intersection(set([None, "housenumber"])))>0
         self.only_housenumber = len(filters.get("type")) == 1 and filters.get("type")[0] == "housenumber"
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
