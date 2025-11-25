@@ -175,7 +175,9 @@ class Cmd(cmd.Cmd):
             if name in query:
                 query, value = self._match_option(name, query)
                 if value:
-                    filters[name.lower()] = value.strip()
+                    expanded_values = []
+                    expanded_values.extend(v.strip() for v in value.split("|") if v.strip())
+                    filters[name.lower()] = expanded_values
         helper = Search(limit=limit, verbose=verbose, autocomplete=autocomplete)
         start = time.time()
         for i in range(0, count):
