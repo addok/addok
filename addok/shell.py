@@ -156,7 +156,7 @@ class Cmd(cmd.Cmd):
     def _parse_filters(self, query):
         """Parse filter parameters from shell query.
 
-        Supports both repetition (TYPE street TYPE city) and separator (TYPE street|city).
+        Supports both repetition (TYPE street TYPE city) and pipe separator (TYPE street|city).
 
         Args:
             query: The query string containing filters
@@ -188,10 +188,9 @@ class Cmd(cmd.Cmd):
             while name_upper in temp_query:
                 temp_query, value = self._match_option(name_upper, temp_query)
                 if value:
-                    # Support separator (defaults to '|', same as HTTP API)
-                    separator = getattr(config, 'FILTERS_MULTI_VALUE_SEPARATOR', '|')
-                    if separator in value:
-                        filter_values.extend(v.strip() for v in value.split(separator) if v.strip())
+                    # Support pipe separator (shell-specific, simpler than HTTP API config)
+                    if '|' in value:
+                        filter_values.extend(v.strip() for v in value.split('|') if v.strip())
                     else:
                         filter_values.append(value.strip())
 

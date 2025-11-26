@@ -9,7 +9,6 @@ class TestShellFilterParsing:
     def cmd(self, config):
         """Create a Cmd instance for testing."""
         config.FILTERS = ["type", "postcode"]
-        config.FILTERS_MULTI_VALUE_SEPARATOR = "|"
         return Cmd()
 
     def test_parse_single_filter(self, cmd):
@@ -42,7 +41,7 @@ class TestShellFilterParsing:
         assert "rue des lilas" in remaining
 
     def test_parse_filter_with_separator(self, cmd):
-        """Test parsing filter with separator (TYPE street|city)."""
+        """Test parsing filter with pipe separator (TYPE street|city)."""
         query = "rue des lilas TYPE street|city"
         remaining, filters = cmd._parse_filters(query)
 
