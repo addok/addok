@@ -503,9 +503,9 @@ def test_only_housenumber_mode_with_multivalue_type_filter(factory):
         housenumbers={"11": {"lat": "48.3254", "lon": "2.256"}},
     )
 
-    # With type=["housenumber"] (list with single value)
-    # only_housenumber = ({"housenumber"} == {"housenumber"}) => True
-    # So it should enforce only_housenumber mode, same as string "housenumber"
+    # When type is ["housenumber"] (a list with a single value),
+    # it should behave the same as type="housenumber" (a string),
+    # i.e., only_housenumber mode should be enforced.
     results = search("11 paris", type=["housenumber"])
     ids = [r.id for r in results]
     assert with_housenumber["id"] in ids
@@ -517,8 +517,7 @@ def test_only_housenumber_mode_with_multivalue_type_filter(factory):
     assert with_housenumber["id"] in ids
     assert without_housenumber["id"] not in ids
 
-    # With type=["housenumber", "street"], should NOT enforce only_housenumber
-    # because type_set != {"housenumber"}
+    # When multiple types are specified, should not restrict results to only housenumbers.
     results = search("11 paris", type=["housenumber", "street"])
     assert len(results) >= 1
     # Should find the housenumber result

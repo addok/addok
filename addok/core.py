@@ -152,7 +152,7 @@ class BaseHelper:
             if isinstance(type_filter, (list, tuple)):
                 type_set = set(type_filter)
             else:
-                # Unexpected type - treat as single value for robustness
+                # Unexpected type - treat as single value for consistency with _build_filters
                 type_set = {str(type_filter)}
             self.check_housenumber = "housenumber" in type_set
             self.only_housenumber = type_set == {"housenumber"}
