@@ -495,7 +495,7 @@ def test_housenumber_excluded_with_multivalue_type_filter(factory):
 
 
 def test_only_housenumber_mode_with_multivalue_type_filter(factory):
-    """Test that only_housenumber mode requires single 'housenumber' value"""
+    """Test that only_housenumber mode behavior with multi-value type filters"""
     without_housenumber = factory(name="avenue de Paris", type="street")
     with_housenumber = factory(
         name="rue de Paris",
@@ -503,19 +503,22 @@ def test_only_housenumber_mode_with_multivalue_type_filter(factory):
         housenumbers={"11": {"lat": "48.3254", "lon": "2.256"}},
     )
 
-    # With type=["housenumber"] (list with single value), should NOT enforce only_housenumber mode
-    # because it's a list, not a string - so it should allow streets without housenumbers
-    results = search("paris", type=["housenumber"])
+    # With type=["housenumber"] (list with single value)
+    # only_housenumber = ({"housenumber"} == {"housenumber"}) => True
+    # So it should enforce only_housenumber mode, same as string "housenumber"
+    results = search("11 paris", type=["housenumber"])
     ids = [r.id for r in results]
-    # Both might be included since it's not enforcing only_housenumber mode
-    
-    # With type="housenumber" (string), should enforce only_housenumber mode
+    assert with_housenumber["id"] in ids
+    assert without_housenumber["id"] not in ids
+
+    # With type="housenumber" (string), should also enforce only_housenumber mode
     results = search("11 paris", type="housenumber")
     ids = [r.id for r in results]
     assert with_housenumber["id"] in ids
     assert without_housenumber["id"] not in ids
-    
-    # With type=["housenumber", "street"], should allow both
+
+    # With type=["housenumber", "street"], should NOT enforce only_housenumber
+    # because type_set != {"housenumber"}
     results = search("11 paris", type=["housenumber", "street"])
     assert len(results) >= 1
     # Should find the housenumber result

@@ -130,6 +130,33 @@ class BaseHelper:
         for msg in self._debug:
             print(msg)
 
+    def _setup_housenumber_checks(self, type_filter):
+        """Setup housenumber check flags based on type filter.
+
+        Args:
+            type_filter: The type filter value (None, string, list, or tuple)
+
+        Sets:
+            self.check_housenumber: Whether to check for housenumber matches
+            self.only_housenumber: Whether to enforce housenumber-only mode
+        """
+        if type_filter is None:
+            self.check_housenumber = True
+            self.only_housenumber = False
+        elif isinstance(type_filter, str):
+            # Backward compatibility: single string value
+            self.check_housenumber = type_filter == "housenumber"
+            self.only_housenumber = type_filter == "housenumber"
+        else:
+            # Multi-value filter (list or tuple)
+            if isinstance(type_filter, (list, tuple)):
+                type_set = set(type_filter)
+            else:
+                # Unexpected type - treat as single value for robustness
+                type_set = {str(type_filter)}
+            self.check_housenumber = "housenumber" in type_set
+            self.only_housenumber = type_set == {"housenumber"}
+
     def _normalize_filter_values(self, values):
         """Normalize filter values by deduplicating and sorting.
 
@@ -266,19 +293,7 @@ class Search(BaseHelper):
         self.keys = []
         self.matched_keys = set([])
         # Handle multi-value type filters for housenumber logic
-        type_filter = filters.get("type")
-        if type_filter is None:
-            self.check_housenumber = True
-            self.only_housenumber = False
-        elif isinstance(type_filter, str):
-            # Backward compatibility: single string value
-            self.check_housenumber = type_filter == "housenumber"
-            self.only_housenumber = type_filter == "housenumber"
-        else:
-            # Multi-value filter (list)
-            type_set = set(type_filter) if isinstance(type_filter, (list, tuple)) else {type_filter}
-            self.check_housenumber = "housenumber" in type_set
-            self.only_housenumber = type_set == {"housenumber"}
+        self._setup_housenumber_checks(filters.get("type"))
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
 
@@ -421,19 +436,7 @@ class Reverse(BaseHelper):
         self.wanted = limit
         self.fetched = []
         # Handle multi-value type filters for housenumber logic
-        type_filter = filters.get("type")
-        if type_filter is None:
-            self.check_housenumber = True
-            self.only_housenumber = False
-        elif isinstance(type_filter, str):
-            # Backward compatibility: single string value
-            self.check_housenumber = type_filter == "housenumber"
-            self.only_housenumber = type_filter == "housenumber"
-        else:
-            # Multi-value filter (list)
-            type_set = set(type_filter) if isinstance(type_filter, (list, tuple)) else {type_filter}
-            self.check_housenumber = "housenumber" in type_set
-            self.only_housenumber = type_set == {"housenumber"}
+        self._setup_housenumber_checks(filters.get("type"))
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
         self.debug('Filters: %s', [f'{k}={v}' for k, v in filters.items()])
