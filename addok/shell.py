@@ -490,7 +490,7 @@ class Cmd(cmd.Cmd):
         limit = 1
         if "LIMIT" in rest:
             rest, limit_str = self._match_option("LIMIT", rest)
-            if limit_str is None:
+            if not limit_str:
                 print(red("LIMIT option requires an integer value."))
                 return
             try:
@@ -502,7 +502,14 @@ class Cmd(cmd.Cmd):
         # Parse filters
         _, filters = self._parse_filters(rest)
 
-        for r in reverse(float(lat), float(lon), limit=limit, **filters):
+        try:
+            lat_float = float(lat)
+            lon_float = float(lon)
+        except ValueError:
+            print(red(f"Invalid coordinates. Latitude '{lat}' or longitude '{lon}' is not a valid number."))
+            return
+
+        for r in reverse(lat_float, lon_float, limit=limit, **filters):
             print(
                 "{} ({} | {} km | {})".format(
                     white(r), blue(r.score), blue(r.distance), blue(r._id)
