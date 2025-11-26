@@ -20,10 +20,20 @@ Return document linked to word with higher score.
 
     BESTSCORE lilas
 
+#### BENCH
+Run a search multiple times to benchmark it (default 100 runs):
+
+    BENCH rue des lilas
+    BENCH 50 rue des lilas
+
+Supports all search options.
+
 #### BUCKET
 Issue a search and return all the collected bucket, not only up to limit elements:
 
     BUCKET rue des Lilas
+
+Supports all search options including filters with multiple values (see SEARCH).
 
 #### DBINFO
 Print some useful infos from Redis DB.
@@ -42,6 +52,8 @@ Print the distance score between two strings. Use | as separator.
 Issue a search with debug info:
 
     EXPLAIN rue des Lilas
+
+Supports all search options including filters with multiple values (see SEARCH).
 
 #### FREQUENCY
 Return word frequency in index.
