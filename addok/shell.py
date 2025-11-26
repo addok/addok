@@ -62,10 +62,9 @@ class Cmd(cmd.Cmd):
     def save_history(self):
         try:
             readline.write_history_file(self.history_file)
-        except FileNotFoundError:
-            print(
-                red("Unable to write history file to " "{}.".format(self.history_file))
-            )
+        except (FileNotFoundError, OSError):
+            # OSError can occur during tests when multiple instances try to write
+            pass
 
     @property
     def history_file(self):
