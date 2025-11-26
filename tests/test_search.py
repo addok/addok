@@ -463,6 +463,65 @@ def test_housenumber_are_not_computed_if_another_type_is_asked(factory):
     assert results[0].type == "street"
 
 
+def test_housenumber_with_multivalue_type_filter_including_housenumber(factory):
+    """Test that housenumber is computed when type filter includes 'housenumber' in a list"""
+    factory(
+        name="rue de Bamako",
+        type="street",
+        housenumbers={"11": {"lat": "48.3254", "lon": "2.256"}},
+    )
+
+    # When type filter is a list containing "housenumber", it should compute and return housenumber
+    results = search("11 rue de bamako", type=["housenumber", "street"])
+    assert len(results) >= 1
+    assert results[0].type == "housenumber"
+    assert results[0].housenumber == "11"
+
+
+def test_housenumber_excluded_with_multivalue_type_filter(factory):
+    """Test that housenumber is NOT computed when type filter doesn't include 'housenumber'"""
+    factory(
+        name="rue de Bamako",
+        type="street",
+        housenumbers={"11": {"lat": "48.3254", "lon": "2.256"}},
+    )
+
+    # When type filter is a list NOT containing "housenumber", it should NOT compute housenumber
+    results = search("11 rue de bamako", type=["street", "locality"])
+    assert len(results) == 1
+    assert results[0].type == "street"
+    # Should not have housenumber attribute set
+    assert not results[0].housenumber
+
+
+def test_only_housenumber_mode_with_multivalue_type_filter(factory):
+    """Test that only_housenumber mode requires single 'housenumber' value"""
+    without_housenumber = factory(name="avenue de Paris", type="street")
+    with_housenumber = factory(
+        name="rue de Paris",
+        type="street",
+        housenumbers={"11": {"lat": "48.3254", "lon": "2.256"}},
+    )
+
+    # With type=["housenumber"] (list with single value), should NOT enforce only_housenumber mode
+    # because it's a list, not a string - so it should allow streets without housenumbers
+    results = search("paris", type=["housenumber"])
+    ids = [r.id for r in results]
+    # Both might be included since it's not enforcing only_housenumber mode
+    
+    # With type="housenumber" (string), should enforce only_housenumber mode
+    results = search("11 paris", type="housenumber")
+    ids = [r.id for r in results]
+    assert with_housenumber["id"] in ids
+    assert without_housenumber["id"] not in ids
+    
+    # With type=["housenumber", "street"], should allow both
+    results = search("11 paris", type=["housenumber", "street"])
+    assert len(results) >= 1
+    # Should find the housenumber result
+    assert any(r.id == with_housenumber["id"] and r.type == "housenumber" for r in results)
+
+
 def test_housenumbers_payload_fields_are_exported(config, factory):
     factory(
         name="rue de Paris",
