@@ -408,9 +408,9 @@ class Reverse(BaseHelper):
         self.results = []
         self.wanted = limit
         self.fetched = []
-        self.check_housenumber = filters.get("type") in [None, "housenumber"]
-        self.only_housenumber = filters.get("type") == "housenumber"
-        # Build filter keys with normalized multi-value support
+        type_filters = filters.get("type")
+        self.check_housenumber = not type_filters or len(set(type_filters).intersection(set([None, "housenumber"])))>0
+        self.only_housenumber = type_filters is not None and len(type_filters) == 1 and type_filters[0] == "housenumber"        # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
         self.debug('Filters: %s', [f'{k}={v}' for k, v in filters.items()])
         geoh = geohash.encode(lat, lon, config.GEOHASH_PRECISION)
