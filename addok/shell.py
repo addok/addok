@@ -155,35 +155,35 @@ class Cmd(cmd.Cmd):
 
     def _parse_filters(self, query):
         """Parse filter parameters from shell query.
-        
+
         Supports both repetition (TYPE street TYPE city) and separator (TYPE street|city).
-        
+
         Args:
             query: The query string containing filters
-            
+
         Returns:
             tuple: (remaining_query, filters_dict)
                 - remaining_query: query with filters removed
                 - filters_dict: dict with filter names as keys and string/list as values
-                
+
         Examples:
             >>> _parse_filters("rue TYPE street LIMIT 10")
             ("rue  LIMIT 10", {"type": "street"})
-            
+
             >>> _parse_filters("rue TYPE street TYPE city")
             ("rue  ", {"type": ["street", "city"]})
-            
+
             >>> _parse_filters("rue TYPE street|city")
             ("rue  ", {"type": ["street", "city"]})
         """
         filters = {}
         remaining_query = query
-        
+
         for name in config.FILTERS:
             name_upper = name.upper()
             filter_values = []
             temp_query = remaining_query
-            
+
             # Collect all occurrences of this filter (repetition support)
             while name_upper in temp_query:
                 temp_query, value = self._match_option(name_upper, temp_query)
@@ -194,13 +194,13 @@ class Cmd(cmd.Cmd):
                         filter_values.extend(v.strip() for v in value.split(separator) if v.strip())
                     else:
                         filter_values.append(value.strip())
-            
+
             if filter_values:
                 remaining_query = temp_query
                 # Single value: keep as string for backward compatibility
                 # Multiple values: use list (handled by core.py)
                 filters[name.lower()] = filter_values if len(filter_values) > 1 else filter_values[0]
-        
+
         return remaining_query, filters
 
     def _search(self, query, verbose=False, bucket=False, count=1):
@@ -220,10 +220,10 @@ class Cmd(cmd.Cmd):
             lat, lon = center.split()
             lat = float(lat)
             lon = float(lon)
-        
+
         # Parse filters
         query, filters = self._parse_filters(query)
-        
+
         helper = Search(limit=limit, verbose=verbose, autocomplete=autocomplete)
         start = time.time()
         for i in range(0, count):
@@ -475,9 +475,18 @@ class Cmd(cmd.Cmd):
 
     def do_REVERSE(self, latlon):
         """Do a reverse search. Args: lat lon.
-        REVERSE 48.1234 2.9876"""
+        REVERSE 48.1234 2.9876 [LIMIT 5] [FILTER VALUE…]"""
+        # Parse LIMIT option
+        limit = 1
+        if "LIMIT" in latlon:
+            latlon, limit_str = self._match_option("LIMIT", latlon)
+            limit = int(limit_str)
+        
+        # Parse filters
+        latlon, filters = self._parse_filters(latlon)
+        
         lat, lon = latlon.split()
-        for r in reverse(float(lat), float(lon)):
+        for r in reverse(float(lat), float(lon), limit=limit, **filters):
             print(
                 "{} ({} | {} km | {})".format(
                     white(r), blue(r.score), blue(r.distance), blue(r._id)

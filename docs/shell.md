@@ -33,7 +33,7 @@ Issue a search and return all the collected bucket, not only up to limit element
 
     BUCKET rue des Lilas
 
-Supports all search options including filters with multiple values (see SEARCH).
+Supports all search options.
 
 #### DBINFO
 Print some useful infos from Redis DB.
@@ -53,7 +53,7 @@ Issue a search with debug info:
 
     EXPLAIN rue des Lilas
 
-Supports all search options including filters with multiple values (see SEARCH).
+Supports all search options.
 
 #### FREQUENCY
 Return word frequency in index.
@@ -118,6 +118,10 @@ See all token associated with a given token.
 Do a reverse search. Args: lat lon.
 
     REVERSE 48.1234 2.9876
+
+Supports LIMIT and filters with multiple values (see SEARCH for filter syntax):
+
+    REVERSE 48.1234 2.9876 LIMIT 5 TYPE street
 
 #### SEARCH
 Issue a search (default command, can be omitted; arguments between `[]` are
