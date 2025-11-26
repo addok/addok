@@ -153,6 +153,56 @@ class Cmd(cmd.Cmd):
             option = option.replace(key, "")
         return string.strip(), option.strip(" =") if option else option
 
+    def _parse_filters(self, query):
+        """Parse filter parameters from shell query.
+        
+        Supports both repetition (TYPE street TYPE city) and separator (TYPE street|city).
+        
+        Args:
+            query: The query string containing filters
+            
+        Returns:
+            tuple: (remaining_query, filters_dict)
+                - remaining_query: query with filters removed
+                - filters_dict: dict with filter names as keys and string/list as values
+                
+        Examples:
+            >>> _parse_filters("rue TYPE street LIMIT 10")
+            ("rue  LIMIT 10", {"type": "street"})
+            
+            >>> _parse_filters("rue TYPE street TYPE city")
+            ("rue  ", {"type": ["street", "city"]})
+            
+            >>> _parse_filters("rue TYPE street|city")
+            ("rue  ", {"type": ["street", "city"]})
+        """
+        filters = {}
+        remaining_query = query
+        
+        for name in config.FILTERS:
+            name_upper = name.upper()
+            filter_values = []
+            temp_query = remaining_query
+            
+            # Collect all occurrences of this filter (repetition support)
+            while name_upper in temp_query:
+                temp_query, value = self._match_option(name_upper, temp_query)
+                if value:
+                    # Support separator (defaults to '|', same as HTTP API)
+                    separator = getattr(config, 'FILTERS_MULTI_VALUE_SEPARATOR', '|')
+                    if separator in value:
+                        filter_values.extend(v.strip() for v in value.split(separator) if v.strip())
+                    else:
+                        filter_values.append(value.strip())
+            
+            if filter_values:
+                remaining_query = temp_query
+                # Single value: keep as string for backward compatibility
+                # Multiple values: use list (handled by core.py)
+                filters[name.lower()] = filter_values if len(filter_values) > 1 else filter_values[0]
+        
+        return remaining_query, filters
+
     def _search(self, query, verbose=False, bucket=False, count=1):
         limit = 10
         autocomplete = True
@@ -170,12 +220,10 @@ class Cmd(cmd.Cmd):
             lat, lon = center.split()
             lat = float(lat)
             lon = float(lon)
-        for name in config.FILTERS:
-            name = name.upper()
-            if name in query:
-                query, value = self._match_option(name, query)
-                if value:
-                    filters[name.lower()] = value.strip()
+        
+        # Parse filters
+        query, filters = self._parse_filters(query)
+        
         helper = Search(limit=limit, verbose=verbose, autocomplete=autocomplete)
         start = time.time()
         for i in range(0, count):
