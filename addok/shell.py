@@ -186,7 +186,10 @@ class Cmd(cmd.Cmd):
 
             # Collect all occurrences of this filter (repetition support)
             while name_upper in temp_query:
+                prev_query = temp_query
                 temp_query, value = self._match_option(name_upper, temp_query)
+                if temp_query == prev_query:  # Safety check to prevent infinite loop
+                    break
                 if value:
                     # Support pipe separator (shell-specific, simpler than HTTP API config)
                     if '|' in value:
@@ -475,16 +478,30 @@ class Cmd(cmd.Cmd):
     def do_REVERSE(self, latlon):
         """Do a reverse search. Args: lat lon.
         REVERSE 48.1234 2.9876 [LIMIT 5] [FILTER VALUE…]"""
+        # Extract coordinates first
+        tokens = latlon.split()
+        if len(tokens) < 2:
+            print(red("Malformed input. Usage: REVERSE <lat> <lon> [LIMIT n] [FILTER ...]"))
+            return
+        lat, lon = tokens[0], tokens[1]
+        rest = " ".join(tokens[2:]) if len(tokens) > 2 else ""
+
         # Parse LIMIT option
         limit = 1
-        if "LIMIT" in latlon:
-            latlon, limit_str = self._match_option("LIMIT", latlon)
-            limit = int(limit_str)
-        
+        if "LIMIT" in rest:
+            rest, limit_str = self._match_option("LIMIT", rest)
+            if limit_str is None:
+                print(red("LIMIT option requires an integer value."))
+                return
+            try:
+                limit = int(limit_str)
+            except ValueError:
+                print(red(f"LIMIT value '{limit_str}' is not a valid integer."))
+                return
+
         # Parse filters
-        latlon, filters = self._parse_filters(latlon)
-        
-        lat, lon = latlon.split()
+        _, filters = self._parse_filters(rest)
+
         for r in reverse(float(lat), float(lon), limit=limit, **filters):
             print(
                 "{} ({} | {} km | {})".format(
