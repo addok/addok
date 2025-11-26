@@ -133,7 +133,7 @@ Also, every registered filter is available, for example:
 
     rue des lilas CITY hautmont
 
-Filters support multiple values using either repetition or separator syntax:
+Filters support multiple values using either repetition or pipe separator:
 
     rue des lilas TYPE street TYPE city
     rue des lilas TYPE street|city
