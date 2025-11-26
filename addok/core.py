@@ -265,8 +265,20 @@ class Search(BaseHelper):
         self.housenumbers = []
         self.keys = []
         self.matched_keys = set([])
-        self.check_housenumber = filters.get("type") in [None, "housenumber"]
-        self.only_housenumber = filters.get("type") == "housenumber"
+        # Handle multi-value type filters for housenumber logic
+        type_filter = filters.get("type")
+        if type_filter is None:
+            self.check_housenumber = True
+            self.only_housenumber = False
+        elif isinstance(type_filter, str):
+            # Backward compatibility: single string value
+            self.check_housenumber = type_filter == "housenumber"
+            self.only_housenumber = type_filter == "housenumber"
+        else:
+            # Multi-value filter (list)
+            type_set = set(type_filter) if isinstance(type_filter, (list, tuple)) else {type_filter}
+            self.check_housenumber = "housenumber" in type_set
+            self.only_housenumber = type_set == {"housenumber"}
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
 
@@ -408,8 +420,20 @@ class Reverse(BaseHelper):
         self.results = []
         self.wanted = limit
         self.fetched = []
-        self.check_housenumber = filters.get("type") in [None, "housenumber"]
-        self.only_housenumber = filters.get("type") == "housenumber"
+        # Handle multi-value type filters for housenumber logic
+        type_filter = filters.get("type")
+        if type_filter is None:
+            self.check_housenumber = True
+            self.only_housenumber = False
+        elif isinstance(type_filter, str):
+            # Backward compatibility: single string value
+            self.check_housenumber = type_filter == "housenumber"
+            self.only_housenumber = type_filter == "housenumber"
+        else:
+            # Multi-value filter (list)
+            type_set = set(type_filter) if isinstance(type_filter, (list, tuple)) else {type_filter}
+            self.check_housenumber = "housenumber" in type_set
+            self.only_housenumber = type_set == {"housenumber"}
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
         self.debug('Filters: %s', [f'{k}={v}' for k, v in filters.items()])
