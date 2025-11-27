@@ -227,14 +227,13 @@ class Reverse(View):
 class Health(View):
     def on_get(self, req, resp):
         try:
-            get_document(keys.document_key('dummy').encode())
             redis_version = DB.info().get("redis_version")
         except:
-            return self.json(
-                req,
-                resp,
-                {"status": "UNHEALTHY"},
-            )
+            raise falcon.HTTPServiceUnavaible(description="redis is currently unavailable")
+        try:
+            get_document(keys.document_key('dummy').encode())
+        except:
+            raise falcon.HTTPServiceUnavaible(description="Unable to reach the document store")
 
         return self.json(
             req,
