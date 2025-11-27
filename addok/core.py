@@ -130,6 +130,33 @@ class BaseHelper:
         for msg in self._debug:
             print(msg)
 
+    def _setup_housenumber_checks(self, type_filter):
+        """Setup housenumber check flags based on type filter.
+
+        Args:
+            type_filter: The type filter value (None, string, list, or tuple)
+
+        Sets:
+            self.check_housenumber: Whether to check for housenumber matches
+            self.only_housenumber: Whether to enforce housenumber-only mode
+        """
+        if type_filter is None:
+            self.check_housenumber = True
+            self.only_housenumber = False
+        elif isinstance(type_filter, str):
+            # Backward compatibility: single string value
+            self.check_housenumber = type_filter == "housenumber"
+            self.only_housenumber = type_filter == "housenumber"
+        else:
+            # Multi-value filter (list or tuple)
+            if isinstance(type_filter, (list, tuple)):
+                type_set = set(type_filter)
+            else:
+                # Unexpected type - treat as single value for consistency with _build_filters
+                type_set = {str(type_filter)}
+            self.check_housenumber = "housenumber" in type_set
+            self.only_housenumber = type_set == {"housenumber"}
+
     def _normalize_filter_values(self, values):
         """Normalize filter values by deduplicating and sorting.
 
@@ -265,8 +292,8 @@ class Search(BaseHelper):
         self.housenumbers = []
         self.keys = []
         self.matched_keys = set([])
-        self.check_housenumber = filters.get("type") in [None, "housenumber"]
-        self.only_housenumber = filters.get("type") == "housenumber"
+        # Handle multi-value type filters for housenumber logic
+        self._setup_housenumber_checks(filters.get("type"))
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
 
@@ -408,8 +435,8 @@ class Reverse(BaseHelper):
         self.results = []
         self.wanted = limit
         self.fetched = []
-        self.check_housenumber = filters.get("type") in [None, "housenumber"]
-        self.only_housenumber = filters.get("type") == "housenumber"
+        # Handle multi-value type filters for housenumber logic
+        self._setup_housenumber_checks(filters.get("type"))
         # Build filter keys with normalized multi-value support
         self.filters = self._build_filters(filters)
         self.debug('Filters: %s', [f'{k}={v}' for k, v in filters.items()])
