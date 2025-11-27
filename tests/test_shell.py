@@ -5,9 +5,10 @@ from addok.shell import Cmd
 class TestShellFilterParsing:
     """Tests for shell filter parsing (_parse_filters method)."""
 
-    @pytest.fixture
-    def cmd(self, config):
-        """Create a Cmd instance for testing."""
+    @pytest.fixture(scope="class")
+    def cmd(self):
+        """Create a single Cmd instance for all tests in this class."""
+        from addok.config import config
         config.FILTERS = ["type", "postcode"]
         return Cmd()
 
