@@ -62,10 +62,9 @@ class Cmd(cmd.Cmd):
     def save_history(self):
         try:
             readline.write_history_file(self.history_file)
-        except FileNotFoundError:
-            print(
-                red("Unable to write history file to " "{}.".format(self.history_file))
-            )
+        except (FileNotFoundError, OSError):
+            # OSError can occur during tests when multiple instances try to write
+            pass
 
     @property
     def history_file(self):
@@ -153,6 +152,58 @@ class Cmd(cmd.Cmd):
             option = option.replace(key, "")
         return string.strip(), option.strip(" =") if option else option
 
+    def _parse_filters(self, query):
+        """Parse filter parameters from shell query.
+
+        Supports both repetition (TYPE street TYPE city) and pipe separator (TYPE street|city).
+
+        Args:
+            query: The query string containing filters
+
+        Returns:
+            tuple: (remaining_query, filters_dict)
+                - remaining_query: query with filters removed
+                - filters_dict: dict with filter names as keys and string/list as values
+
+        Examples:
+            >>> _parse_filters("rue TYPE street LIMIT 10")
+            ("rue  LIMIT 10", {"type": "street"})
+
+            >>> _parse_filters("rue TYPE street TYPE city")
+            ("rue  ", {"type": ["street", "city"]})
+
+            >>> _parse_filters("rue TYPE street|city")
+            ("rue  ", {"type": ["street", "city"]})
+        """
+        filters = {}
+        remaining_query = query
+
+        for name in config.FILTERS:
+            name_upper = name.upper()
+            filter_values = []
+            temp_query = remaining_query
+
+            # Collect all occurrences of this filter (repetition support)
+            while name_upper in temp_query:
+                prev_query = temp_query
+                temp_query, value = self._match_option(name_upper, temp_query)
+                if temp_query == prev_query:  # Safety check to prevent infinite loop
+                    break
+                if value:
+                    # Support pipe separator (shell-specific, simpler than HTTP API config)
+                    if '|' in value:
+                        filter_values.extend(v.strip() for v in value.split('|') if v.strip())
+                    else:
+                        filter_values.append(value.strip())
+
+            if filter_values:
+                remaining_query = temp_query
+                # Single value: keep as string for backward compatibility
+                # Multiple values: use list (handled by core.py)
+                filters[name.lower()] = filter_values if len(filter_values) > 1 else filter_values[0]
+
+        return remaining_query, filters
+
     def _search(self, query, verbose=False, bucket=False, count=1):
         limit = 10
         autocomplete = True
@@ -170,12 +221,10 @@ class Cmd(cmd.Cmd):
             lat, lon = center.split()
             lat = float(lat)
             lon = float(lon)
-        for name in config.FILTERS:
-            name = name.upper()
-            if name in query:
-                query, value = self._match_option(name, query)
-                if value:
-                    filters[name.lower()] = value.strip()
+
+        # Parse filters
+        query, filters = self._parse_filters(query)
+
         helper = Search(limit=limit, verbose=verbose, autocomplete=autocomplete)
         start = time.time()
         for i in range(0, count):
@@ -427,9 +476,39 @@ class Cmd(cmd.Cmd):
 
     def do_REVERSE(self, latlon):
         """Do a reverse search. Args: lat lon.
-        REVERSE 48.1234 2.9876"""
-        lat, lon = latlon.split()
-        for r in reverse(float(lat), float(lon)):
+        REVERSE 48.1234 2.9876 [LIMIT 5] [FILTER VALUE…]"""
+        # Extract coordinates first
+        tokens = latlon.split()
+        if len(tokens) < 2:
+            print(red("Malformed input. Usage: REVERSE <lat> <lon> [LIMIT n] [FILTER ...]"))
+            return
+        lat, lon = tokens[0], tokens[1]
+        rest = " ".join(tokens[2:]) if len(tokens) > 2 else ""
+
+        # Parse LIMIT option
+        limit = 1
+        if "LIMIT" in rest:
+            rest, limit_str = self._match_option("LIMIT", rest)
+            if not limit_str:
+                print(red("LIMIT option requires an integer value."))
+                return
+            try:
+                limit = int(limit_str)
+            except ValueError:
+                print(red(f"LIMIT value '{limit_str}' is not a valid integer."))
+                return
+
+        # Parse filters
+        _, filters = self._parse_filters(rest)
+
+        try:
+            lat_float = float(lat)
+            lon_float = float(lon)
+        except ValueError:
+            print(red(f"Invalid coordinates. Latitude '{lat}' or longitude '{lon}' is not a valid number."))
+            return
+
+        for r in reverse(lat_float, lon_float, limit=limit, **filters):
             print(
                 "{} ({} | {} km | {})".format(
                     white(r), blue(r.score), blue(r.distance), blue(r._id)

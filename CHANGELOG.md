@@ -2,6 +2,13 @@
 
 Empty for now.
 
+## 1.3.2 (2025-11-27)
+
+### Changes
+
+- **Multi-value filter support in shell** (#[922](https://github.com/addok/addok/pull/922)): All shell search commands (SEARCH, EXPLAIN, BUCKET, BENCH, REVERSE) now support multi-value filters using parameter repetition (`TYPE street TYPE city`) or pipe separator (`TYPE street|city`).
+- **Housenumber filtering with multi-value filters** (#[921](https://github.com/addok/addok/pull/921)): Fixed housenumber type filtering logic to properly handle multi-value filters (e.g., `type=housenumber&type=street`) in both `search()` and `reverse()` functions.
+
 ## 1.3.1 (2025-11-16)
 
 ### Changes

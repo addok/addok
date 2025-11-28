@@ -83,3 +83,42 @@ def test_reverse_should_enforce_housenumber_if_filtered(factory):
     )
     results = reverse(lat=48.234544, lon=5.235444, type="housenumber")
     assert results[0].type == "housenumber"
+
+
+def test_reverse_housenumber_with_multivalue_filter_including_housenumber(factory):
+    """Test that housenumber is returned when type filter includes 'housenumber' in a list"""
+    factory(
+        lat=48.234544,
+        lon=5.235444,
+        housenumbers={"24": {"lat": 48.234545, "lon": 5.235445}},
+    )
+    # When type filter is a list containing "housenumber", it should return housenumber
+    results = reverse(lat=48.234545, lon=5.235445, type=["housenumber", "street"])
+    assert results[0].type == "housenumber"
+    assert results[0].housenumber == "24"
+
+
+def test_reverse_housenumber_excluded_with_multivalue_filter(factory):
+    """Test that housenumber is NOT returned when type filter doesn't include 'housenumber'"""
+    factory(
+        lat=48.234544,
+        lon=5.235444,
+        housenumbers={"24": {"lat": 48.234545, "lon": 5.235445}},
+    )
+    # When type filter is a list NOT containing "housenumber", it should return street
+    results = reverse(lat=48.234545, lon=5.235445, type=["street", "locality"])
+    assert results[0].type == "street"
+
+
+def test_reverse_only_housenumber_not_enforced_with_multivalue_filter(factory):
+    """Test that only_housenumber mode is NOT active with multi-value filters"""
+    factory(
+        lat=48.234544,
+        lon=5.235444,
+        housenumbers={"24": {"lat": 48.234545, "lon": 5.235445}},
+    )
+    # When type filter contains housenumber AND other types, should not enforce housenumber-only
+    # (i.e., should return street if it's closer to the exact point)
+    results = reverse(lat=48.234544, lon=5.235444, type=["housenumber", "street"])
+    # Should return street since it's at the exact coordinates
+    assert results[0].type == "street"
