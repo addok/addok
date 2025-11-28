@@ -9,7 +9,9 @@ import falcon
 from addok.config import config
 from addok.core import reverse, search
 from addok.db import DB
+from addok.helpers import keys
 from addok.helpers.text import EntityTooLarge
+from addok.ds import get_document
 
 notfound_logger = None
 query_logger = None
@@ -224,10 +226,20 @@ class Reverse(View):
 
 class Health(View):
     def on_get(self, req, resp):
+        try:
+            redis_version = DB.info().get("redis_version")
+            is_loading = DB.info().get("loading")
+        except:
+            raise falcon.HTTPServiceUnavaible(description="redis is currently unavailable")
+        try:
+            get_document(keys.document_key('dummy').encode())
+        except:
+            raise falcon.HTTPServiceUnavaible(description="Unable to reach the document store")
+
         return self.json(
             req,
             resp,
-            {"status": "HEALTHY", "redis_version": DB.info().get("redis_version")},
+            {"status": "HEALTHY", "redis_version": redis_version, "is_loading": is_loading},
         )
 
 
