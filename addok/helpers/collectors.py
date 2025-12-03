@@ -68,6 +68,12 @@ def only_commons(helper):
 def bucket_with_meaningful(helper):
     if not helper.meaningful:
         return
+
+    if (helper.common and helper.bucket_dry and
+        (not helper.meaningful or helper.meaningful[0].frequency > config.COMMON_THRESHOLD)):
+            helper.debug("Still only not found and common tokens.")
+            return
+
     if len(helper.meaningful) == 1 and helper.common and not helper.filters:
         # Avoid running with too less tokens while having commons terms.
         for token in helper.common:
