@@ -9,26 +9,10 @@ from .config import config
 from .db import DB
 from .ds import get_document, get_documents
 from .helpers import keys as dbkeys, scripts
+from .helpers.geohash import compute_geohash_key
 from .helpers.text import ascii
 
 REDIS_UNIQUE_ID = str(uuid.uuid4())  # Really unique id for tmp values in redis.
-
-
-def compute_geohash_key(geoh, with_neighbors=True):
-    if with_neighbors:
-        neighbors = geohash.expand(geoh)
-        neighbors = [dbkeys.geohash_key(n) for n in neighbors]
-    else:
-        neighbors = [geoh]
-    key = "gx|{}".format(geoh)
-    total = DB.sunionstore(key, neighbors)
-    if not total:
-        # No need to keep it.
-        DB.delete(key)
-        key = False
-    else:
-        DB.expire(key, 10)
-    return key
 
 
 class Result:
@@ -280,9 +264,30 @@ class Search(BaseHelper):
         self.autocomplete = autocomplete
         self.pid = REDIS_UNIQUE_ID
 
-    def __call__(self, query, lat=None, lon=None, **filters):
+    def __call__(self, query, lat=None, lon=None, geo_boost=None, geo_radius=None, **filters):
         self.lat = lat
         self.lon = lon
+        
+        # Validate and set geo_boost mode
+        self.geo_boost_mode = geo_boost or config.GEO_BOOST_DEFAULT
+        valid_modes = ["score", "favor", "strict"]
+        if self.geo_boost_mode not in valid_modes:
+            raise ValueError(
+                f"geo_boost must be one of {valid_modes}, got {self.geo_boost_mode}"
+            )
+        
+        # Validate and set geo_radius
+        if geo_radius is not None:
+            if not isinstance(geo_radius, (int, float)):
+                raise TypeError(
+                    f"geo_radius must be a number, got {type(geo_radius).__name__}"
+                )
+            if geo_radius < 0 or geo_radius > 100:
+                raise ValueError(
+                    f"geo_radius must be between 0 and 100 km, got {geo_radius}"
+                )
+        self.geo_radius = geo_radius if geo_radius is not None else config.GEO_RADIUS_DEFAULT
+        
         self._geohash_key = None
         self.results = {}
         self.bucket = set([])  # No duplicates.
@@ -317,7 +322,11 @@ class Search(BaseHelper):
     def geohash_key(self):
         if self.lat and self.lon and self._geohash_key is None:
             geoh = geohash.encode(self.lat, self.lon, config.GEOHASH_PRECISION)
-            self._geohash_key = compute_geohash_key(geoh)
+            self._geohash_key = compute_geohash_key(
+                geoh,
+                with_neighbors=True,
+                radius_km=self.geo_radius
+            )
             if self._geohash_key:
                 self.debug("Computed geohash key %s", self._geohash_key)
             else:
@@ -493,6 +502,8 @@ def search(
     autocomplete=False,
     lat=None,
     lon=None,
+    geo_boost=None,
+    geo_radius=None,
     verbose=False,
     **filters
 ):
@@ -502,7 +513,7 @@ def search(
         verbose=verbose,
         autocomplete=autocomplete,
     )
-    return helper(query, lat=lat, lon=lon, **filters)
+    return helper(query, lat=lat, lon=lon, geo_boost=geo_boost, geo_radius=geo_radius, **filters)
 
 
 def reverse(lat, lon, limit=1, verbose=False, **filters):

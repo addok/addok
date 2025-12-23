@@ -2,7 +2,7 @@
 
 *Search engine for address. Only address.*
 
-## Overview
+## Overview
 
 Addok works with Redis as backend.
 
@@ -10,6 +10,7 @@ Addok works with Redis as backend.
 - it serves a minimal GeoJSON based API (with Falcon)
 - it does reverse geocoding
 - it does batch geocoding (through CSV)
+- it has [advanced geographic search](geographic_search.md) with configurable radius and filtering modes
 - it has a debug shell for inspecting the index
 - it's configurable in many details
 - it's extendable by plugins

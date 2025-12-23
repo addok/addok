@@ -118,6 +118,52 @@ def score_by_geo_distance(helper, result):
     )
 
 
+def filter_by_geo_radius(helper, result):
+    """Filter out results outside the requested radius in strict mode.
+    
+    Only applies when:
+    - geo_boost mode is "strict"
+    - geo_radius is specified
+    - A center point (lat/lon) is provided
+    
+    Uses real Haversine distance, not geohash approximation. This ensures
+    that geohash cells (which are rectangular) don't include results beyond
+    the requested circular radius, especially in the corners.
+    
+    In "score" and "favor" modes, geo_radius only affects geohash cell
+    selection but doesn't filter final results, preserving their behavior.
+    
+    Returns:
+        False to filter out the result, None to keep it
+    """
+    # Only filter in strict mode
+    if not hasattr(helper, 'geo_boost_mode') or helper.geo_boost_mode != "strict":
+        return  # Not strict mode, don't filter
+    
+    # Only filter if geo_radius is explicitly set
+    if not hasattr(helper, 'geo_radius') or helper.geo_radius is None:
+        return  # No radius specified, don't filter
+    
+    if helper.lat is None or helper.lon is None:
+        return  # No center, can't filter
+    
+    # Calculate real distance (should already be set by score_by_geo_distance)
+    if not hasattr(result, 'distance'):
+        km = haversine_distance(
+            (float(result.lat), float(result.lon)), 
+            (helper.lat, helper.lon)
+        )
+        result.distance = km * 1000
+    else:
+        km = result.distance / 1000.0
+    
+    # Filter out if beyond radius
+    if km > helper.geo_radius:
+        helper.debug("Filtering out %s: %.2f km > %.2f km radius (strict mode)", 
+                    result, km, helper.geo_radius)
+        return False  # Remove this result
+
+
 def adjust_scores(helper, result):
     if helper.lat is not None and helper.lon is not None:
         str_distance = result._scores.get("str_distance")

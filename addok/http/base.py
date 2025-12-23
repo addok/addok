@@ -185,6 +185,27 @@ class Search(View):
         center = None
         if lon and lat:
             center = (lon, lat)
+        
+        # Parse geo_boost parameter
+        geo_boost = req.get_param("geo_boost")
+        if geo_boost and geo_boost not in ["score", "favor", "strict"]:
+            raise falcon.HTTPInvalidParam(
+                "must be one of: score, favor, strict", "geo_boost"
+            )
+        
+        # Parse geo_radius parameter (in km)
+        geo_radius = None
+        geo_radius_param = req.get_param("geo_radius")
+        if geo_radius_param:
+            try:
+                geo_radius = float(geo_radius_param)
+                if geo_radius < 0 or geo_radius > 100:
+                    raise falcon.HTTPInvalidParam(
+                        "out of range (0..100 km)", "geo_radius"
+                    )
+            except (ValueError, TypeError):
+                raise falcon.HTTPInvalidParam("invalid value", "geo_radius")
+        
         filters = self.match_filters(req)
         timer = time.perf_counter()
         try:
@@ -194,6 +215,8 @@ class Search(View):
                 autocomplete=autocomplete,
                 lat=lat,
                 lon=lon,
+                geo_boost=geo_boost,
+                geo_radius=geo_radius,
                 **filters
             )
         except EntityTooLarge as e:

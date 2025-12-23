@@ -97,6 +97,7 @@ SEARCH_RESULT_PROCESSORS_PYPATHS = [
     "addok.helpers.results.score_by_autocomplete_distance",
     "addok.helpers.results.score_by_ngram_distance",
     "addok.helpers.results.score_by_geo_distance",
+    "addok.helpers.results.filter_by_geo_radius",
     "addok.helpers.results.adjust_scores",
 ]
 REVERSE_RESULT_PROCESSORS_PYPATHS = [
@@ -146,6 +147,16 @@ IMPORTANCE_WEIGHT = 0.1
 
 # Geographical distance importance on final score
 GEO_DISTANCE_WEIGHT = 0.1
+
+# Geographic boost behavior when a center (lat/lon) is provided
+# - "score": Use center only for scoring (default, backward compatible)
+# - "favor": Strongly favor nearby results by using geohash in meaningful queries
+# - "strict": Always filter by geohash (like reverse geocoding)
+GEO_BOOST_DEFAULT = "score"
+
+# Default radius in km for geographic filtering when geo_boost is used
+# This affects how many geohash cells are considered (1 cell ~= 0.15km at precision 7)
+GEO_RADIUS_DEFAULT = None  # None = use only immediate neighbors (9 cells)
 
 # Default score for the relation token => document
 DEFAULT_BOOST = 1.0
