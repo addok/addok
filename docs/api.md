@@ -25,8 +25,8 @@ Issue a full text search.
 - **geo_boost**: control how geographic center influences results (default: `score`)
   - `score`: center used only for scoring (backward compatible)
   - `favor`: prioritize nearby results with automatic fallback
-  - `strict`: only return results within geographic area (~500m)
-- **geo_radius**: search radius in kilometers (0-100, future feature for dynamic area control)
+  - `strict`: only return results within the specified radius
+- **geo_radius**: search radius in kilometers (0-100)
 - every filter that has been declared in the [config](config.md) is available as
   parameters
 
