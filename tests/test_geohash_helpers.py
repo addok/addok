@@ -2,8 +2,8 @@
 import pytest
 import geohash as geohash_lib
 
+from addok.helpers import haversine_distance
 from addok.helpers.geohash import (
-    haversine,
     get_geohash_cell_size,
     calculate_geohash_layers,
 )
@@ -12,15 +12,15 @@ from addok.helpers.geohash import (
 def test_haversine_known_distances():
     """Test haversine calculation with known distances."""
     # Paris to Lyon: ~392 km
-    distance = haversine(48.8566, 2.3522, 45.7640, 4.8357)
+    distance = haversine_distance((48.8566, 2.3522), (45.7640, 4.8357))
     assert 390 < distance < 395
 
     # Paris to Paris (same point): 0 km
-    distance = haversine(48.8566, 2.3522, 48.8566, 2.3522)
+    distance = haversine_distance((48.8566, 2.3522), (48.8566, 2.3522))
     assert distance < 0.001
 
     # Equator 1 degree longitude: ~111 km
-    distance = haversine(0, 0, 0, 1)
+    distance = haversine_distance((0, 0), (0, 1))
     assert 110 < distance < 112
 
 
