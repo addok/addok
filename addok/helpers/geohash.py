@@ -1,44 +1,12 @@
 """Geohash-related helper functions for geographic search operations."""
 
 from functools import lru_cache
-from math import radians, cos, sin, asin, sqrt
 
 import geohash
 
 from addok.config import config
 from addok.db import DB
-from addok.helpers import keys as dbkeys
-
-
-def haversine(lat1, lon1, lat2, lon2):
-    """Calculate the great circle distance between two points on Earth.
-    
-    Uses the Haversine formula to compute the distance between two points
-    given their latitude and longitude coordinates.
-    
-    Args:
-        lat1, lon1: Latitude and longitude of first point in decimal degrees
-        lat2, lon2: Latitude and longitude of second point in decimal degrees
-    
-    Returns:
-        Distance in kilometers
-    
-    Reference:
-        https://en.wikipedia.org/wiki/Haversine_formula
-    """
-    # Earth radius in kilometers
-    R = 6371
-    
-    # Convert decimal degrees to radians
-    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-    
-    # Haversine formula
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a))
-    
-    return R * c
+from addok.helpers import haversine_distance, keys as dbkeys
 
 
 @lru_cache(maxsize=128)
@@ -66,10 +34,10 @@ def get_geohash_cell_size(geoh):
     bbox = geohash.bbox(geoh)
     
     # Calculate latitude dimension (north-south)
-    lat_size_km = haversine(bbox['s'], bbox['w'], bbox['n'], bbox['w'])
+    lat_size_km = haversine_distance((bbox['s'], bbox['w']), (bbox['n'], bbox['w']))
     
     # Calculate longitude dimension (east-west)
-    lon_size_km = haversine(bbox['s'], bbox['w'], bbox['s'], bbox['e'])
+    lon_size_km = haversine_distance((bbox['s'], bbox['w']), (bbox['s'], bbox['e']))
     
     return lat_size_km, lon_size_km
 
