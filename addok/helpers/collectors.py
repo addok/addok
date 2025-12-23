@@ -69,6 +69,16 @@ def only_commons(helper):
 
 
 def bucket_with_meaningful(helper):
+    """Collect results based on meaningful tokens and geographic modes.
+    
+    Handles three geo_boost modes:
+    - score: Geographic scoring only (default, backward compatible)
+    - favor: Prioritizes nearby results, falls back to broader search if insufficient
+    - strict: Always filters by geohash, returns empty if no nearby results
+    
+    Returns:
+        bool: True to stop collector chain (in strict mode), None otherwise
+    """
     if not helper.meaningful:
         return
     if len(helper.meaningful) == 1 and helper.common and not helper.filters:
@@ -85,7 +95,7 @@ def bucket_with_meaningful(helper):
         
         if mode == "strict":
             # Always use geohash as filter (like reverse)
-            helper.debug("geo_boost=strict: filtering by geohash")
+            helper.debug("geo_boost=strict: filtering by geohash %s", helper.geohash_key)
             
             if not helper.geohash_key:
                 # No documents in geohash area - return empty results
@@ -182,7 +192,7 @@ def ensure_geohash_results_are_included_if_center_is_given(helper):
         if helper.geohash_key and len(helper.bucket) >= helper.wanted:
             helper.debug("geo_boost=favor: ensuring nearby results in final set")
             
-            # Note: geohash_key was already computed with geo_radius in the property
+            # Note: geohash_key property (core.py) already computed with geo_radius
             # No need to recompute here
             helper.add_to_bucket(helper.keys + [helper.geohash_key], max(helper.wanted * 2, 20))
         return
@@ -191,7 +201,7 @@ def ensure_geohash_results_are_included_if_center_is_given(helper):
     if helper.bucket_overflow and helper.geohash_key:
         helper.debug("Bucket overflow and center, force nearby look up")
         
-        # Note: geohash_key was already computed with geo_radius in the property
+        # Note: geohash_key property (core.py) already computed with geo_radius
         # No need to recompute here
         helper.add_to_bucket(helper.keys + [helper.geohash_key], max(helper.wanted, 10))
 

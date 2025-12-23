@@ -1,5 +1,7 @@
 """Geohash-related helper functions for geographic search operations."""
 
+from functools import lru_cache
+
 import geohash
 
 from addok.config import config
@@ -99,6 +101,7 @@ def calculate_geohash_layers(radius_km, precision):
         return 4
 
 
+@lru_cache(maxsize=128)
 def expand_geohash_layers(geoh, layers=1):
     """Expand a geohash to include multiple layers of neighbors.
 
@@ -107,10 +110,14 @@ def expand_geohash_layers(geoh, layers=1):
         layers: Number of neighbor layers to include (1-4)
 
     Returns:
-        Set of geohash strings including center and all neighbor layers
+        Frozenset of geohash strings including center and all neighbor layers
+        
+    Note:
+        This function is cached for performance. The result is a frozenset
+        to ensure hashability for the cache.
     """
     if layers < 1:
-        return {geoh}
+        return frozenset([geoh])
 
     # Start with center
     current_layer = {geoh}
@@ -131,4 +138,4 @@ def expand_geohash_layers(geoh, layers=1):
         if not current_layer:
             break
 
-    return all_cells
+    return frozenset(all_cells)

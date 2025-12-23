@@ -213,10 +213,9 @@ def test_geo_radius_edge_cases(factory):
         importance=0.05,
     )
 
-    # Negative radius should be handled (treated as 0 or ignored)
-    results = search("paris", lat=48.1, lon=0.9, geo_radius=-1.0)
-    # Should still work, just ignore invalid radius
-    assert len(results) >= 0
+    # Negative radius should raise ValueError
+    with pytest.raises(ValueError, match="geo_radius must be between 0 and 100"):
+        search("paris", lat=48.1, lon=0.9, geo_radius=-1.0)
 
     # Very small positive radius
     results = search("paris", lat=48.1, lon=0.9, geo_radius=0.1)

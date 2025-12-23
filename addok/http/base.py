@@ -199,7 +199,7 @@ class Search(View):
         if geo_radius_param:
             try:
                 geo_radius = float(geo_radius_param)
-                if geo_radius <= 0 or geo_radius > 100:
+                if geo_radius < 0 or geo_radius > 100:
                     raise falcon.HTTPInvalidParam(
                         "out of range (0..100 km)", "geo_radius"
                     )
