@@ -47,7 +47,7 @@ Controls the search radius in kilometers when a center point is provided. Works 
 - Default: `None` (uses default radius based on geohash precision)
 
 **Behavior:**
-The implementation automatically adapts to the configured `GEOHASH_PRECISION`:
+The implementation automatically adapts to the configured `GEOHASH_PRECISION` and calculates actual cell dimensions based on latitude (accounting for Earth's curvature):
 - **Precision 5** (~4.9km cells): Suitable for country-level searches
 - **Precision 6** (~1.2km cells): City-level searches
 - **Precision 7** (~153m cells): Street-level searches (default)
@@ -150,10 +150,11 @@ GET /search/?q=rue victor hugo&lat=48.8566&lon=2.3522&geo_boost=favor&limit=10
 - Map-based search interfaces
 
 **How it works:**
-1. **Always** filters by geohash
-2. Only returns results within ~500m radius (9 geohash cells at precision 7)
-3. No fallback to broader search
-4. Similar to `/reverse/` endpoint behavior
+1. **Always** filters by geohash to limit search area
+2. Collects results from geohash cells covering the requested radius
+3. **Applies precise distance filtering** using Haversine formula to remove results beyond the exact radius
+4. No fallback to broader search
+5. Similar to `/reverse/` endpoint behavior but with configurable radius
 
 **Use case:** "What's around me right now", POI search on mobile, map tile queries.
 
@@ -204,12 +205,24 @@ GET /search/?q=rue victor hugo&lat=48.8566&lon=2.3522&geo_boost=strict&limit=10
 - Fastest mode when results exist nearby
 - No fallback search = no additional queries
 - May return empty faster than other modes
+- Distance calculations are reused between scoring and filtering phases
 
-### Collectors Affected
+**Performance Optimizations:**
+- **LRU caching** on geohash expansion and cell size calculations (`@lru_cache(maxsize=128)`)
+- **Distance calculation reuse** between `score_by_geo_distance` and `filter_by_geo_radius` processors
+- **Dynamic cell size calculation** based on actual latitude (Earth's curvature)
+- **Efficient geohash neighbor expansion** using frozen sets
 
-1. **`bucket_with_meaningful()`**: Now checks `geo_boost_mode` and adjusts strategy
+### Components Involved
+
+**Collectors:**
+1. **`bucket_with_meaningful()`**: Checks `geo_boost_mode` and adjusts strategy
 2. **`ensure_geohash_results_are_included_if_center_is_given()`**: Respects modes
 3. Other collectors unchanged (commons, autocomplete, etc.)
+
+**Result Processors:**
+1. **`score_by_geo_distance`**: Calculates Haversine distance and stores it on results
+2. **`filter_by_geo_radius`**: Removes results beyond radius in strict mode (reuses calculated distance)
 
 ## Migration Guide
 
