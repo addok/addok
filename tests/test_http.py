@@ -61,8 +61,9 @@ def test_search_filters_can_be_combined(client, factory):
 def test_search_supports_multi_value_filter_via_http(client, factory):
     factory(name="rue de Paris", type="street")
     factory(name="Paris", type="city")
+    # With default separator ' ' (space), pass "street city" as value
     resp = client.get(
-        "/search/", query_string={"q": "paris", "type": "street+city"}
+        "/search/", query_string={"q": "paris", "type": "street city"}
     )
     assert resp.json["type"] == "FeatureCollection"
     assert len(resp.json["features"]) == 2
@@ -119,9 +120,10 @@ def test_reverse_supports_multi_value_filter(client, factory):
     street = factory(name="rue des avions", lat=48.2345, lon=5.2354, type="street")
     city = factory(name="Ville", lat=48.2345, lon=5.2354, type="city")
     locality = factory(name="Lieu-dit", lat=48.2345, lon=5.2354, type="locality")
+    # With default separator ' ' (space), pass "street city" as value
     resp = client.get(
         "/reverse/",
-        query_string={"lat": "48.2345", "lon": "5.2354", "type": "street+city", "limit": "10"},
+        query_string={"lat": "48.2345", "lon": "5.2354", "type": "street city", "limit": "10"},
     )
     assert resp.json["type"] == "FeatureCollection"
     assert len(resp.json["features"]) == 2
@@ -139,7 +141,7 @@ def test_reverse_multi_filter_combination(client, factory):
         query_string={
             "lat": "48.2345",
             "lon": "5.2354",
-            "type": "street+city",
+            "type": "street city",
             "postcode": "75001",
             "limit": "10",
         },
@@ -150,6 +152,21 @@ def test_reverse_multi_filter_combination(client, factory):
     assert len(resp.json["features"]) == 2
     names = {feature["properties"]["name"] for feature in resp.json["features"]}
     assert names == {"rue A", "Ville C"}
+
+
+def test_reverse_multi_params_without_separator(config, client, factory):
+    """Test that reverse with multiple parameters works even when separator=None"""
+    config.FILTERS_MULTI_VALUE_SEPARATOR = None
+    
+    street = factory(name="rue Test", lat=48.2345, lon=5.2354, type="street")
+    city = factory(name="City Test", lat=48.2345, lon=5.2354, type="city")
+    locality = factory(name="Locality Test", lat=48.2345, lon=5.2354, type="locality")
+    
+    # Multiple parameters should still work with OR logic
+    resp = client.get("/reverse/?lat=48.2345&lon=5.2354&type=street&type=city&limit=10")
+    assert len(resp.json["features"]) == 2
+    types = {feature["properties"]["type"] for feature in resp.json["features"]}
+    assert types == {"street", "city"}
 
 
 def test_reverse_should_have_cors_headers(client, factory):
@@ -337,4 +354,113 @@ def test_search_accepts_valid_geo_radius(client, factory):
 def test_health_should_return_ok(client):
     resp = client.get("/health")
     assert resp.status_code == 200
-    assert resp.json['status'] == "HEALTHY"
+    assert "status" in resp.json
+    assert resp.json["status"] == "HEALTHY"
+
+
+def test_multi_value_filters_can_be_disabled(config, client, factory):
+    """Test that multi-value filters can be completely disabled.
+
+    When FILTERS_MULTI_VALUE_SEPARATOR=None, filter values are never split,
+    but multiple query parameters should still work for multi-value OR logic.
+    """
+    config.FILTERS_MULTI_VALUE_SEPARATOR = None
+
+    factory(name="Test Item", type="foo bar")  # Literal value with space
+    factory(name="Rue Test", type="street")
+    factory(name="City Test", type="city")
+
+    # type=foo+bar → decoded as "foo bar" → not split because separator disabled
+    resp = client.get("/search/?q=test&type=foo+bar")
+    assert len(resp.json["features"]) == 1
+    assert resp.json["features"][0]["properties"]["type"] == "foo bar"
+    
+    # Multi-parameters should still work even with separator=None
+    resp = client.get("/search/?q=test&type=street&type=city")
+    assert len(resp.json["features"]) == 2
+    types = {f["properties"]["type"] for f in resp.json["features"]}
+    assert types == {"street", "city"}
+
+
+def test_multi_value_filter_with_space_separator(config, client, factory):
+    """Test multi-value filters using space as separator.
+
+    When the separator is a space, URL-encoded spaces ('+' or '%20') are decoded
+    and then used to split the value into multiple filter values.
+
+    Note: This means filter values cannot themselves contain spaces.
+    This is an edge case, not the recommended configuration.
+    """
+    config.FILTERS_MULTI_VALUE_SEPARATOR = " "
+
+    factory(name="Place Test", type="foo")
+    factory(name="Place Test 2", type="bar")
+
+    # type=foo+bar → decoded as "foo bar" → split on " " → ["foo", "bar"] (OR logic)
+    resp = client.get("/search/?q=place&type=foo+bar")
+
+    assert len(resp.json["features"]) == 2
+    types = {f["properties"]["type"] for f in resp.json["features"]}
+    assert types == {"foo", "bar"}
+
+
+def test_custom_separator_allows_values_with_spaces(config, client, factory):
+    """Test using comma separator to support filter values containing spaces.
+
+    This is the recommended approach when filter values can contain spaces.
+    With comma separator:
+    - Spaces in values are preserved (type=my+foo → "my foo")
+    - Multiple values are split on comma (type=my+foo,bar → ["my foo", "bar"])
+    """
+    config.FILTERS_MULTI_VALUE_SEPARATOR = ','
+
+    factory(name="Rue Street A", type="my foo")  # Value with space
+    factory(name="City B", type="bar")
+
+    # type=my+foo,bar → decoded as "my foo,bar" → split on "," → ["my foo", "bar"]
+    resp = client.get("/search/?q=rue city&type=my+foo,bar")
+    assert len(resp.json["features"]) == 2
+    types = {f["properties"]["type"] for f in resp.json["features"]}
+    assert types == {"my foo", "bar"}
+
+
+def test_multi_querystring_parameters(config, client, factory):
+    """Test using multiple query string parameters for multi-value filters.
+
+    When FILTERS_MULTI_VALUE_SEPARATOR is set, you can pass the same
+    filter parameter multiple times for OR logic, as an alternative
+    to using separators within a single value.
+    """
+    config.FILTERS_MULTI_VALUE_SEPARATOR = " "
+
+    factory(name="Rue Test", type="street")
+    factory(name="City Test", type="city")
+
+    # Using multiple parameters: type=street&type=city (OR logic)
+    resp = client.get("/search/?q=test&type=street&type=city")
+    assert len(resp.json["features"]) == 2
+    types = {f["properties"]["type"] for f in resp.json["features"]}
+    assert types == {"street", "city"}
+
+def test_multi_mixed(config, client, factory):
+    """Test combining multi-value filters via separator and multiple parameters.
+
+    When FILTERS_MULTI_VALUE_SEPARATOR is set, you can combine:
+    - Multiple query parameters: ?type=street&type=city boulevard
+    - Each parameter value can also contain the separator
+    """
+    config.FILTERS_MULTI_VALUE_SEPARATOR = " "
+
+    factory(name="Street Test", type="street")
+    factory(name="City Test", type="city")
+    factory(name="Boulevard Test", type="boulevard")
+    factory(name="Avenue Test", type="avenue")
+
+    # type=street&type=city+boulevard
+    # → ["street", "city boulevard"] joined with " "
+    # → "street city boulevard"
+    # → split on " " → ["street", "city", "boulevard"]
+    resp = client.get("/search/?q=test&type=street&type=city+boulevard")
+    assert len(resp.json["features"]) == 3
+    types = {f["properties"]["type"] for f in resp.json["features"]}
+    assert types == {"street", "city", "boulevard"}

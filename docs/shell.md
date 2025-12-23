@@ -20,10 +20,20 @@ Return document linked to word with higher score.
 
     BESTSCORE lilas
 
+#### BENCH
+Run a search multiple times to benchmark it (default 100 runs):
+
+    BENCH rue des lilas
+    BENCH 50 rue des lilas
+
+Supports all search options.
+
 #### BUCKET
 Issue a search and return all the collected bucket, not only up to limit elements:
 
     BUCKET rue des Lilas
+
+Supports all search options.
 
 #### DBINFO
 Print some useful infos from Redis DB.
@@ -42,6 +52,8 @@ Print the distance score between two strings. Use | as separator.
 Issue a search with debug info:
 
     EXPLAIN rue des Lilas
+
+Supports all search options.
 
 #### FREQUENCY
 Return word frequency in index.
@@ -107,6 +119,10 @@ Do a reverse search. Args: lat lon.
 
     REVERSE 48.1234 2.9876
 
+Supports LIMIT and filters with multiple values (see SEARCH for filter syntax):
+
+    REVERSE 48.1234 2.9876 LIMIT 5 TYPE street
+
 #### SEARCH
 Issue a search (default command, can be omitted; arguments between `[]` are
 optional):
@@ -116,6 +132,11 @@ optional):
 Also, every registered filter is available, for example:
 
     rue des lilas CITY hautmont
+
+Filters support multiple values using either repetition or pipe separator:
+
+    rue des lilas TYPE street TYPE city
+    rue des lilas TYPE street|city
 
 #### TOKENIZE
 Inspect how a string is tokenized before being indexed.

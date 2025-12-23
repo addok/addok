@@ -1,5 +1,23 @@
 ## Unreleased
 
+Empty for now.
+
+## 1.3.2 (2025-11-27)
+
+### Changes
+
+- **Multi-value filter support in shell** (#[922](https://github.com/addok/addok/pull/922)): All shell search commands (SEARCH, EXPLAIN, BUCKET, BENCH, REVERSE) now support multi-value filters using parameter repetition (`TYPE street TYPE city`) or pipe separator (`TYPE street|city`).
+- **Housenumber filtering with multi-value filters** (#[921](https://github.com/addok/addok/pull/921)): Fixed housenumber type filtering logic to properly handle multi-value filters (e.g., `type=housenumber&type=street`) in both `search()` and `reverse()` functions.
+
+## 1.3.1 (2025-11-16)
+
+### Changes
+
+- **Multi-value filters improvements** (#[914](https://github.com/addok/addok/pull/914), #[915](https://github.com/addok/addok/pull/915)): The multi-value filter separator is now configurable via `FILTERS_MULTI_VALUE_SEPARATOR` parameter (default: `' '`). Set to `None` to disable separator parsing (multiple parameters still work). Additionally, the Python API (`search()`, `reverse()`) now accepts lists directly for multi-value filters (e.g., `type=["street", "city"]`), while the HTTP layer handles string parsing. Single string values remain supported for backward compatibility. This improves code clarity and type safety while maintaining full HTTP API compatibility.
+- **Temporary setuptools pin** (#[913](https://github.com/addok/addok/pull/913)): Added `setuptools < 81` constraint to avoid deprecation warnings from `pkg_resources`. This temporary fix will be removed in the next major version when migrating away from `pkg_resources`.
+
+## 1.3.0 (2025-11-02)
+
 ### Breaking changes
 
 - Update `redis` to 6.4.0 and `hiredis` to 3.3.0 for Redis 8 compatibility

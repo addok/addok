@@ -312,14 +312,58 @@ list of strings.
 Min score used to consider a result may *match* the query.
 
     MATCH_THRESHOLD = 0.9
+
+#### FILTERS_MULTI_VALUE_SEPARATOR (str)
+
+Separator character used in HTTP query strings to split filter values into multiple values for OR logic.
+Set to `None` to disable separator parsing (filter values are treated as literals, but multiple parameters still work).
+
+    FILTERS_MULTI_VALUE_SEPARATOR = ' '
+
+**Important**: This setting only affects the **HTTP API** query string parsing. When calling
+`search()` or `reverse()` functions directly in Python, use lists for multi-value filters:
+
+```python
+# HTTP API (uses separator)
+GET /search?q=Paris&type=street+city  # Parsed into ["street", "city"]
+
+# Python API (use lists directly)
+search("Paris", type=["street", "city"])  # Multi-value
+search("Paris", type="street")            # Single value (backward compatible)
+```
+
+**HTTP syntaxes:**
+
+When separator is configured (e.g., space):
+- Single parameter with separator: `?type=street+city` → `["street", "city"]`
+- Multiple parameters: `?type=street&type=city` → `["street", "city"]`
+- Combined: `?type=street&type=city+locality` → `["street", "city", "locality"]`
+
+When `separator=None`:
+- Single parameter: `?type=street+city` → `["street city"]` (treated as literal with space)
+- Multiple parameters: `?type=street&type=city` → `["street", "city"]` (still works!)
+
+**Default (space)**: Works naturally with URL encoding where `+` represents spaces.
+`?type=street+municipality` → split into `["street", "municipality"]`.
+
+**For filter values containing spaces**, use a different separator:
+
+```python
+FILTERS_MULTI_VALUE_SEPARATOR = '|'   # ?type=street|municipality
+FILTERS_MULTI_VALUE_SEPARATOR = ','   # ?type=street,municipality
+FILTERS_MULTI_VALUE_SEPARATOR = None  # ?type=my+street treated as "my street"
+```
+
+Values are automatically deduplicated, sorted, and trimmed of whitespace.
+
 #### MAX_FILTER_VALUES (int)
-Maximum number of values allowed in a multi-value filter (e.g., `type=street+city+locality`).
-This limit prevents performance issues and potential abuse when using OR filters.
+
+Maximum number of values in a multi-value filter (e.g., `type=street city locality`).
+Prevents performance issues with OR filters.
 
     MAX_FILTER_VALUES = 10
 
-For example, with `MAX_FILTER_VALUES = 10`, a query like `?type=v1+v2+v3+...+v15` will only
-consider the first 10 unique values after deduplication and sorting.
+Example: `?type=v1 v2 v3...v15` only considers the first 10 unique values.
 
 #### PROCESSORS_PYPATHS (iterable of Python paths)
 Define the various functions to preprocess the text, before indexing and
