@@ -7,9 +7,13 @@ def test_extract_redis_config_with_all_params():
     config_section = {
         "host": "redis.example.com",
         "port": 6380,
+        "username": "user",
         "db": 5,
         "password": "secret123",
         "unix_socket_path": "/var/run/redis.sock",
+        # TLS parameters (basic CA-only)
+        "ssl": True,
+        "ssl_ca_certs": "/path/to/ca.pem",
     }
 
     result = _extract_redis_config(config_section)
@@ -17,8 +21,12 @@ def test_extract_redis_config_with_all_params():
     assert result["host"] == "redis.example.com"
     assert result["port"] == 6380
     assert result["db"] == 5
+    assert result["username"] == "user"
     assert result["password"] == "secret123"
     assert result["unix_socket_path"] == "/var/run/redis.sock"
+    # TLS assertions (basic CA-only)
+    assert result["ssl"] == True
+    assert result["ssl_ca_certs"] == "/path/to/ca.pem"
 
 
 def test_extract_redis_config_with_minimal_params():
@@ -34,8 +42,12 @@ def test_extract_redis_config_with_minimal_params():
     assert result["host"] == "localhost"
     assert result["port"] == 6379
     assert result["db"] == 0
+    assert result["username"] == "default"
     assert result["password"] is None
     assert result["unix_socket_path"] is None
+    # TLS parameters should be None when not provided (basic CA-only)
+    assert result["ssl"] is None
+    assert result["ssl_ca_certs"] is None
 
 
 def test_extract_redis_config_handles_missing_keys():
@@ -47,8 +59,12 @@ def test_extract_redis_config_handles_missing_keys():
     assert result["host"] is None
     assert result["port"] is None
     assert result["db"] is None
+    assert result["username"] is None
     assert result["password"] is None
     assert result["unix_socket_path"] is None
+    # TLS parameters should be None when not provided (basic CA-only)
+    assert result["ssl"] is None
+    assert result["ssl_ca_certs"] is None
 
 
 def test_get_redis_params_returns_structured_dict():
@@ -66,7 +82,12 @@ def test_get_redis_params_returns_structured_dict():
     assert isinstance(result["use_redis_documents"], bool)
 
     # Should have standard Redis connection keys
-    for key in ["host", "port", "db", "password", "unix_socket_path"]:
+    # Standard Redis connection keys
+    for key in ["host", "port", "db", "username", "password", "unix_socket_path"]:
+        assert key in result["indexes"]
+        assert key in result["documents"]
+    # TLS/SSL keys (basic CA-only)
+    for key in ["ssl", "ssl_ca_certs"]:
         assert key in result["indexes"]
         assert key in result["documents"]
 
@@ -91,3 +112,22 @@ def test_get_redis_params_detects_redis_document_store(config):
     # Should correctly identify if using Redis for documents
     expected = addok_config.DOCUMENT_STORE == ds.RedisStore
     assert result["use_redis_documents"] == expected
+
+
+def test_extract_redis_config_with_tls_params():
+    """Test extraction of Redis config with TLS parameters (basic CA-only)."""
+    config_section = {
+        "host": "redis.example.com",
+        "port": 6380,
+        "username": "user",
+        "db": 5,
+        # TLS parameters (basic CA-only)
+        "ssl": True,
+        "ssl_ca_certs": "/path/to/ca.pem",
+    }
+
+    result = _extract_redis_config(config_section)
+
+    # Verify TLS parameters are extracted correctly (basic CA-only)
+    assert result["ssl"] == True
+    assert result["ssl_ca_certs"] == "/path/to/ca.pem"

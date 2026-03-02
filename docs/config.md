@@ -52,6 +52,7 @@ subdictionnaries, for example:
     REDIS = {
         'host': 'myhost',
         'port': 6379,
+        'username': 'default',
         'indexes': {
             'db': 11,
         },
@@ -64,6 +65,7 @@ If your hosts are different, you can define them like this:
 
     REDIS = {
         'port': 6379,
+        'username': 'default',
         'indexes': {
             'host': 'myhost1',
             'db': 11,
@@ -75,6 +77,33 @@ If your hosts are different, you can define them like this:
     }
 
 And of course, same for the port.
+
+### TLS/SSL Configuration
+
+Addok supports secure Redis connections using TLS/SSL with basic CA certificate support. This is similar to the Redis CLI usage:
+
+```bash
+redis-cli -h 192.0.2.1 -p 6379 --user <redis-user> --askpass --tls --cacert SSL_<redis-cluster-name>.pem
+```
+
+You can configure TLS parameters in the `REDIS` section:
+
+```python
+REDIS = {
+    'host': 'redis.example.com',
+    'port': 6380,
+    'username': 'user',
+    'password': 'secret',
+    # TLS/SSL parameters (basic CA-only support)
+    'ssl': True,                    # Enable SSL/TLS
+    'ssl_ca_certs': '/path/to/ca.pem',  # CA certificate file
+}
+```
+
+**Environment Variables:**
+TLS parameters can also be configured via environment variables:
+- `REDIS_SSL=true` or `false` - Enable TLS
+- `REDIS_SSL_CA_CERTS=/path/to/ca.pem` - CA certificate file path
 
 To use Redis through a Unix socket, use `unix_socket_path` key.
 
