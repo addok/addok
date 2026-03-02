@@ -4,7 +4,11 @@ from pathlib import Path
 REDIS = {
     "host": os.environ.get("REDIS_HOST") or "localhost",
     "port": os.environ.get("REDIS_PORT") or 6379,
+    "username": os.environ.get("REDIS_USER") or "default",
     "unix_socket_path": os.environ.get("REDIS_SOCKET"),
+    # TLS/SSL configuration (basic CA-only support)
+    "ssl": os.environ.get("REDIS_SSL", "false").lower() == "true",
+    "ssl_ca_certs": os.environ.get("REDIS_SSL_CA_CERTS"),
     "indexes": {
         "db": os.environ.get("REDIS_DB_INDEXES") or 0,
     },

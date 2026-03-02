@@ -37,9 +37,13 @@ def _extract_redis_config(config_section):
     return {
         "host": config_section.get("host"),
         "port": config_section.get("port"),
+        "username": config_section.get("username"),
         "db": config_section.get("db"),
         "password": config_section.get("password"),
         "unix_socket_path": config_section.get("unix_socket_path"),
+        # TLS/SSL parameters (basic CA-only support)
+        "ssl": config_section.get("ssl"),
+        "ssl_ca_certs": config_section.get("ssl_ca_certs"),
     }
 
 

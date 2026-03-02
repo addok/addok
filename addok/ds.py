@@ -48,10 +48,14 @@ def on_load():
         params.update(config.REDIS.get("documents", {}))
         _DB.connect(
             host=params.get("host"),
+            username=params.get("username") or "default",
             port=params.get("port"),
             db=params.get("db"),
             password=params.get("password"),
             unix_socket_path=params.get("unix_socket_path"),
+            # TLS/SSL parameters (basic CA-only support)
+            ssl=params.get("ssl"),
+            ssl_ca_certs=params.get("ssl_ca_certs"),
         )
 
 
